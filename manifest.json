@@ -4,7 +4,7 @@
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#2196f3",
-  "description": "Ranpin主页",
+  "description": "Ranpin的主页",
   "theme_color": "blue",
   "icons": [
     {

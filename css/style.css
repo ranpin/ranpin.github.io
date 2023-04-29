@@ -3,7 +3,7 @@
 #app .navbar .home-link span:before{
     display: inline-block;
     content:'';
-    width: 3rem;
+    width: 3.5rem;
     height:2.4rem;
     background:url('../img/logo.png') no-repeat;
     background-size:100% 100%;
