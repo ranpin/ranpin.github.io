@@ -1,15 +1,15 @@
 {
-  "name": "君哥聊編程",
-  "short_name": "君哥",
+  "name": "Ranpin",
+  "short_name": "Ranpin",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#2196f3",
-  "description": "君哥聊編程主页",
+  "description": "Ranpin主页",
   "theme_color": "blue",
   "icons": [
     {
       "src": "./img/logo.png",
-      "sizes": "144x144",
+      "sizes": "100x100",
       "type": "image/png"
     }
   ],
