@@ -18,8 +18,20 @@
 .bilibili-player-video-recommend-container {
 	display:none !important;
 }
-/* 放开评论
-.valine-wrapper {
+
+/* .valine-wrapper {
 	display:none !important;
+} */
+
+
+.nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
 }
-*/
+.nav-item {
+    flex: 1;
+    max-width: 15%;
+}
+
