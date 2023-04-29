@@ -159,15 +159,15 @@ self.__precacheManifest = [
   },
   {
     "url": "categories/java/index.html",
-    "revision": "9f9acc646a39328ae10e0e8754f2707a"
+    "revision": "7d2c6fa2fcd2f64d105566e224489f5f"
   },
   {
     "url": "categories/前端/index.html",
-    "revision": "938ec4e8d96f38f987b428e513c8411e"
+    "revision": "799dc5286541f83c1a7d27aaeca249bb"
   },
   {
     "url": "categories/生活/index.html",
-    "revision": "169ab066c9be040ed194e526d359cf26"
+    "revision": "435ff000fe8d1bf12f20f2225cc3a4fe"
   },
   {
     "url": "css/style.css",
@@ -191,7 +191,7 @@ self.__precacheManifest = [
   },
   {
     "url": "index.html",
-    "revision": "7a611c35cd0b9899033a18f4b1cf49cb"
+    "revision": "304ae18f51838d004b2f55aa5ae24af5"
   },
   {
     "url": "js/custom.js",
@@ -199,39 +199,39 @@ self.__precacheManifest = [
   },
   {
     "url": "tag/index.html",
-    "revision": "68c20942b4e10f5ca2390352dadeac83"
+    "revision": "cd8256bd7ac2a96c7d8cf6950e8b1901"
   },
   {
     "url": "tags/JavaSE/index.html",
-    "revision": "0fb3e6911a79cebb500fc3d0f42dad4e"
+    "revision": "1995320769eb42b868a167a12a4d6273"
   },
   {
     "url": "tags/js/index.html",
-    "revision": "f297fda1d8c1472f6abb1985210f0500"
+    "revision": "3e3abaf6c0e64618b8870def7eaf2fca"
   },
   {
     "url": "tags/Spring/index.html",
-    "revision": "1579552a10e10cedd2b1935065444217"
+    "revision": "f896b595ffa44bab5306c64a812384ce"
   },
   {
     "url": "tags/SpringBoot/index.html",
-    "revision": "2aaac5a6aa4446dc5213c9244df223df"
+    "revision": "410f5f995f660025d0ba9eb76512267c"
   },
   {
     "url": "tags/vue/index.html",
-    "revision": "a7b47e62ba96059d11b85d49526db093"
+    "revision": "12c36bd6f4cc0ef00752133e23a27c4a"
   },
   {
     "url": "tags/分享生活/index.html",
-    "revision": "8fc7a592a912f0da0c510cbb7ec32357"
+    "revision": "230b8ab43724c2f8bc2aae49b214f659"
   },
   {
     "url": "tags/生活/index.html",
-    "revision": "f2f846c728c4970daaea9b49e24b0f2d"
+    "revision": "4858254b3415cb75a7b654c62f7f52c0"
   },
   {
     "url": "tags/面向对象/index.html",
-    "revision": "5b380ad8be352251eec13b394e318fc5"
+    "revision": "50a4845c4e66dcba413e9f1cb84421cf"
   },
   {
     "url": "timeline/index.html",
