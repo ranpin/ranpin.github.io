@@ -27,19 +27,19 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "525732774da75727a1df110457679dce"
+    "revision": "955005cefa7ca15fda13284c975ebc82"
   },
   {
     "url": "AI技术/BigModel/BigM_SAM.html",
-    "revision": "56fc55c78eb1613969d42ac95314bdcb"
+    "revision": "3ecdabed20048453bedbada636f249a6"
   },
   {
     "url": "AI技术/CV/CV.html",
-    "revision": "49ba765a0ce1911b942afc2697c7a70f"
+    "revision": "fabbefb69546f6bfd93c6d1bfa5009d7"
   },
   {
     "url": "AI技术/NLP/NLP.html",
-    "revision": "a4bce96e091cb49c528e0b113b9c1fdc"
+    "revision": "cd0bd889b23f99f60449828dda10c24f"
   },
   {
     "url": "assets/css/0.styles.185cf5f0.css",
@@ -54,80 +54,80 @@ self.__precacheManifest = [
     "revision": "36767f3efa2e4c880f42a42e8b2075b0"
   },
   {
-    "url": "assets/js/1.f9445522.js",
-    "revision": "ffb7b3522ff7156d327ccd1d0eb7f4e1"
+    "url": "assets/js/1.f5d79b1d.js",
+    "revision": "80e874d935fa04ef0a3cf70f0f0b5935"
   },
   {
-    "url": "assets/js/10.26049f71.js",
-    "revision": "962db3d1dc5931a55f9a54c628223c79"
+    "url": "assets/js/10.03c0b8fe.js",
+    "revision": "d80f294664c7d1a5819c01ad918fbbb7"
   },
   {
-    "url": "assets/js/11.d90d8bfb.js",
-    "revision": "dceb4efc6b03967f66c1393076b92213"
+    "url": "assets/js/11.1798fa3f.js",
+    "revision": "f691bd867cc34565cc44645d382a8e2e"
   },
   {
-    "url": "assets/js/12.5f4895dc.js",
-    "revision": "3802f94e320289d4f9e19f756691a483"
+    "url": "assets/js/12.f4ab899a.js",
+    "revision": "dd3d34300ee4475e176bf18b43440ab7"
   },
   {
-    "url": "assets/js/13.0404c3d8.js",
-    "revision": "9015f3263f9055425d656307f0032013"
+    "url": "assets/js/13.0b5f1178.js",
+    "revision": "3bd1e22ed5589bdc750813cb23fdd61f"
   },
   {
-    "url": "assets/js/14.3bc7e746.js",
-    "revision": "97b105ee3f34ecf8e03d7fc08c6a5322"
+    "url": "assets/js/14.3442bf0d.js",
+    "revision": "c9de225a5353710849c901cd2435f3c5"
   },
   {
-    "url": "assets/js/15.db81e5e8.js",
-    "revision": "9a207fd16e2b2514130d3c3a638c2bb9"
+    "url": "assets/js/15.bc033e0c.js",
+    "revision": "e7d0bce6bb798bccb7b4a5ebfd323ed4"
   },
   {
-    "url": "assets/js/16.3746fd71.js",
-    "revision": "38f08cebb4c05afe9d245e9042d395b9"
+    "url": "assets/js/16.6d48cbad.js",
+    "revision": "d2f1cb4a44c12db217dcc27ad93873f8"
   },
   {
-    "url": "assets/js/17.309d8f9d.js",
-    "revision": "7d077de62a863d8c978a6f981208b18f"
+    "url": "assets/js/17.5fb879c1.js",
+    "revision": "a7f6932a7dac74b2a8d1ad7a8741c6bc"
   },
   {
-    "url": "assets/js/18.5f608851.js",
-    "revision": "269aba192355df77612c01866d3a3cd1"
+    "url": "assets/js/18.1a3860ec.js",
+    "revision": "8b181f932ab855134dc59f19b4440601"
   },
   {
-    "url": "assets/js/19.7af3db92.js",
-    "revision": "6bebf1b212ed2f86df6ecf8b20985c08"
+    "url": "assets/js/19.d44bd57d.js",
+    "revision": "619395d44d1b5cc9ef082858f2308510"
   },
   {
-    "url": "assets/js/20.ea557779.js",
-    "revision": "9e302cdba0d3ed8f76af4c1bae1209a9"
+    "url": "assets/js/20.70c3eb69.js",
+    "revision": "35cfe5590de9477a737ad237f30d9569"
   },
   {
-    "url": "assets/js/4.e92d468e.js",
-    "revision": "8c04e5a87ba291e0c9b41201d8533c38"
+    "url": "assets/js/4.77550293.js",
+    "revision": "b628498c134d43b63e6ef1e38b1625d7"
   },
   {
-    "url": "assets/js/5.bee2cf70.js",
-    "revision": "f41578ea10359dc246a704f5dd85661b"
+    "url": "assets/js/5.616f5f1a.js",
+    "revision": "724f97a248e23bd4243fe4c7a092e809"
   },
   {
-    "url": "assets/js/6.d553eed5.js",
-    "revision": "0dd9d21dda44966ea69e662e59731bfa"
+    "url": "assets/js/6.5592fcbe.js",
+    "revision": "5544e774205cf901af74a53f5d52a539"
   },
   {
-    "url": "assets/js/7.bcddde1c.js",
-    "revision": "51cf3986a3e1ac1b5b3a28077fd3899d"
+    "url": "assets/js/7.c53857df.js",
+    "revision": "9889ef9ba681b50fa1991981bc58cc70"
   },
   {
-    "url": "assets/js/8.7ed2c13e.js",
-    "revision": "b663711f7866818f8ca3d7d62e3ec57c"
+    "url": "assets/js/8.2242ecd8.js",
+    "revision": "2ade43a1e022053bf0a2b87f597799e9"
   },
   {
-    "url": "assets/js/9.19f04698.js",
-    "revision": "9c3c5b1d0c9bea74113c0a341bb5c158"
+    "url": "assets/js/9.19e575fa.js",
+    "revision": "05f42e2a1c21414a549f96311dc42cb0"
   },
   {
-    "url": "assets/js/app.9b8a1292.js",
-    "revision": "509a543f4f83e4a848b9b0d9458d554d"
+    "url": "assets/js/app.3a7f56d3.js",
+    "revision": "e88fc0e6a9ac1ab602183c0bf0ed5b36"
   },
   {
     "url": "assets/js/baidu.js",
@@ -142,32 +142,36 @@ self.__precacheManifest = [
     "revision": "8438da67128634169acc28c53e2ca388"
   },
   {
+    "url": "categories/AI开发/index.html",
+    "revision": "1b9684404f5f73b976a29b00db10b315"
+  },
+  {
     "url": "categories/BigModel/index.html",
-    "revision": "874bb801afff34f699435c9afa31efbf"
+    "revision": "4c50dab797d13f855b413d8fa5ffe743"
   },
   {
     "url": "categories/CV/index.html",
-    "revision": "18bb9cb726e58175bfdcb537bd2f0934"
+    "revision": "98581e590eed3328908589277ae28bd6"
   },
   {
     "url": "categories/index.html",
-    "revision": "b7a3c487e3670550bf10780e1d2bb25c"
+    "revision": "7594c5039417e539efacf807305ebb04"
   },
   {
     "url": "categories/NLP/index.html",
-    "revision": "de2667fad9e16bcad9bb42c33186071e"
+    "revision": "3666e17632258af2716eaa1be1e291b8"
   },
   {
-    "url": "categories/Python/index.html",
-    "revision": "87e13901619a55389dc93007d4b3a0cc"
+    "url": "categories/TensorFlow/index.html",
+    "revision": "726c0f6345714f1c749a85573d31f884"
   },
   {
     "url": "categories/前端/index.html",
-    "revision": "e21077d131db3ce73ba78ede54e089b9"
+    "revision": "d37f115f195c7e26ee3a84f938009d5f"
   },
   {
     "url": "categories/学有所思/index.html",
-    "revision": "632b48f8b36f72577c38e413f318773c"
+    "revision": "cf681bd7e2c85de1c18f2ca26a84dfa7"
   },
   {
     "url": "css/style.css",
@@ -195,7 +199,7 @@ self.__precacheManifest = [
   },
   {
     "url": "index.html",
-    "revision": "a28dcf09bb3f1aa4d7908a9f6ee9f34e"
+    "revision": "551ad1493d2e4c96518bf45a250f1a17"
   },
   {
     "url": "js/custom.js",
@@ -203,67 +207,67 @@ self.__precacheManifest = [
   },
   {
     "url": "tag/index.html",
-    "revision": "990289e1510961f943757820a07dab91"
+    "revision": "97505be575231794a9db12b575ca09d9"
   },
   {
-    "url": "tags/AI技术/index.html",
-    "revision": "7cebb02405f3cc4e0e526bb43d000257"
+    "url": "tags/AI开发/index.html",
+    "revision": "c16faec4c2ca95583acbe0313c2179c8"
   },
   {
     "url": "tags/BigModel/index.html",
-    "revision": "757950a1274068db45f6051273e59580"
+    "revision": "b8cee9d8f6006e59f8543f4e45d5cb3f"
   },
   {
     "url": "tags/CV/index.html",
-    "revision": "700380f313d6950734a3a420db052d47"
+    "revision": "304a901e4eebc981492524e1e342a17e"
   },
   {
     "url": "tags/js/index.html",
-    "revision": "d7d6d9a0a1acd90319ed589319b06c44"
+    "revision": "0647cea604de5dd98742a4913ea9f3dc"
   },
   {
     "url": "tags/NLP/index.html",
-    "revision": "6fa05647ca2fdaed3b7c9b11cdde4ddd"
+    "revision": "dc6359e2dd711ff2c2fdced6096f9782"
   },
   {
     "url": "tags/Python/index.html",
-    "revision": "9b4577397ea09a6677f376fc29247b5b"
+    "revision": "c50b53d874e5823789a2f925fe57567b"
   },
   {
     "url": "tags/SAM/index.html",
-    "revision": "04e6df8d15668cc4c4d8b2d933c6d9ed"
+    "revision": "4b3cd9eb7b48d7b892b2101791a53ff9"
   },
   {
     "url": "tags/vue/index.html",
-    "revision": "cf413fc854032f0cad348fb7564f1948"
+    "revision": "7e7c92f3f0ab4c6bb47299118ff81a3a"
   },
   {
     "url": "tags/学有所思/index.html",
-    "revision": "2e75a27237c29840064d2771eb3e9a55"
+    "revision": "8d3c37ac2a48448b82aed26e555549f3"
   },
   {
     "url": "timeline/index.html",
-    "revision": "29a7e7e1f9079aee5b7358112b875aba"
+    "revision": "f5f20945cce9af2896fdba10f6f34a21"
   },
   {
     "url": "学有所思/life.html",
-    "revision": "fb02684750ce8c91d32b45b53d0d7352"
+    "revision": "49491897a2b985c75a86d71649b29771"
   },
   {
-    "url": "开发技术/Python/python.html",
-    "revision": "14d5bc5a4157a0bff78db73c3b3eda16"
+    "url": "开发技术/AI开发/tensorflow.html",
+    "revision": "93cd1a87869fced839770f49e07951ec"
   },
   {
     "url": "开发技术/vue/vue01.html",
-    "revision": "dd624fe57bdc296636f1286a82839064"
+    "revision": "53be1f0a50b956ae4fe21d03527d5636"
   },
   {
     "url": "本站总览/guide/guide.html",
-    "revision": "c4100deac8bb3cf373f6ed1850113889"
+    "revision": "f8c1238985f8bc809657d6eccfb66ed3"
   },
   {
     "url": "本站总览/timeline/timeline.html",
-    "revision": "137dcd627e920fe52def0150c0d9418c"
+    "revision": "92a82e285cf1f34450b2ddb85f5e4fc0"
   }
 ].concat(self.__precacheManifest || []);
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
