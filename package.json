@@ -4,9 +4,10 @@
   "description": "Ranpin的个人学术项目分享网站",
   "homepage": "https://ranpin.github.io",
   "scripts": {
-    "dev": "webpack serve",
+    "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "preview": "serve dist -s -n -L -p 8080"
+    "preview": "serve dist -s -n -L -p 8080",
+    "test:build": "npm run build && npm run preview"
   },
   "keywords": [
     "portfolio",
