@@ -4,6 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ranpin - 学术分享</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafaf9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      text-align: center;
+      max-width: 500px;
+      padding: 40px 20px;
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #6b7280;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .btn {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #2563eb;
+    }
+    .loading {
+      margin-top: 20px;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+  </style>
   <script>
     // GitHub Pages SPA 重定向脚本
     (function(l) {
@@ -19,12 +67,19 @@
   </script>
 </head>
 <body>
-  <div id="root"></div>
+  <div class="container">
+    <div class="icon">🎓</div>
+    <h1>正在跳转...</h1>
+    <p>页面正在重定向到首页，请稍候...</p>
+    <a href="/" class="btn">立即前往首页</a>
+    <div class="loading">如果页面没有自动跳转，请点击上方按钮</div>
+  </div>
+  
   <script>
-    // 如果是直接访问 404 页面，重定向到首页
-    if (window.location.pathname === '/404.html') {
+    // 立即重定向到首页
+    setTimeout(function() {
       window.location.replace('/');
-    }
+    }, 1000);
   </script>
 </body>
 </html>

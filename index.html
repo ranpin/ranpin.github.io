@@ -19,20 +19,6 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- GitHub Pages SPA 支持 -->
-  <script>
-    (function(l) {
-      if (l.search[1] === '/' ) {
-        var decoded = l.search.slice(1).split('&').map(function(s) { 
-          return s.replace(/~and~/g, '&')
-        }).join('?');
-        window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-        );
-      }
-    }(window.location))
-  </script>
-  
   <!-- 加载指示器样式 -->
   <style>
     #loading {
@@ -43,9 +29,11 @@
       height: 100%;
       background: #fafaf9;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      font-family: 'Inter', sans-serif;
     }
     .spinner {
       width: 40px;
@@ -54,10 +42,37 @@
       border-top: 4px solid #3b82f6;
       border-radius: 50%;
       animation: spin 1s linear infinite;
+      margin-bottom: 20px;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .error-message {
+      text-align: center;
+      color: #ef4444;
+      max-width: 400px;
+      padding: 20px;
+    }
+    .error-message h2 {
+      margin-bottom: 10px;
+      color: #dc2626;
+    }
+    .error-message button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .error-message button:hover {
+      background: #2563eb;
     }
   </style>
 </head>
@@ -65,27 +80,100 @@
   <!-- 加载指示器 -->
   <div id="loading">
     <div class="spinner"></div>
+    <div class="loading-text">正在加载...</div>
   </div>
   
   <div id="root"></div>
   
   <script>
+    // 设置超时时间
+    let loadingTimeout = setTimeout(function() {
+      const loading = document.getElementById('loading');
+      if (loading && loading.style.display !== 'none') {
+        loading.innerHTML = `
+          <div class="error-message">
+            <h2>⚠️ 加载超时</h2>
+            <p>页面加载时间过长，可能是网络问题或资源加载失败。</p>
+            <button onclick="window.location.reload()">重新加载</button>
+            <div style="margin-top: 15px; font-size: 12px; color: #9ca3af;">
+              <p>如果问题持续存在，请检查：</p>
+              <p>• 网络连接是否正常</p>
+              <p>• 浏览器是否支持现代 JavaScript</p>
+              <p>• 是否启用了广告拦截器</p>
+            </div>
+          </div>
+        `;
+      }
+    }, 10000); // 10秒超时
+    
     // 移除加载指示器
-    window.addEventListener('load', function() {
+    function hideLoading() {
+      clearTimeout(loadingTimeout);
       const loading = document.getElementById('loading');
       if (loading) {
         loading.style.display = 'none';
       }
+    }
+    
+    // 当 DOM 加载完成时
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM 加载完成');
+      // 给 React 一些时间来渲染
+      setTimeout(function() {
+        const root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          hideLoading();
+        }
+      }, 1000);
+    });
+    
+    // 当所有资源加载完成时
+    window.addEventListener('load', function() {
+      console.log('所有资源加载完成');
+      hideLoading();
     });
     
     // 错误处理
     window.addEventListener('error', function(e) {
       console.error('页面加载错误:', e);
+      clearTimeout(loadingTimeout);
       const loading = document.getElementById('loading');
       if (loading) {
-        loading.innerHTML = '<div style="text-align: center;"><h2>加载失败</h2><p>请刷新页面重试</p></div>';
+        loading.innerHTML = `
+          <div class="error-message">
+            <h2>❌ 加载失败</h2>
+            <p>页面加载时发生错误：${e.message || '未知错误'}</p>
+            <button onclick="window.location.reload()">重新加载</button>
+            <div style="margin-top: 15px; font-size: 12px; color: #9ca3af;">
+              <p>错误详情：${e.filename || ''}:${e.lineno || ''}</p>
+            </div>
+          </div>
+        `;
       }
     });
+    
+    // 检测 React 是否成功挂载
+    setTimeout(function() {
+      const root = document.getElementById('root');
+      if (root && root.children.length === 0) {
+        console.warn('React 应用可能未成功挂载');
+        const loading = document.getElementById('loading');
+        if (loading && loading.style.display !== 'none') {
+          loading.innerHTML = `
+            <div class="error-message">
+              <h2>🔧 应用未启动</h2>
+              <p>React 应用似乎没有正确启动。这可能是由于：</p>
+              <ul style="text-align: left; margin: 15px 0;">
+                <li>JavaScript 文件加载失败</li>
+                <li>浏览器不支持某些现代特性</li>
+                <li>网络连接问题</li>
+              </ul>
+              <button onclick="window.location.reload()">重新加载</button>
+            </div>
+          `;
+        }
+      }
+    }, 5000);
   </script>
 </body>
 </html>

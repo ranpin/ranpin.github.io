@@ -11,37 +11,44 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: isProduction ? '[name].[contenthash].js' : 'bundle.js',
       clean: true,
-      publicPath: '/'
+      publicPath: isProduction ? '/ranpin.github.io/' : '/'
     },
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              [
-                '@babel/preset-react',
-                {
-                  development: true,
-                },
-              ],
-              '@babel/preset-env'
-            ]
+    module: {
+      rules: [
+        {
+          test: /\.jsx?$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                [
+                  '@babel/preset-react',
+                  {
+                    development: !isProduction,
+                  },
+                ],
+                [
+                  '@babel/preset-env',
+                  {
+                    targets: {
+                      browsers: ['> 1%', 'last 2 versions', 'not ie <= 8']
+                    }
+                  }
+                ]
+              ]
+            }
           }
+        },
+        {
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader', 'postcss-loader']
         }
-      },
-      {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader', 'postcss-loader']
-      }
-    ]
-  },
-  resolve: {
-    extensions: ['.js', '.jsx']
-  },
+      ]
+    },
+    resolve: {
+      extensions: ['.js', '.jsx']
+    },
     devServer: {
       port: 3001,
       allowedHosts: ['all', '.alibaba-inc.com'],
@@ -64,6 +71,18 @@ module.exports = (env, argv) => {
           minifyURLs: true,
         } : false
       })
-    ]
+    ],
+    optimization: isProduction ? {
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    } : {}
   };
 };
