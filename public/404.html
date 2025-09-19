@@ -52,7 +52,7 @@
       font-size: 14px;
     }
   </style>
-  <script>
+  <script type="text/javascript">
     // GitHub Pages SPA 重定向脚本
     (function(l) {
       if (l.search[1] === '/' ) {
@@ -71,15 +71,22 @@
     <div class="icon">🎓</div>
     <h1>正在跳转...</h1>
     <p>页面正在重定向到首页，请稍候...</p>
-    <a href="/" class="btn">立即前往首页</a>
+    <a href="./index.html" class="btn">立即前往首页</a>
     <div class="loading">如果页面没有自动跳转，请点击上方按钮</div>
   </div>
   
-  <script>
-    // 立即重定向到首页
-    setTimeout(function() {
-      window.location.replace('/');
-    }, 1000);
+  <script type="text/javascript">
+    // GitHub Pages 路径重定向
+    var pathSegmentsToKeep = 0;
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + 
+      '/?/' + 
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
   </script>
 </body>
 </html>
