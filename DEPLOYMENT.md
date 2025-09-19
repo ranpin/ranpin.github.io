@@ -64,7 +64,7 @@ npm run test:build
 ### 管理员登录
 1. 访问 [https://ranpin.github.io](https://ranpin.github.io)
 2. 点击右上角盾牌图标
-3. 输入密码：`admin123`
+3. 输入密码：`ranpin.github`
 4. 或使用快捷键：`Ctrl/Cmd + Shift + A`
 
 ### 数据备份

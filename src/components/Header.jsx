@@ -73,7 +73,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
   // 处理管理员登录
   const handleAdminLogin = () => {
     // 简单的密码验证，你可以根据需要修改密码
-    const correctPassword = 'admin123'; // 建议修改为更安全的密码
+    const correctPassword = 'ranpin.github'; // 建议修改为更安全的密码
     
     if (adminPassword === correctPassword) {
       setIsAdminMode(true);
