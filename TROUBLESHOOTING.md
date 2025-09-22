@@ -159,7 +159,7 @@ npm audit fix
 1. **检查密码设置**
    ```javascript
    // src/components/Header.jsx 第 44 行
-   const correctPassword = 'admin123'; // 确认密码
+   const correctPassword = 'Ranpin@'; // 确认密码
    ```
 
 2. **检查本地存储**
@@ -185,7 +185,7 @@ location.reload();
 ```javascript
 // 临时调试：在控制台查看密码
 // 注意：生产环境中不要这样做
-console.log('Password check:', 'your-input' === 'admin123');
+console.log('Password check:', 'your-input' === 'Ranpin@');
 ```
 
 **方案 C: 使用快捷键**
