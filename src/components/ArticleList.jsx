@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ArticleList = ({ onArticleClick, projects }) => {
+const ArticleList = ({ onArticleClick, projects, onEditProject, onDeleteProject, isAdminMode }) => {
   // 确保projects是数组，如果没有传入projects或为空，使用默认数据
   const projectList = (projects && Array.isArray(projects) && projects.length > 0) ? projects : [
     {
@@ -124,10 +124,6 @@ const ArticleList = ({ onArticleClick, projects }) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-        <i className="fas fa-code text-blue-500 mr-3"></i>
-        项目经历
-      </h2>
       
       <div className="space-y-4">
         {projectList && projectList.length > 0 ? (
@@ -155,7 +151,35 @@ const ArticleList = ({ onArticleClick, projects }) => {
                   </div>
                   <div className="text-sm text-gray-500 mb-2 font-mono">{project.period || '时间未知'}</div>
                 </div>
-                <i className="fas fa-chevron-right text-gray-300 hover:text-blue-500 transition-colors text-sm"></i>
+                <div className="flex items-center space-x-2">
+                  {isAdminMode && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditProject(project);
+                        }}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="编辑项目"
+                      >
+                        <i className="fas fa-edit text-sm"></i>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('确定要删除这个项目吗？此操作不可撤销！')) {
+                            onDeleteProject(project.id);
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="删除项目"
+                      >
+                        <i className="fas fa-trash text-sm"></i>
+                      </button>
+                    </>
+                  )}
+                  <i className="fas fa-chevron-right text-gray-300 hover:text-blue-500 transition-colors text-sm"></i>
+                </div>
               </div>
               
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
