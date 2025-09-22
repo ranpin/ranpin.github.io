@@ -11,7 +11,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: isProduction ? '[name].[contenthash].js' : 'bundle.js',
       clean: true,
-      publicPath: './'
+      publicPath: isProduction ? './' : '/'
     },
     module: {
       rules: [
@@ -52,17 +52,18 @@ module.exports = (env, argv) => {
     devServer: {
       port: 3001,
       allowedHosts: ['all', '.alibaba-inc.com'],
-      historyApiFallback: {
-        index: '/index.html'
-      },
+      historyApiFallback: true,
       static: {
-        directory: path.join(__dirname, 'dist'),
-      }
+        directory: path.join(__dirname, 'public'),
+      },
+      open: true,
+      hot: true
     },
     plugins: [
       new HtmlWebpackPlugin({
         template: './index.html',
         inject: 'body',
+        filename: 'index.html',
         minify: isProduction ? {
           removeComments: true,
           collapseWhitespace: true,

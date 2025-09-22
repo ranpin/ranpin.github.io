@@ -1,121 +1,449 @@
-# 🚀 Ranpin 学术作品集 - 部署指南
+# 🚀 学术作品集 - 部署指南
 
-## 📍 当前部署状态
+一个完整的部署指南，帮助你将学术作品集网站部署到各种平台。
 
-- **仓库**: `ranpin/ranpin.github.io`
-- **访问地址**: [https://ranpin.github.io](https://ranpin.github.io)
-- **部署方式**: GitHub Pages + GitHub Actions 自动部署
+## 📋 部署前准备
 
-## ⚠️ 空白页面问题修复
-
-如果网站显示空白，请按以下步骤操作：
-
-### 1. 检查 GitHub Pages 设置
-- 进入仓库 Settings → Pages
-- 确认 Source 设置为 **"GitHub Actions"**
-- 如果不是，请更改并保存
-
-### 2. 重新推送代码
+### 环境检查
 ```bash
-# 添加所有更改
-git add .
+# 检查 Node.js 版本 (需要 16+)
+node --version
 
-# 提交更改
-git commit -m "Fix deployment configuration"
+# 检查 npm 版本
+npm --version
 
-# 推送到 GitHub
-git push origin main
-```
-
-### 3. 等待部署完成
-- 访问 `https://github.com/ranpin/ranpin.github.io/actions`
-- 等待绿色 ✅ 状态（通常 2-5 分钟）
-- 如果显示红色 ❌，点击查看错误日志
-
-### 4. 清除浏览器缓存
-- 按 `Ctrl+F5` (Windows) 或 `Cmd+Shift+R` (Mac)
-- 或使用无痕模式访问网站
-
-## 🔄 正常部署流程
-
-## 🛠️ 本地开发
-
-### 启动开发服务器
-```bash
-npm run dev
-```
-访问 `http://localhost:3001`
-
-### 本地构建测试
-```bash
+# 本地构建测试
 npm run build
 npm run preview
 ```
-访问 `http://localhost:8080` 测试构建结果
 
-### 完整测试流程
+### 安全配置
+1. **修改管理员密码**
+   ```javascript
+   // 编辑 src/components/Header.jsx 第 44 行
+   const correctPassword = 'your-secure-password';
+   ```
+
+2. **更新个人信息**
+   - 编辑 `src/data/content.js`
+   - 或通过管理面板更新
+
+## 🌐 GitHub Pages 部署 (推荐)
+
+### 自动部署设置
+
+1. **创建 GitHub 仓库**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/yourusername/your-repo.git
+   git push -u origin main
+   ```
+
+2. **配置 GitHub Pages**
+   - 进入仓库 Settings → Pages
+   - Source 选择 **"GitHub Actions"**
+   - 项目已包含自动部署配置
+
+3. **部署工作流**
+   - 推送代码后自动触发构建
+   - 构建完成后自动部署到 GitHub Pages
+   - 访问 `https://yourusername.github.io/your-repo`
+
+### 自定义域名 (可选)
+
+1. **添加 CNAME 文件**
+   ```bash
+   echo "your-domain.com" > public/CNAME
+   ```
+
+2. **DNS 配置**
+   - 添加 CNAME 记录指向 `yourusername.github.io`
+   - 或添加 A 记录指向 GitHub Pages IP
+
+3. **HTTPS 设置**
+   - GitHub Pages 自动提供 HTTPS
+   - 在仓库设置中启用 "Enforce HTTPS"
+
+## ☁️ Vercel 部署
+
+### 快速部署
+
+1. **连接仓库**
+   - 访问 [vercel.com](https://vercel.com)
+   - 点击 "New Project"
+   - 导入 GitHub 仓库
+
+2. **构建配置**
+   ```json
+   {
+     "buildCommand": "npm run build",
+     "outputDirectory": "dist",
+     "installCommand": "npm install"
+   }
+   ```
+
+3. **环境变量** (如需要)
+   - 在 Vercel 控制台设置
+   - 用于 API 密钥等敏感信息
+
+### 自定义域名
+
+1. **添加域名**
+   - 在 Vercel 项目设置中添加域名
+   - 配置 DNS 记录
+
+2. **SSL 证书**
+   - Vercel 自动提供 SSL 证书
+   - 支持自动续期
+
+## 🌊 Netlify 部署
+
+### 拖拽部署
+
+1. **构建项目**
+   ```bash
+   npm run build
+   ```
+
+2. **上传 dist 文件夹**
+   - 访问 [netlify.com](https://netlify.com)
+   - 拖拽 `dist` 文件夹到部署区域
+
+### Git 集成部署
+
+1. **连接仓库**
+   - 选择 "New site from Git"
+   - 连接 GitHub 仓库
+
+2. **构建设置**
+   ```
+   Build command: npm run build
+   Publish directory: dist
+   ```
+
+3. **重定向配置**
+   ```
+   # public/_redirects
+   /*    /index.html   200
+   ```
+
+## 🔥 Firebase Hosting
+
+### 初始化项目
+
+1. **安装 Firebase CLI**
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   ```
+
+2. **初始化 Firebase**
+   ```bash
+   firebase init hosting
+   ```
+
+3. **配置文件**
+   ```json
+   {
+     "hosting": {
+       "public": "dist",
+       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+       "rewrites": [
+         {
+           "source": "**",
+           "destination": "/index.html"
+         }
+       ]
+     }
+   }
+   ```
+
+### 部署流程
+
 ```bash
-# 测试构建和预览
-npm run test:build
+# 构建项目
+npm run build
+
+# 部署到 Firebase
+firebase deploy
 ```
 
-## 📝 内容管理
+## 🐳 Docker 部署
 
-### 管理员登录
-1. 访问 [https://ranpin.github.io](https://ranpin.github.io)
-2. 点击右上角盾牌图标
-3. 输入密码：`ranpin.github`
-4. 或使用快捷键：`Ctrl/Cmd + Shift + A`
+### Dockerfile
 
-### 数据备份
-- 定期在管理面板中导出数据
-- 保存 JSON 文件作为备份
-- 重要更新前建议先备份
+```dockerfile
+# 构建阶段
+FROM node:18-alpine AS builder
 
-## 🔧 配置说明
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 
-### 重要文件
-- `package.json` - 项目配置和依赖
-- `webpack.config.js` - 构建配置
-- `.github/workflows/deploy.yml` - 自动部署配置
-- `src/data/content.js` - 默认内容数据
+COPY . .
+RUN npm run build
 
-### 自定义域名（可选）
-如果想使用自定义域名：
-1. 在仓库根目录创建 `CNAME` 文件
-2. 文件内容为你的域名，如：`ranpin.com`
-3. 在域名提供商处设置 DNS 记录
+# 生产阶段
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### Nginx 配置
+
+```nginx
+# nginx.conf
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    server {
+        listen 80;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # 缓存静态资源
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+}
+```
+
+### 构建和运行
+
+```bash
+# 构建镜像
+docker build -t academic-portfolio .
+
+# 运行容器
+docker run -p 80:80 academic-portfolio
+```
+
+## 🔧 高级配置
+
+### 环境变量
+
+```bash
+# .env.production
+VITE_API_URL=https://api.yourdomain.com
+VITE_ANALYTICS_ID=your-analytics-id
+```
+
+### 构建优化
+
+```javascript
+// webpack.config.js 优化配置
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
+  },
+};
+```
+
+### CDN 配置
+
+```javascript
+// 使用 CDN 加速静态资源
+const cdnUrl = 'https://cdn.yourdomain.com';
+
+module.exports = {
+  output: {
+    publicPath: process.env.NODE_ENV === 'production' ? cdnUrl : '/',
+  },
+};
+```
+
+## 📊 性能监控
+
+### 分析工具
+
+1. **Lighthouse**
+   ```bash
+   npm install -g lighthouse
+   lighthouse https://yourdomain.com
+   ```
+
+2. **Bundle Analyzer**
+   ```bash
+   npm install --save-dev webpack-bundle-analyzer
+   npm run build -- --analyze
+   ```
+
+### 性能优化
+
+1. **图片优化**
+   - 使用 WebP 格式
+   - 启用懒加载
+   - 使用 CDN 服务
+
+2. **代码分割**
+   - 路由级别分割
+   - 组件懒加载
+   - 第三方库分离
+
+3. **缓存策略**
+   - 静态资源长期缓存
+   - HTML 文件短期缓存
+   - API 响应缓存
 
 ## 🚨 故障排除
 
-### 部署失败
-1. 检查 Actions 页面的错误日志
-2. 确认所有文件都已正确推送
-3. 检查 `package.json` 中的依赖是否正确
+### 常见问题
 
-### 网站无法访问
-1. 确认部署已成功完成
-2. 等待 DNS 传播（可能需要几分钟）
-3. 清除浏览器缓存
+**构建失败**
+```bash
+# 清理缓存
+rm -rf node_modules package-lock.json
+npm install
 
-### 管理面板无法使用
-1. 检查浏览器控制台是否有错误
-2. 确认本地存储功能正常
-3. 尝试清除浏览器数据后重新登录
+# 检查依赖版本
+npm audit
+npm audit fix
+```
 
-## 📊 性能优化
+**部署后空白页面**
+- 检查构建输出目录
+- 确认路由配置正确
+- 查看浏览器控制台错误
 
-- 图片建议使用 Unsplash 等 CDN 服务
-- 视频文件建议上传到 YouTube/B站等平台
-- 定期清理不需要的本地存储数据
+**静态资源 404**
+- 检查 publicPath 配置
+- 确认文件路径正确
+- 验证服务器配置
 
-## 🔒 安全建议
+### 调试技巧
 
-1. **修改默认密码**：编辑 `src/components/Header.jsx` 第 44 行
-2. **定期备份数据**：避免数据丢失
-3. **谨慎分享管理密码**：只给信任的人
+1. **本地模拟生产环境**
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+2. **检查构建输出**
+   ```bash
+   ls -la dist/
+   ```
+
+3. **网络调试**
+   - 使用浏览器开发者工具
+   - 检查网络请求状态
+   - 查看响应头信息
+
+## 🔒 安全最佳实践
+
+### 部署安全
+
+1. **HTTPS 强制**
+   - 所有平台都启用 HTTPS
+   - 配置 HSTS 头部
+   - 使用安全的 Cookie 设置
+
+2. **内容安全策略**
+   ```html
+   <meta http-equiv="Content-Security-Policy" 
+         content="default-src 'self'; script-src 'self' 'unsafe-inline';">
+   ```
+
+3. **访问控制**
+   - 定期更换管理员密码
+   - 监控异常访问
+   - 设置访问日志
+
+### 数据安全
+
+1. **备份策略**
+   - 定期导出数据
+   - 多地备份存储
+   - 版本控制管理
+
+2. **隐私保护**
+   - 不在代码中存储敏感信息
+   - 使用环境变量
+   - 定期清理日志
+
+## 📈 监控和维护
+
+### 监控指标
+
+1. **性能监控**
+   - 页面加载时间
+   - 资源加载状态
+   - 用户交互响应
+
+2. **错误监控**
+   - JavaScript 错误
+   - 网络请求失败
+   - 资源加载失败
+
+3. **用户分析**
+   - 访问量统计
+   - 用户行为分析
+   - 设备和浏览器分布
+
+### 维护计划
+
+1. **定期更新**
+   - 依赖包更新
+   - 安全补丁应用
+   - 功能优化升级
+
+2. **备份计划**
+   - 每周数据备份
+   - 重要节点版本备份
+   - 灾难恢复测试
+
+3. **性能优化**
+   - 定期性能测试
+   - 资源使用分析
+   - 用户体验优化
 
 ---
 
-**最后更新**: 2024年3月
-**维护者**: Ranpin
+## 📞 技术支持
+
+### 获取帮助
+
+1. **文档资源**
+   - 查看项目 README
+   - 阅读相关技术文档
+   - 搜索常见问题解答
+
+2. **社区支持**
+   - GitHub Issues
+   - 技术论坛讨论
+   - 开发者社区
+
+3. **专业服务**
+   - 技术咨询服务
+   - 定制开发需求
+   - 部署运维支持
+
+**最后更新**: 2024年3月  
+**维护状态**: 积极维护中 🚀

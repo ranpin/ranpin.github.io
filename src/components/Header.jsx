@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import SearchBox from './SearchBox';
 
 const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showMobileProfile, setShowMobileProfile] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
     name: "张博士",
     title: "清华大学计算机系",
@@ -73,7 +75,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
   // 处理管理员登录
   const handleAdminLogin = () => {
     // 简单的密码验证，你可以根据需要修改密码
-    const correctPassword = 'ranpin.github'; // 建议修改为更安全的密码
+    const correctPassword = 'admin123'; // 建议修改为更安全的密码
     
     if (adminPassword === correctPassword) {
       setIsAdminMode(true);
@@ -139,7 +141,8 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
               </button>
             </div>
           
-          <div className="flex-1 sm:flex sm:justify-center min-w-0">
+          <div className="flex-1 flex items-center justify-center min-w-0">
+            {/* 导航菜单 - 居中显示 */}
             <div className="flex space-x-1 sm:space-x-4 lg:space-x-8 overflow-x-auto py-3 lg:py-4 scrollbar-hide">
               {navItems.map((item) => (
                 <button
@@ -163,8 +166,18 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
             </div>
           </div>
           
-          {/* 管理按钮区域 - 移动端优化 */}
+          {/* 右侧按钮区域 - 移动端优化 */}
           <div className="py-3 lg:py-4 flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
+            {/* 搜索按钮 - 所有屏幕尺寸都显示图标 */}
+            <div>
+              <button
+                onClick={() => setShowMobileSearch(true)}
+                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                title="搜索"
+              >
+                <i className="fas fa-search text-sm"></i>
+              </button>
+            </div>
             {!isAdminMode ? (
               // 未登录管理模式时显示登录按钮
               <>
@@ -283,6 +296,59 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
                   取消
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* 搜索弹窗 - 所有设备通用 */}
+    {showMobileSearch && (
+      <div 
+        className="fixed inset-0 z-50 bg-black bg-opacity-50"
+        onClick={() => setShowMobileSearch(false)}
+      >
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl transform transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 搜索头部 */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                <i className="fas fa-search text-blue-500 mr-3"></i>
+                全局搜索
+              </h3>
+              <button 
+                onClick={() => setShowMobileSearch(false)}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+              >
+                <i className="fas fa-times text-gray-600"></i>
+              </button>
+            </div>
+
+            {/* 搜索框 */}
+            <div className="p-6">
+              <SearchBox 
+                placeholder="搜索项目、论文、博客、工作经历..."
+                className="w-full"
+                onSearch={(results, action) => {
+                  if (action === 'select' && results.length > 0) {
+                    const result = results[0];
+                    setShowMobileSearch(false);
+                    // 根据搜索结果类型跳转到对应页面
+                    if (result.type === 'project') {
+                      setActiveSection('resume');
+                    } else if (result.type === 'publication') {
+                      setActiveSection('resume');
+                    } else if (result.type.includes('blog')) {
+                      setActiveSection('learning');
+                    } else if (result.type === 'internship') {
+                      setActiveSection('resume');
+                    }
+                  }
+                }}
+              />
             </div>
           </div>
         </div>
