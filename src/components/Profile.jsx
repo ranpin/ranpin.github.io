@@ -209,7 +209,7 @@ const Profile = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
   };
 
   return (
-    <div className="w-80 bg-white shadow-lg flex-shrink-0 rounded-2xl m-6 p-8 h-fit hidden sm:block">
+    <div className="w-full lg:w-80 bg-white shadow-lg rounded-2xl p-6 lg:p-8">
       <EditableCard
         isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
         onEdit={() => onEditPersonalInfo && onEditPersonalInfo()}
