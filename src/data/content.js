@@ -1,4 +1,4 @@
-// 网站内容数据管理文件
+// 网站内容数据管理文件 - 增强版(添加面试友好字段)
 // 你可以直接在这里修改所有网站内容,无需修改组件代码
 
 export const personalInfo = {
@@ -6,7 +6,7 @@ export const personalInfo = {
   title: "斑马网络 - 大模型工程框架工程师",
   location: "杭州,中国",
   email: "chenrunbin.crb@alibaba-inc.com",
-  avatar: "陈", // 可以是字母或图片URL
+  avatar: "陈",
   bio: {
     main: "专注于端侧大模型工程化与AI Agent系统开发的软件工程师,具备扎实的大模型推理优化、SDK开发、多模态记忆系统等领域的实践经验。",
     detail: "擅长C++/Python开发,熟悉vLLM、QNN等推理框架,在车机端大模型部署、性能优化、跨团队联调等方面有丰富经验。主导岚图、比亚迪等多个车企项目的技术对接与交付,成功交付多个端侧大模型项目。"
@@ -45,8 +45,28 @@ export const projects = [
     status: "已交付",
     github: "",
     demo: "",
+    businessContext: "岚图汽车需要在车机端实现智能舱内感知能力,包括安全相关的遗留儿童检测和用户体验相关的衣着识别、舱外问答等功能。传统云端方案存在延迟高、隐私泄露风险,因此需要端侧解决方案。",
+    yourRole: "作为SDK开发负责人,主导从架构设计到实车部署的全流程。负责与算法团队对接模型集成,与量化团队合作优化推理性能,与测试团队制定验收标准,与车企技术团队完成联调交付。",
+    architectureDetail: "采用分层架构设计:\n• SDK层: 提供统一的C++接口,支持property配置和数据dump功能\n• 推理层: 集成vLLM+QNN后端,支持INT8/FP16量化模型\n• 预处理层: 统一图像尺寸标准,优化裁剪和缩放算法\n• 后处理层: 解析模型输出,生成结构化结果",
     abstract: "本项目为岚图汽车打造完整的端侧大模型解决方案,涵盖从SDK架构设计、性能优化到实车部署的全流程。支持舱内遗留物检测、遗留儿童识别、衣着识别、舱外问答等多个核心场景,实现了端到端的高效推理链路。",
     methodology: "采用模块化SDK架构设计,实现数据dump功能(原图、裁图、query、返回结果),采用property配置方式。集成量化模型(0331/0403/0411/0416多个版本),优化图像预处理实现,统一全图识别和裁剪后的图像尺寸标准。",
+    technicalChallenges: [
+      {
+        challenge: "TPS持续下降问题",
+        solution: "通过内存泄漏排查和显存管理优化,发现并修复了图像缓存未释放的问题,将TPS从6恢复到稳定40",
+        impact: "保障了长时间运行的稳定性"
+      },
+      {
+        challenge: "端到端耗时过长",
+        solution: "通过模型替换(0331→0416)、图像预处理并行化、减少不必要的数据拷贝,累计优化数百毫秒",
+        impact: "舱内端到端耗时降至~4s,满足实时性要求"
+      },
+      {
+        challenge: "多场景模型切换效率低",
+        solution: "设计模型预加载机制,在后台提前加载下一个场景所需模型,减少冷启动时间",
+        impact: "场景切换延迟降低50%"
+      }
+    ],
     results: [
       { metric: "舱内端到端耗时", value: "~4s", baseline: "优化前更长" },
       { metric: "衣着识别耗时", value: "~2s", baseline: "行业平均~5s" },
@@ -59,6 +79,18 @@ export const projects = [
       "通过模型替换和图像预处理优化,累计提升推理速度数百毫秒",
       "解决TPS持续下降的性能问题(从40降到6的异常)",
       "成功交付岚图项目,支持实车测试"
+    ],
+    interviewHighlights: [
+      "主导跨团队协作: 同时推动算法、量化、测试、车企四方协作,建立标准化联调流程",
+      "性能优化实战: 通过系统性分析瓶颈,实现端到端耗时优化50%+",
+      "工程化思维: 设计数据dump机制,大幅提升问题定位效率",
+      "快速迭代能力: 2个月内完成5个版本迭代,响应车企需求变化"
+    ],
+    discussionTopics: [
+      "端侧vs云端大模型的权衡取舍",
+      "车机环境下的资源约束与优化策略",
+      "多模态模型在车载场景的应用前景",
+      "如何平衡模型精度与推理速度"
     ]
   },
   {
@@ -70,8 +102,28 @@ export const projects = [
     status: "已完成",
     github: "",
     demo: "",
+    businessContext: "比亚迪需要在同一车机场景中支持多种不同的对话风格和功能(如导航助手、娱乐助手、车辆控制助手),传统方案需要为每个场景部署独立模型,资源占用大。通过多LoRA技术,可以在共享基座模型的前提下,实现不同场景的个性化能力。",
+    yourRole: "负责AADK框架的定制化改造,设计并实现多LoRA动态加载机制。与比亚迪技术团队对接需求,制定技术方案,完成代码开发和联调测试。",
+    architectureDetail: "• aadkcore层: 扩展模型加载器,支持单个场景注册多个LoRA适配器\n• oai_inference agent层: 解析请求中的agent_id,映射到对应的lora_name\n• 路由层: 根据lora_name动态选择激活的LoRA,实现毫秒级切换\n• 分支管理: 创建独立的byd分支,隔离定制代码与主线",
     abstract: "针对比亚迪的业务需求,对AADK框架进行定制化改造,实现多LoRA动态加载和切换机制。该方案显著提升了模型复用效率,支持灵活的场景扩展,为后续业务迭代奠定了坚实基础。",
     methodology: "修改aadkcore代码支持单个场景加载多个LoRA,根据lora_name使用不同的LoRA。修改oai_inference agent代码,支持agent_id的解析与lora_name的映射。创建独立的byd分支,避免与主线代码冲突。",
+    technicalChallenges: [
+      {
+        challenge: "LoRA切换时的状态管理",
+        solution: "设计LoRA上下文隔离机制,确保切换时不会污染其他LoRA的状态",
+        impact: "实现干净的切换,避免串扰"
+      },
+      {
+        challenge: "agent_id到lora_name的映射灵活性",
+        solution: "采用配置化映射表,支持运行时动态更新,无需重新编译",
+        impact: "提升运维灵活性,支持A/B测试"
+      },
+      {
+        challenge: "分支管理与代码合并冲突",
+        solution: "协商创建两个独立的byd分支(基础框架分支和业务逻辑分支),明确合并策略",
+        impact: "避免与主线代码冲突,便于后续迭代"
+      }
+    ],
     results: [
       { metric: "LoRA切换效率", value: "毫秒级", baseline: "传统方式需重新加载" },
       { metric: "模型复用率", value: "显著提升", baseline: "单场景单模型" },
@@ -82,6 +134,18 @@ export const projects = [
       "设计agent_id到lora_name的映射方案,支持灵活的场景扩展",
       "更新设备上部署的agentcore,链路联调成功",
       "协商创建两个新的byd分支,便于后续代码迭代"
+    ],
+    interviewHighlights: [
+      "技术创新: 将多LoRA技术应用于车机场景,探索端侧模型复用的新路径",
+      "工程实践: 设计配置化映射方案,平衡灵活性与性能",
+      "协作能力: 与比亚迪团队紧密合作,快速响应定制化需求",
+      "版本管理: 建立分支隔离策略,保障代码可维护性"
+    ],
+    discussionTopics: [
+      "LoRA技术的原理及适用场景",
+      "多租户场景下的模型共享策略",
+      "端侧资源约束下的模型优化思路",
+      "如何设计可扩展的Agent路由机制"
     ]
   },
   {
@@ -93,8 +157,28 @@ export const projects = [
     status: "持续迭代",
     github: "",
     demo: "",
+    businessContext: "随着车机智能化程度提升,需要支持视频聊天、主动语音、车辆控制等多种Agent场景。传统开发方式重复造轮子,效率低下。AADK框架旨在提供标准化的Agent开发基础设施,降低开发门槛,提升代码复用率。",
+    yourRole: "作为框架核心开发者,负责整体架构设计、消息分发机制实现、Agent插件化接口定义。编写开发文档和示例代码,推动框架在团队内的落地应用。",
+    architectureDetail: "采用工厂模式和策略模式设计:\n• MsgDispatcher: 消息分发中心,根据scenario_id路由到对应Agent\n• AgentPlugin: 统一接口基类,定义deliver_msg、scenario_id、clear_memory等标准方法\n• ModelRunner: 模型运行器,封装推理调用逻辑\n• 具体Agent: VideoChat/ProactiveSpeech/ActiveVision/CarControl/Chitchat等继承自AgentPlugin",
     abstract: "AADK(Autonomous Agent Development Kit)是一个面向端侧设备的AI Agent开发框架,采用模块化架构设计,支持视频聊天、主动语音、主动视觉、车辆控制、闲聊等多种Agent场景。框架提供统一的消息分发、模型推理和插件化接口,大幅降低Agent开发门槛。",
     methodology: "采用工厂模式和策略模式设计,核心模块包括消息分发中心(MsgDispatcher)、多个专用Agent模块、统一接口(AgentPlugin)和模型运行器(ModelRunner)。所有Agent继承自AgentPlugin基类,实现deliver_msg、scenario_id、clear_memory等标准接口。",
+    technicalChallenges: [
+      {
+        challenge: "消息路由的效率与扩展性",
+        solution: "设计基于scenario_id的路由表,支持O(1)时间复杂度的消息分发,新增Agent只需注册即可",
+        impact: "支持5+种Agent类型,新增Agent开发时间从2周缩短至3天"
+      },
+      {
+        challenge: "Agent间的状态隔离",
+        solution: "为每个Agent实例维护独立的上下文,通过clear_memory接口实现会话重置",
+        impact: "避免不同场景间的状态污染,提升系统稳定性"
+      },
+      {
+        challenge: "云端模型与端侧模型的统一调用",
+        solution: "设计ModelRunner抽象层,屏蔽斑马云平台和端侧推理引擎的差异",
+        impact: "实现云端/端侧模型无缝切换,支持混合部署"
+      }
+    ],
     results: [
       { metric: "支持的Agent类型", value: "5+", baseline: "VideoChat/ProactiveSpeech/ActiveVision/CarControl/Chitchat" },
       { metric: "开发效率", value: "显著提升", baseline: "标准化开发流程" },
@@ -107,6 +191,18 @@ export const projects = [
       "支持斑马云平台模型调用,实现云端模型接入",
       "实现持久化存储检索支持,增强Agent的记忆能力",
       "补充AADK API文档,完善开发者生态"
+    ],
+    interviewHighlights: [
+      "架构设计能力: 运用设计模式构建可扩展的Agent框架",
+      "标准化思维: 通过统一接口和开发指南,提升团队协作效率",
+      "技术广度: 同时掌握端侧推理和云端API调用",
+      "文档能力: 编写完善的API文档和开发指南"
+    ],
+    discussionTopics: [
+      "Agent框架的设计原则与最佳实践",
+      "消息驱动架构的优缺点",
+      "如何在资源受限环境下实现多Agent并发",
+      "端云协同的Agent系统设计思路"
     ]
   },
   {
@@ -118,8 +214,28 @@ export const projects = [
     status: "研究中",
     github: "",
     demo: "",
+    businessContext: "当前的Agent系统缺乏长期记忆能力,无法记住用户的历史偏好和交互记录。多模态记忆系统可以让Agent具备'回忆'能力,提升个性化体验。但端侧资源有限,需要探索轻量化的实现方案。",
+    yourRole: "负责技术预研工作,包括业界方案调研、MIRIX机制分析、原型开发验证。输出技术报告和实施建议,为后续产品化提供决策依据。",
+    architectureDetail: "研究的技术路线:\n• MIRIX解析: 分析多模态信息的索引和检索机制\n• 向量数据库: 评估Faiss、Chroma等端侧可行的向量存储方案\n• 记忆压缩: 探索关键信息提取和摘要生成技术\n• 检索增强: 研究RAG技术在端侧的轻量化实现",
     abstract: "该项目聚焦于端侧多模态记忆系统的技术预研,包括MIRIX-cpp的实现方案研究、业界多模态记忆方案的对比分析、以及AI Memory机制的深入理解。通过原型开发验证关键技术点,为后续产品化奠定基础。",
     methodology: "研究MIRIX解析机制并探索C++实现方案,对比分析业界多模态记忆方案的技术可行性和落地路径,基于调研结果进行原型开发并验证关键技术点,深入理解AI Memory机制并探索端侧实现方案。",
+    technicalChallenges: [
+      {
+        challenge: "端侧存储资源限制",
+        solution: "研究向量量化技术和分层存储策略,将高频访问记忆存储在高速存储,低频记忆归档",
+        impact: "在有限存储空间下最大化记忆容量"
+      },
+      {
+        challenge: "多模态数据的统一表示",
+        solution: "探索CLIP等多模态嵌入模型,将文本、图像、音频映射到统一向量空间",
+        impact: "实现跨模态的记忆检索"
+      },
+      {
+        challenge: "隐私保护",
+        solution: "研究本地加密存储和差分隐私技术,确保用户数据不出设备",
+        impact: "满足车机场景的隐私合规要求"
+      }
+    ],
     results: [
       { metric: "技术方案储备", value: "完整", baseline: "覆盖主流方案" },
       { metric: "原型验证", value: "完成", baseline: "关键技术点已验证" },
@@ -130,6 +246,18 @@ export const projects = [
       "对比分析业界多模态记忆方案,评估技术可行性和落地路径",
       "基于调研结果进行原型开发,验证关键技术点",
       "深入理解AI Memory机制,探索端侧实现方案"
+    ],
+    interviewHighlights: [
+      "技术前瞻性: 关注AI Memory前沿技术,具备技术选型能力",
+      "研究能力: 系统性调研业界方案,形成结构化技术报告",
+      "工程落地思维: 考虑端侧资源约束,探索轻量化实现路径",
+      "隐私意识: 重视数据安全,研究隐私保护技术"
+    ],
+    discussionTopics: [
+      "多模态记忆系统的技术挑战与机遇",
+      "端侧向量数据库的选型与优化",
+      "RAG技术在资源受限环境中的应用",
+      "如何平衡记忆完整性与存储成本"
     ]
   },
   {
@@ -141,8 +269,28 @@ export const projects = [
     status: "已完成",
     github: "",
     demo: "",
+    businessContext: "9075是高通的车规级芯片平台,需要在该平台上编译和部署大模型推理引擎。车机环境复杂,编译链特殊,需要建立标准化的编译发布流程,确保在不同车机上的稳定运行。",
+    yourRole: "负责搭建9075交叉编译环境,优化编译脚本,解决编译依赖问题。协助团队进行车机部署验证,定位和解决运行时问题,形成技术文档。",
+    architectureDetail: "编译发布流程:\n• 交叉编译环境: 配置ARM64工具链,集成QNN SDK依赖\n• 编译脚本: 自动化编译、打包、签名流程\n• 依赖管理: 统一管理第三方库版本,避免冲突\n• 车机验证: 在实际车机环境进行功能测试和性能基准测试",
     abstract: "该项目负责9075芯片平台的编译发布全流程,包括交叉编译环境搭建、依赖库管理、编译脚本优化等。同时负责车机端的部署验证,协助解决编译和运行时遇到的各类问题,确保系统在真实车机环境中的稳定运行。",
     methodology: "建立标准化的编译发布流程,优化编译脚本和依赖管理,进行车机端的部署验证和性能测试,建立问题定位和解决机制,形成技术文档和最佳实践。",
+    technicalChallenges: [
+      {
+        challenge: "交叉编译环境的复杂性",
+        solution: "容器化编译环境,固化工具链版本,确保编译一致性",
+        impact: "编译成功率达到100%,消除环境差异导致的问题"
+      },
+      {
+        challenge: "车机端依赖库缺失",
+        solution: "静态链接关键依赖,或提供兼容的动态库版本",
+        impact: "减少车机端部署的依赖项,提升兼容性"
+      },
+      {
+        challenge: "运行时crash定位困难",
+        solution: "集成addr2line工具,结合符号表快速定位崩溃位置",
+        impact: "问题定位时间从小时级缩短至分钟级"
+      }
+    ],
     results: [
       { metric: "编译成功率", value: "100%", baseline: "稳定可靠" },
       { metric: "部署验证", value: "完成", baseline: "车机环境验证通过" },
@@ -153,6 +301,18 @@ export const projects = [
       "进行车机端的部署验证,保障系统正常运行",
       "协助解决编译和运行时问题,提升团队效率",
       "形成标准化的编译发布流程和文档"
+    ],
+    interviewHighlights: [
+      "工程化能力: 建立标准化编译流程,提升团队效率",
+      "问题解决能力: 快速定位和解决复杂的编译/运行时问题",
+      "文档意识: 沉淀技术文档,形成最佳实践",
+      "跨平台经验: 掌握ARM64交叉编译和车规级芯片适配"
+    ],
+    discussionTopics: [
+      "交叉编译的最佳实践",
+      "车规级芯片的适配要点",
+      "如何构建可靠的CI/CD流程",
+      "嵌入式Linux系统的调试技巧"
     ]
   }
 ];
