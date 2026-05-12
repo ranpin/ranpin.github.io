@@ -42,3 +42,4 @@ __pycache__/
 # Real workspace internal
 .real/
 .memory_split_v1.done
+dist/
