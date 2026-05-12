@@ -1,26 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import SearchBox from './SearchBox';
 
-const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
+const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showMobileProfile, setShowMobileProfile] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [personalInfo, setPersonalInfo] = useState({
-    name: "张博士",
-    title: "清华大学计算机系",
-    location: "北京，中国",
-    email: "zhang@example.edu",
-    avatar: "A",
-    researchInterests: ["机器学习", "深度学习", "视觉", "NLP"],
-    socialLinks: {
-      github: "#",
-      linkedin: "#",
-      scholar: "#",
-      rss: "#"
-    }
-  });
 
   const navItems = [
     { id: 'home', label: '首页', icon: 'fas fa-home' },
@@ -34,42 +20,6 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
     if (adminStatus === 'true') {
       setIsAdminMode(true);
     }
-  }, []);
-
-  // 从本地存储加载个人信息
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('portfolio_personal_info');
-      if (stored) {
-        const data = JSON.parse(stored);
-        setPersonalInfo(prev => ({ ...prev, ...data }));
-      }
-    } catch (error) {
-      console.warn('Failed to load personal info:', error);
-    }
-  }, []);
-
-  // 监听本地存储变化
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const stored = localStorage.getItem('portfolio_personal_info');
-        if (stored) {
-          const data = JSON.parse(stored);
-          setPersonalInfo(prev => ({ ...prev, ...data }));
-        }
-      } catch (error) {
-        console.warn('Failed to load personal info:', error);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('personalInfoUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('personalInfoUpdated', handleStorageChange);
-    };
   }, []);
 
   // 处理管理员登录

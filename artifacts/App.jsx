@@ -202,11 +202,7 @@ const App = () => {
   // 组件主渲染逻辑
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        activeSection={activeSection} 
-        setActiveSection={setActiveSection}
-        personalInfo={personalInfo}
-      />
+      <Header activeSection={activeSection} setActiveSection={setActiveSection} />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 首页内容 */}

@@ -1,66 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import EditableCard from './EditableCard';
 
-const Profile = ({ externalPersonalInfo, onEditPersonalInfo, onInsertAt }) => {
-  const [personalInfo, setPersonalInfo] = useState(externalPersonalInfo || {
-    name: "张博士",
-    title: "清华大学计算机系",
-    location: "北京，中国",
-    email: "zhang@example.edu",
-    avatar: "A",
-    researchInterests: ["机器学习", "深度学习", "视觉", "NLP"],
-    socialLinks: {
-      github: "#",
-      linkedin: "#",
-      scholar: "#",
-      rss: "#"
-    }
-  });
-
+const Profile = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
   // 布局顺序状态
   const [layoutOrder, setLayoutOrder] = useState(['profile', 'interests', 'social']);
   const [draggedItem, setDraggedItem] = useState(null);
 
-  // 从本地存储加载个人信息
+  // 从本地存储加载布局顺序
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('portfolio_personal_info');
-      if (stored) {
-        const data = JSON.parse(stored);
-        setPersonalInfo(prev => ({ ...prev, ...data }));
-      }
-      
-      // 加载布局顺序
       const storedLayout = localStorage.getItem('portfolio_profile_layout');
       if (storedLayout) {
         setLayoutOrder(JSON.parse(storedLayout));
       }
     } catch (error) {
-      console.warn('Failed to load personal info:', error);
+      console.warn('Failed to load layout order:', error);
     }
-  }, []);
-
-  // 监听本地存储变化
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const stored = localStorage.getItem('portfolio_personal_info');
-        if (stored) {
-          const data = JSON.parse(stored);
-          setPersonalInfo(prev => ({ ...prev, ...data }));
-        }
-      } catch (error) {
-        console.warn('Failed to load personal info:', error);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('personalInfoUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('personalInfoUpdated', handleStorageChange);
-    };
   }, []);
 
   // 拖拽处理函数
