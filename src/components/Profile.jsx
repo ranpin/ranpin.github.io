@@ -77,6 +77,7 @@ const Profile = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
             src={personalInfo.avatar} 
             alt="头像" 
             className="w-full h-full object-cover"
+            loading="eager"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
@@ -87,6 +88,7 @@ const Profile = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
             src={personalInfo.avatar} 
             alt="头像" 
             className="w-full h-full object-cover"
+            loading="eager"
           />
         ) : (
           personalInfo.avatar || "A"
@@ -224,4 +226,4 @@ const Profile = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
   );
 };
 
-export default Profile;
+export default React.memo(Profile);

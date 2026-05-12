@@ -128,4 +128,4 @@ const EditableCard = ({
   );
 };
 
-export default EditableCard;
+export default React.memo(EditableCard);
