@@ -82,7 +82,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin }) => {
       localStorage.setItem('portfolio_admin_mode', 'true');
       setShowPasswordInput(false);
       setAdminPassword('');
-      onOpenAdmin();
+      // 不再自动弹出旧 AdminPanel，积木式编辑按钮已在页面显示
     } else {
       alert('密码错误！');
       setAdminPassword('');

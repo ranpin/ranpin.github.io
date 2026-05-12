@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import EditableCard from './EditableCard';
 
-const Profile = () => {
-  const [personalInfo, setPersonalInfo] = useState({
+const Profile = ({ externalPersonalInfo, onEditPersonalInfo, onInsertAt }) => {
+  const [personalInfo, setPersonalInfo] = useState(externalPersonalInfo || {
     name: "张博士",
     title: "清华大学计算机系",
     location: "北京，中国",
@@ -254,7 +255,16 @@ const Profile = () => {
 
   return (
     <div className="w-80 bg-white shadow-lg flex-shrink-0 rounded-2xl m-6 p-8 h-fit hidden sm:block">
-      {renderSections()}
+      <EditableCard
+        isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+        onEdit={() => onEditPersonalInfo && onEditPersonalInfo()}
+        onDelete={null}
+        onInsertBefore={() => onInsertAt && onInsertAt('personal-info', 0)}
+        onInsertAfter={() => onInsertAt && onInsertAt('personal-info', 1)}
+        className=""
+      >
+        {renderSections()}
+      </EditableCard>
     </div>
   );
 };
