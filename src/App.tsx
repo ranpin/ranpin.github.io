@@ -3,6 +3,8 @@ import Header from './components/Header';
 import Profile from './components/Profile';
 import ResumeSection from './components/ResumeSection';
 import LearningSectionFull from './components/LearningSectionFull';
+import HomeSection from './components/HomeSection';
+import StargateSection from './components/StargateSection';
 import ArticleList from './components/ArticleList';
 import AdminPanel from './components/AdminPanel';
 import InlineEditor from './components/InlineEditor';
@@ -447,52 +449,14 @@ const App = () => {
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 首页内容 */}
         {activeSection === 'home' && (
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* 左侧个人信息侧边栏 */}
-            <div className="lg:w-80 lg:flex-shrink-0">
-              <Profile 
-                personalInfo={personalInfo} 
-                isAdminMode={isAdminMode}
-                onEdit={() => openInlineEditor('personal-info', personalInfo, 0)}
-              />
-            </div>
-            
-            {/* 右侧主内容区域 */}
-            <div className="flex-1 min-w-0">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                  <i className="fas fa-bolt text-yellow-500 mr-3"></i>
-                  最新动态
-                </h2>
-                <div className="space-y-4">
-                  {recentNews.map((news, index) => (
-                    <EditableCard
-                      key={news.id || index}
-                      isAdminMode={isAdminMode}
-                      onEdit={() => openInlineEditor('news', news, index)}
-                      onDelete={() => handleDeleteWithUndo('news', index)}
-                      onInsertBefore={() => handleInsertAt('news', index)}
-                      onInsertAfter={() => handleInsertAt('news', index + 1)}
-                    >
-                      <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border-l-4 border-blue-500">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <span className="text-sm text-gray-500 font-mono">{news.date}</span>
-                              {news.type && (
-                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">{news.type}</span>
-                              )}
-                            </div>
-                            <p className="text-gray-800 leading-relaxed">{news.content}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </EditableCard>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <HomeSection 
+            personalInfo={personalInfo}
+            recentNews={recentNews}
+            isAdminMode={isAdminMode}
+            openInlineEditor={openInlineEditor}
+            handleDeleteWithUndo={handleDeleteWithUndo}
+            handleInsertAt={handleInsertAt}
+          />
         )}
 
         {/* 个人简历内容 */}
@@ -694,133 +658,8 @@ const App = () => {
           )}
 
               {/* 星际之门 - 创意项目与设计展示 */}
-              {activeSection === 'stargate' && (
-                <div className="max-w-6xl mx-auto">
-                  {/* 标题区域 */}
-                  <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center">
-                      <i className="fas fa-star text-yellow-500 mr-4 animate-pulse"></i>
-                      星际之门
-                      <i className="fas fa-star text-yellow-500 ml-4 animate-pulse"></i>
-                    </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                      探索无限可能的创意宇宙 —— 这里汇集了我的一些有趣的设计、实验性项目和奇思妙想
-                    </p>
-                  </div>
-
-                  {/* 特色项目网格 */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                    {/* 示例卡片 1 - AI 艺术创作 */}
-                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fas fa-palette text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">AI 艺术实验室</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        探索人工智能与艺术创作的边界，生成独特的视觉作品
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          进行中
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 示例卡片 2 - 互动可视化 */}
-                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fas fa-chart-network text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">数据宇宙可视化</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        将复杂数据转化为沉浸式的交互式视觉体验
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          已完成
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 示例卡片 3 - 游戏开发 */}
-                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fas fa-gamepad text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">迷你游戏工坊</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        创意小游戏和互动体验的原型设计与开发
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          构思中
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 示例卡片 4 - 硬件创客 */}
-                    <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fas fa-microchip text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">IoT 智能设备</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        物联网硬件原型和智能家居解决方案
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          实验中
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 示例卡片 5 - 开源贡献 */}
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fab fa-github text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">开源工具箱</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        为开发者社区贡献的实用工具和库
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          持续更新
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 示例卡片 6 - 写作与思考 */}
-                    <div className="bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
-                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i className="fas fa-pen-fancy text-3xl"></i>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2">思维碎片</h3>
-                      <p className="text-sm text-white text-opacity-90 mb-4">
-                        关于技术、设计和生活的随笔与深度思考
-                      </p>
-                      <div className="flex items-center text-sm">
-                        <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                          连载中
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 底部提示 */}
-                  <div className="text-center">
-                    <div className="inline-block bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl px-8 py-6">
-                      <p className="text-gray-700 mb-2">
-                        <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
-                        更多精彩内容正在路上...
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        如果你有有趣的想法或合作意向，欢迎联系我！
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* 星际之门 - 已抽取至 StargateSection */}
+              {activeSection === 'stargate' && <StargateSection />}
             </main>
           </div>
         </div>
