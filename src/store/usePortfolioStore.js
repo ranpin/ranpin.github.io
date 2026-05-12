@@ -104,6 +104,7 @@ export const usePortfolioStore = create(
       // 删除撤回状态
       deletedItems: [],
       showUndoToast: false,
+      undoTimer: null,
 
       // Actions - 数据更新
       setPersonalInfo: (data) => set({ personalInfo: sanitizeData(data, 'personalInfo') }),
@@ -153,6 +154,7 @@ export const usePortfolioStore = create(
       })),
       clearDeletedItems: () => set({ deletedItems: [], showUndoToast: false }),
       hideUndoToast: () => set({ showUndoToast: false }),
+      setUndoTimer: (timer) => set({ undoTimer: timer }),
 
       // Actions - Tab 管理
       addNewTab: () => set((state) => {
