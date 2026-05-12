@@ -11,6 +11,7 @@ import AutoBackup from './components/AutoBackup';
 import SmartRecommendations from './components/SmartRecommendations';
 import SectionTitleEditor from './components/SectionTitleEditor';
 import ModuleRenderer from './components/ModuleRenderer';
+import { usePortfolioStore } from './store/usePortfolioStore';
 import { 
   personalInfo as initialPersonalInfo, 
   recentNews as initialRecentNews, 
@@ -23,17 +24,71 @@ import {
 } from './data/content';
 
 const App = () => {
-  // 本地存储键名
-  const STORAGE_KEYS = {
-    personalInfo: 'portfolio_personal_info',
-    recentNews: 'portfolio_recent_news',
-    projects: 'portfolio_projects',
-    publications: 'portfolio_publications',
-    internships: 'portfolio_internships',
-    honors: 'portfolio_honors',
-    academicBlogs: 'portfolio_academic_blogs',
-    engineeringBlogs: 'portfolio_engineering_blogs'
-  };
+  // 从 store 获取所有状态和 actions
+  const {
+    // 数据状态
+    personalInfo,
+    recentNews,
+    projects,
+    publications,
+    internships,
+    honors,
+    academicBlogs,
+    engineeringBlogs,
+    
+    // UI 状态
+    activeSection,
+    learningCategory,
+    resumeCategory,
+    resumeTabOrder,
+    customTabNames,
+    inlineEditState,
+    insertMenuState,
+    deletedItems,
+    showUndoToast,
+    isAdminMode,
+    customContent,
+    
+    // Actions - 数据更新
+    setPersonalInfo,
+    setRecentNews,
+    setProjects,
+    setPublications,
+    setInternships,
+    setHonors,
+    setAcademicBlogs,
+    setEngineeringBlogs,
+    
+    // Actions - UI 状态
+    setActiveSection,
+    setLearningCategory,
+    setResumeCategory,
+    setResumeTabOrder,
+    setCustomTabNames,
+    setIsAdminMode,
+    setCustomContent,
+    
+    // Actions - CRUD
+    updateItem,
+    deleteItem,
+    addItem,
+    updateItemAt,
+    deleteItemAt,
+    addItemAt,
+    
+    // Actions - Inline 编辑
+    openInlineEditor,
+    closeInlineEditor,
+    
+    // Actions - 积木选择器
+    openInsertMenu,
+    closeInsertMenu,
+    
+    // Actions - 删除撤回
+    addDeletedItem,
+    clearDeletedItems,
+    hideUndoToast,
+  } = usePortfolioStore();
 
   // 数据迁移与防御性清洗函数
   const sanitizeData = (data, type) => {
@@ -81,43 +136,17 @@ const App = () => {
     return data;
   };
 
-  // 从本地存储加载数据的函数（带数据清洗）
-  const loadFromStorage = (key, defaultValue, type) => {
-    try {
-      const stored = localStorage.getItem(key);
-      const rawData = stored ? JSON.parse(stored) : defaultValue;
-      return sanitizeData(rawData, type);
-    } catch (error) {
-      console.warn(`Failed to load ${key} from localStorage:`, error);
-      return defaultValue;
-    }
-  };
-
-  // 保存到本地存储的函数
-  const saveToStorage = (key, data) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.warn(`Failed to save ${key} to localStorage:`, error);
-    }
-  };
-
   // 状态管理
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [selectedPaper, setSelectedPaper] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [selectedInternship, setSelectedInternship] = useState(null);
-  const [activeSection, setActiveSection] = useState('home');
-  const [learningCategory, setLearningCategory] = useState('academic');
-  const [resumeCategory, setResumeCategory] = useState('projects');
-  const [resumeTabOrder, setResumeTabOrder] = useState(['projects', 'publications', 'internships', 'honors']);
   const [draggedTab, setDraggedTab] = useState(null);
   
   // 分类导航编辑状态
   const [isEditingTabs, setIsEditingTabs] = useState(false);
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingTabName, setEditingTabName] = useState('');
-  const [customTabNames, setCustomTabNames] = useState({});
   
   // 学习记录分页状态
   const [learningPage, setLearningPage] = useState(1);
@@ -126,53 +155,6 @@ const App = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
-  // Inline 编辑状态
-  const [inlineEditState, setInlineEditState] = useState({
-    isVisible: false,
-    type: null, // 'news', 'personal-info', 'project', etc.
-    data: null,
-    index: null
-  });
-
-  // 积木选择器状态
-  const [insertMenuState, setInsertMenuState] = useState({
-    isVisible: false,
-    index: null,
-    sectionType: null
-  });
-
-  // 删除撤回状态
-  const [deletedItems, setDeletedItems] = useState([]);
-  const [showUndoToast, setShowUndoToast] = useState(false);
-  const [undoTimer, setUndoTimer] = useState(null);
-
-  // 数据状态管理（从 localStorage 加载， fallback 到初始数据）
-  const [personalInfo, setPersonalInfo] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.personalInfo, initialPersonalInfo, 'personalInfo')
-  );
-  const [recentNews, setRecentNews] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.recentNews, initialRecentNews, 'news')
-  );
-  const [projects, setProjects] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.projects, initialProjects, 'project')
-  );
-  const [publications, setPublications] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.publications, initialPublications, 'publication')
-  );
-  const [internships, setInternships] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.internships, initialInternships, 'internship')
-  );
-  const [honors, setHonors] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.honors, initialHonors, 'honor')
-  );
-  const [academicBlogs, setAcademicBlogs] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.academicBlogs, initialAcademicBlogs, 'blog-academic')
-  );
-  const [engineeringBlogs, setEngineeringBlogs] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.engineeringBlogs, initialEngineeringBlogs, 'blog-engineering')
-  );
-
-  // 获取分类显示名称
   const getTabDisplayName = (key) => {
     if (customTabNames[key]) return customTabNames[key];
     const defaults = { projects: '项目经历', publications: '学术论文', internships: '工作实习', honors: '荣誉奖项' };
@@ -199,6 +181,258 @@ const App = () => {
     }
   };
 
+  // ========== 基于 Store Actions 的事件处理函数 ==========
+  
+  // 保存内联编辑内容
+  const handleInlineSave = (data) => {
+    const { type, index } = inlineEditState;
+    
+    if (type === 'personal-info') {
+      storeSetPersonalInfo(data);
+    } else if (type === 'news') {
+      updateItemAt('recentNews', index, data);
+    } else if (type === 'project') {
+      if (index === null) {
+        addItem('projects', data);
+      } else {
+        updateItem('projects', projects[index].id, data);
+      }
+    } else if (type === 'publication') {
+      if (index === null) {
+        addItem('publications', data);
+      } else {
+        updateItem('publications', publications[index].id, data);
+      }
+    } else if (type === 'internship') {
+      if (index === null) {
+        addItem('internships', data);
+      } else {
+        updateItem('internships', internships[index].id, data);
+      }
+    } else if (type === 'honor') {
+      if (index === null) {
+        addItem('honors', data);
+      } else {
+        updateItem('honors', honors[index].id, data);
+      }
+    } else if (type === 'blog-academic') {
+      if (index === null) {
+        addItem('academicBlogs', data);
+      } else {
+        updateItem('academicBlogs', academicBlogs[index].id, data);
+      }
+    } else if (type === 'blog-engineering') {
+      if (index === null) {
+        addItem('engineeringBlogs', data);
+      } else {
+        updateItem('engineeringBlogs', engineeringBlogs[index].id, data);
+      }
+    }
+    
+    closeInlineEditor();
+  };
+
+  // 删除项目并支持撤回
+  const handleDeleteWithUndo = (collection, index) => {
+    const items = collection === 'news' ? recentNews : 
+                  collection === 'project' ? projects :
+                  collection === 'publication' ? publications :
+                  collection === 'internship' ? internships :
+                  collection === 'honor' ? honors :
+                  collection === 'blog-academic' ? academicBlogs :
+                  collection === 'blog-engineering' ? engineeringBlogs : [];
+    
+    const itemToDelete = items[index];
+    const storeCollection = collection === 'news' ? 'recentNews' :
+                           collection === 'project' ? 'projects' :
+                           collection === 'publication' ? 'publications' :
+                           collection === 'internship' ? 'internships' :
+                           collection === 'honor' ? 'honors' :
+                           collection === 'blog-academic' ? 'academicBlogs' :
+                           collection === 'blog-engineering' ? 'engineeringBlogs' : collection;
+    
+    // 添加到撤回列表
+    addDeletedItem({ collection: storeCollection, index, item: itemToDelete });
+    
+    // 执行删除
+    deleteItemAt(storeCollection, index);
+    
+    // 设置定时器自动隐藏 toast
+    const timer = setTimeout(() => {
+      setShowUndoToast(false);
+      setDeletedItems([]);
+    }, 5000);
+    setUndoTimer(timer);
+  };
+
+  // 撤销删除
+  const handleUndoDelete = () => {
+    if (deletedItems.length === 0) return;
+    
+    const lastDeleted = deletedItems[deletedItems.length - 1];
+    const { collection, index, item } = lastDeleted;
+    
+    // 恢复数据
+    addItemAt(collection, index, item);
+    
+    // 清除状态
+    setShowUndoToast(false);
+    setDeletedItems([]);
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      setUndoTimer(null);
+    }
+  };
+
+  // 在指定位置插入新项目
+  const handleInsertAt = (collection, index) => {
+    const storeCollection = collection === 'news' ? 'recentNews' :
+                           collection === 'project' ? 'projects' :
+                           collection === 'publication' ? 'publications' :
+                           collection === 'internship' ? 'internships' :
+                           collection === 'honor' ? 'honors' :
+                           collection === 'blog-academic' ? 'academicBlogs' :
+                           collection === 'blog-engineering' ? 'engineeringBlogs' : collection;
+    
+    openInsertMenu(index, storeCollection);
+  };
+
+  // 打开添加编辑器
+  const openAddEditor = (type, index) => {
+    const emptyData = type === 'project' ? {
+      title: '',
+      period: '',
+      role: '',
+      description: '',
+      tags: [],
+      businessContext: '',
+      yourRole: '',
+      architectureDetail: '',
+      technicalChallenges: [],
+      results: [],
+      achievements: [],
+      interviewHighlights: [],
+      discussionTopics: [],
+      demoImage: '',
+      architectureImage: '',
+      demoVideo: '',
+      resultChart: '',
+      githubUrl: '',
+      liveUrl: ''
+    } : type === 'publication' ? {
+      title: '',
+      authors: '',
+      venue: '',
+      year: '',
+      abstract: '',
+      pdfUrl: '',
+      codeUrl: ''
+    } : type === 'internship' ? {
+      company: '',
+      role: '',
+      period: '',
+      description: '',
+      contributions: [],
+      skills: []
+    } : type === 'honor' ? {
+      title: '',
+      issuer: '',
+      date: '',
+      description: ''
+    } : type === 'blog-academic' || type === 'blog-engineering' ? {
+      title: '',
+      date: '',
+      summary: '',
+      url: '',
+      tags: []
+    } : type === 'news' ? {
+      date: new Date().toISOString().split('T')[0],
+      content: '',
+      type: ''
+    } : {};
+    
+    openInlineEditor(type, emptyData, null);
+  };
+
+  // Tab 编辑相关函数
+  const startEditingTab = (tabKey) => {
+    setEditingTabId(tabKey);
+    setEditingTabName(customTabNames[tabKey] || getTabDisplayName(tabKey));
+  };
+
+  const cancelEditingTab = () => {
+    setEditingTabId(null);
+    setEditingTabName('');
+  };
+
+  const saveTabName = () => {
+    if (editingTabId && editingTabName.trim()) {
+      setCustomTabNames({
+        ...customTabNames,
+        [editingTabId]: editingTabName.trim()
+      });
+    }
+    cancelEditingTab();
+  };
+
+  // 管理面板相关函数
+  const handleResetData = () => {
+    if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
+      window.location.reload();
+    }
+  };
+
+  const handleExportData = () => {
+    const data = {
+      personalInfo,
+      recentNews,
+      projects,
+      publications,
+      internships,
+      honors,
+      academicBlogs,
+      engineeringBlogs,
+      exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        
+        if (data.personalInfo) storeSetPersonalInfo(sanitizeData(data.personalInfo, 'personalInfo'));
+        if (data.recentNews) storeSetRecentNews(data.recentNews);
+        if (data.projects) storeSetProjects(sanitizeData(data.projects, 'project'));
+        if (data.publications) storeSetPublications(data.publications);
+        if (data.internships) storeSetInternships(sanitizeData(data.internships, 'internship'));
+        if (data.honors) storeSetHonors(data.honors);
+        if (data.academicBlogs) storeSetAcademicBlogs(data.academicBlogs);
+        if (data.engineeringBlogs) storeSetEngineeringBlogs(data.engineeringBlogs);
+        
+        alert('数据导入成功！');
+      } catch (error) {
+        alert('数据导入失败：文件格式错误');
+        console.error('Import error:', error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   // 组件主渲染逻辑
   return (
     <div className="min-h-screen bg-gray-50">
@@ -216,7 +450,7 @@ const App = () => {
             <div className="lg:w-80 lg:flex-shrink-0">
               <Profile 
                 personalInfo={personalInfo} 
-                isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                isAdminMode={isAdminMode}
                 onEdit={() => openInlineEditor('personal-info', personalInfo, 0)}
               />
             </div>
@@ -232,7 +466,7 @@ const App = () => {
                   {recentNews.map((news, index) => (
                     <EditableCard
                       key={news.id || index}
-                      isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                      isAdminMode={isAdminMode}
                       onEdit={() => openInlineEditor('news', news, index)}
                       onDelete={() => handleDeleteWithUndo('news', index)}
                       onInsertBefore={() => handleInsertAt('news', index)}
@@ -265,7 +499,7 @@ const App = () => {
                   {/* 分类按钮 - 支持编辑功能 */}
                   <div className="mb-8 sm:mb-10">
                     <div className="flex items-center justify-between mb-6">
-                      {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                      {isAdminMode && (
                         <button
                           onClick={() => setIsEditingTabs(!isEditingTabs)}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -280,7 +514,7 @@ const App = () => {
                         </button>
                       )}
                       
-                      {localStorage.getItem('portfolio_admin_mode') === 'true' && isEditingTabs && (
+                      {isAdminMode && isEditingTabs && (
                         <button
                           onClick={addNewTab}
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
@@ -294,7 +528,7 @@ const App = () => {
             
             <div className="flex flex-wrap gap-3 sm:gap-6">
               {resumeTabOrder.map((tabKey, index) => {
-                const isAdminMode = localStorage.getItem('portfolio_admin_mode') === 'true';
+                const isAdminMode = isAdminMode;
                 const isEditing = editingTabId === tabKey;
                 const displayName = getTabDisplayName(tabKey);
                 const icon = getTabIcon(tabKey);
@@ -354,7 +588,7 @@ const App = () => {
                             newOrder.splice(targetIndex, 0, draggedTab);
                             
                             setResumeTabOrder(newOrder);
-                            localStorage.setItem('portfolio_resume_tab_order', JSON.stringify(newOrder));
+                            setResumeTabOrder(newOrder);
                           }
                           setDraggedTab(null);
                         } : undefined}
@@ -412,7 +646,7 @@ const App = () => {
             </div>
             
             {/* 编辑模式提示 */}
-            {localStorage.getItem('portfolio_admin_mode') === 'true' && isEditingTabs && (
+            {isAdminMode && isEditingTabs && (
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <div className="flex items-start space-x-3">
                   <i className="fas fa-info-circle text-blue-600 mt-0.5"></i>
@@ -436,7 +670,7 @@ const App = () => {
                       {projects.map((project, index) => (
                         <EditableCard
                           key={project.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('project', project, index)}
                           onDelete={() => handleDeleteWithUndo('project', index)}
                           onInsertBefore={() => handleInsertAt('project', index)}
@@ -492,7 +726,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-code text-4xl mb-4"></i>
                           <p>暂无项目数据</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加新项目</p>
                           )}
                         </div>
@@ -506,7 +740,7 @@ const App = () => {
                       {publications.map((paper, index) => (
                         <EditableCard
                           key={paper.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('publication', paper, index)}
                           onDelete={() => handleDeleteWithUndo('publication', index)}
                           onInsertBefore={() => handleInsertAt('publication', index)}
@@ -569,7 +803,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-file-alt text-4xl mb-4"></i>
                           <p>暂无学术论文</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加新论文</p>
                           )}
                         </div>
@@ -583,7 +817,7 @@ const App = () => {
                       {internships.map((internship, index) => (
                         <EditableCard
                           key={internship.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('internship', internship, index)}
                           onDelete={() => handleDeleteWithUndo('internship', index)}
                           onInsertBefore={() => handleInsertAt('internship', index)}
@@ -641,7 +875,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-briefcase text-4xl mb-4"></i>
                           <p>暂无工作经历</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加新经历</p>
                           )}
                         </div>
@@ -655,7 +889,7 @@ const App = () => {
                       {honors.map((honor, index) => (
                         <EditableCard
                           key={honor.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('honor', honor, index)}
                           onDelete={() => handleDeleteWithUndo('honor', index)}
                           onInsertBefore={() => handleInsertAt('honor', index)}
@@ -696,7 +930,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-trophy text-4xl mb-4"></i>
                           <p>暂无荣誉奖项</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加新奖项</p>
                           )}
                         </div>
@@ -709,7 +943,7 @@ const App = () => {
                     <div className="space-y-4">
                       {(() => {
                         // 获取自定义内容
-                        const customContent = JSON.parse(localStorage.getItem('portfolio_custom_content') || '[]');
+                        const customContent = customContent;
                         const categoryContent = customContent.filter(item => 
                           item.customCategory === resumeCategory
                         );
@@ -720,7 +954,7 @@ const App = () => {
                               <i className="fas fa-folder-open text-4xl mb-4"></i>
                               <p>该分类下暂无内容</p>
                               <p className="text-sm mt-2">请通过管理面板添加内容</p>
-                              {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                              {isAdminMode && (
                                 <button
                                   onClick={() => {
                                     // 设置编辑项目为自定义内容类型
@@ -768,7 +1002,7 @@ const App = () => {
                                   </div>
                                 )}
                               </div>
-                              {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                              {isAdminMode && (
                                 <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <button
                                     onClick={(e) => {
@@ -791,7 +1025,7 @@ const App = () => {
                                       if (window.confirm('确定要删除这个内容吗？此操作不可撤销！')) {
                                         // 删除自定义内容
                                         const updatedContent = customContent.filter(c => c.id !== item.id);
-                                        localStorage.setItem('portfolio_custom_content', JSON.stringify(updatedContent));
+                                        setCustomContent(updatedContent);
                                         setRefreshKey(prev => prev + 1);
                                       }
                                     }}
@@ -864,7 +1098,7 @@ const App = () => {
                       {academicBlogs.map((blog, index) => (
                         <EditableCard
                           key={blog.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('blog-academic', blog, index)}
                           onDelete={() => handleDeleteWithUndo('blog-academic', index)}
                           onInsertBefore={() => handleInsertAt('blog-academic', index)}
@@ -919,7 +1153,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-graduation-cap text-4xl mb-4"></i>
                           <p>暂无学术研究记录</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加学术博客</p>
                           )}
                         </div>
@@ -933,7 +1167,7 @@ const App = () => {
                       {engineeringBlogs.map((blog, index) => (
                         <EditableCard
                           key={blog.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('blog-engineering', blog, index)}
                           onDelete={() => handleDeleteWithUndo('blog-engineering', index)}
                           onInsertBefore={() => handleInsertAt('blog-engineering', index)}
@@ -988,7 +1222,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-cogs text-4xl mb-4"></i>
                           <p>暂无工程技术记录</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加工程博客</p>
                           )}
                         </div>
@@ -1034,7 +1268,7 @@ const App = () => {
                       {academicBlogs.map((blog, index) => (
                         <EditableCard
                           key={blog.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('blog-academic', blog, index)}
                           onDelete={() => handleDeleteWithUndo('blog-academic', index)}
                           onInsertBefore={() => handleInsertAt('blog-academic', index)}
@@ -1089,7 +1323,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-graduation-cap text-4xl mb-4"></i>
                           <p>暂无学术研究记录</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加学术博客</p>
                           )}
                         </div>
@@ -1103,7 +1337,7 @@ const App = () => {
                       {engineeringBlogs.map((blog, index) => (
                         <EditableCard
                           key={blog.id || index}
-                          isAdminMode={localStorage.getItem('portfolio_admin_mode') === 'true'}
+                          isAdminMode={isAdminMode}
                           onEdit={() => openInlineEditor('blog-engineering', blog, index)}
                           onDelete={() => handleDeleteWithUndo('blog-engineering', index)}
                           onInsertBefore={() => handleInsertAt('blog-engineering', index)}
@@ -1158,7 +1392,7 @@ const App = () => {
                         <div className="text-center py-12 text-gray-500">
                           <i className="fas fa-cogs text-4xl mb-4"></i>
                           <p>暂无工程技术记录</p>
-                          {localStorage.getItem('portfolio_admin_mode') === 'true' && (
+                          {isAdminMode && (
                             <p className="text-sm mt-2">点击任意位置插入点添加工程博客</p>
                           )}
                         </div>
@@ -1901,7 +2135,7 @@ const App = () => {
       )}
 
       {/* 积木选择器 (Block Selector) */}
-      {insertMenuState.isVisible && localStorage.getItem('portfolio_admin_mode') === 'true' && (
+      {insertMenuState.isVisible && isAdminMode && (
         <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
             <div className="flex justify-between items-center mb-6">

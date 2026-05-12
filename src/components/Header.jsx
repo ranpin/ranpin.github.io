@@ -70,6 +70,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
                       src={personalInfo.avatar} 
                       alt="头像" 
                       className="w-full h-full object-cover"
+                      loading="eager"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -80,6 +81,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
                       src={personalInfo.avatar} 
                       alt="头像" 
                       className="w-full h-full object-cover"
+                      loading="eager"
                     />
                   ) : (
                     personalInfo.avatar || "A"
@@ -336,6 +338,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
                     src={personalInfo.avatar} 
                     alt="头像" 
                     className="w-full h-full object-cover"
+                    loading="eager"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
@@ -346,6 +349,7 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
                     src={personalInfo.avatar} 
                     alt="头像" 
                     className="w-full h-full object-cover"
+                    loading="eager"
                   />
                 ) : (
                   personalInfo.avatar || "A"
@@ -428,4 +432,4 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
   );
 };
 
-export default Header;
+export default React.memo(Header);
