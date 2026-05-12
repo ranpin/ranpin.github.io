@@ -2,11 +2,11 @@
 // 你可以直接在这里修改所有网站内容,无需修改组件代码
 
 export const personalInfo = {
-  name: "陈润斌",
+  name: "Ranpin",
   title: "斑马网络 - 大模型工程框架工程师",
   location: "杭州,中国",
-  email: "chenrunbin.crb@alibaba-inc.com",
-  avatar: "陈",
+  email: "ranpin@example.com",
+  avatar: "R",
   bio: {
     main: "专注于端侧大模型工程化与AI Agent系统开发的软件工程师,具备扎实的大模型推理优化、SDK开发、多模态记忆系统等领域的实践经验。",
     detail: "擅长C++/Python开发,熟悉vLLM、QNN等推理框架,在车机端大模型部署、性能优化、跨团队联调等方面有丰富经验。主导岚图、比亚迪等多个车企项目的技术对接与交付,成功交付多个端侧大模型项目。"
