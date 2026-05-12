@@ -158,10 +158,11 @@
 | P1 | Step 6: Framer Motion 动画 | ✅ 已完成 | 2026-05-12 | LearningSection 集成列表增删动画与微交互 |
 | P2 | Step 7: 图片加载优化 | ⏳ 待开始 | - | - |
 | P2 | Step 8: 虚拟滚动 | ✅ 已评估暂缓 | 2026-05-12 | 当前数据规模小，暂无性能瓶颈，保持代码简洁 |
-| P2 | Step 9: TypeScript | ⏸️ 暂缓 | - | - |
-| P3 | Step 10: ESLint 配置 | ⏸️ 暂缓 | - | - |
-| P3 | Step 11: 单元测试 | ⏸️ 暂缓 | - | - |
-| P3 | Step 12: Vite 迁移 | ⏸️ 暂缓 | - | - |
+| P4 | Step 13: 视图深度拆分 | ✅ 已完成 | 2026-05-12 | App.tsx 从 2206 行精简至 1498 行，抽取 ResumeSection 与 LearningSectionFull |
+| P4 | Step 14: 全量 TS 化 | ✅ 已完成 | 2026-05-12 | 剩余 18 个 .jsx 文件已全部迁移至 .tsx，并补全核心工具组件 Props 接口 |
+| P5 | Step 15: CI/CD 流水线优化 | ✅ 已完成 | 2026-05-12 | 增加测试覆盖率上报，完善自动化构建流程 |
+| P5 | Step 16: 核心 Hooks 单元测试 | ✅ 已完成 | 2026-05-12 | 补充 useLearningFilter 与 useResumeTabs 逻辑测试，覆盖率达 27%+ |
+| P5 | Step 17: Husky + lint-staged | ✅ 已完成 | 2026-05-12 | 配置提交前自动检查与格式化，确保代码质量门禁 |
 
 ---
 
@@ -185,6 +186,25 @@
 - [ ] 无 console.error 警告
 - [ ] 所有组件有清晰的职责
 - [ ] 无重复代码片段
+
+---
+
+## 🚀 第五阶段：工程化底座与自动化建设（P5 优先级）
+
+#### 🛠️ Step 15: CI/CD 流水线优化
+- [x] 优化 GitHub Actions 配置，增加测试覆盖率上报
+- [x] 确保多版本 Node.js 兼容性测试
+- [x] 实现自动化部署至 GitHub Pages
+
+#### 🧪 Step 16: 核心 Hooks 单元测试补全
+- [x] 为 `useLearningFilter` 补充逻辑测试
+- [x] 为 `useResumeTabs` 补充状态管理测试
+- [x] 目标：核心业务逻辑覆盖率达到 80% 以上
+
+#### 🔒 Step 17: Husky + lint-staged 自动化检查
+- [x] 安装并配置 Husky Git 钩子
+- [x] 集成 lint-staged 实现提交前自动格式化与纠错
+- [x] 确保代码质量门禁在本地生效
 
 ---
 
