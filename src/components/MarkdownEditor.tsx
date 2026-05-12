@@ -1,14 +1,17 @@
-import { Props } from '../types';
 import React, { useState, useRef } from 'react';
 
-const MarkdownEditor = ({ value, onChange, placeholder = "支持 Markdown 语法..." }) => {
+const MarkdownEditor = ({
+  value,
+  onChange,
+  placeholder = '支持 Markdown 语法...',
+}) => {
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef(null);
 
   // 简单的 Markdown 渲染函数
   const renderMarkdown = (text) => {
     if (!text) return '';
-    
+
     let html = text
       // 标题
       .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -23,13 +26,16 @@ const MarkdownEditor = ({ value, onChange, placeholder = "支持 Markdown 语法
       // 行内代码
       .replace(/`([^`]*)`/gim, '<code>$1</code>')
       // 链接
-      .replace(/\[([^\]]*)\]\(([^\)]*)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(
+        /\[([^\]]*)\]\(([^\)]*)\)/gim,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+      )
       // 列表
       .replace(/^\* (.*$)/gim, '<li>$1</li>')
       .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
       // 换行
       .replace(/\n/gim, '<br>');
-    
+
     return html;
   };
 
@@ -41,7 +47,7 @@ const MarkdownEditor = ({ value, onChange, placeholder = "支持 Markdown 语法
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end);
-    
+
     let newText = '';
     let cursorOffset = 0;
 
@@ -164,19 +170,21 @@ const MarkdownEditor = ({ value, onChange, placeholder = "支持 Markdown 语法
             H3
           </button>
         </div>
-        
+
         <div className="flex items-center space-x-2 flex-shrink-0">
           <button
             type="button"
             onClick={() => setIsPreview(!isPreview)}
             className={`px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded transition-colors ${
-              isPreview 
-                ? 'bg-blue-100 text-blue-700' 
+              isPreview
+                ? 'bg-blue-100 text-blue-700'
                 : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
             }`}
           >
             <i className={`fas ${isPreview ? 'fa-edit' : 'fa-eye'} mr-1`}></i>
-            <span className="hidden sm:inline">{isPreview ? '编辑' : '预览'}</span>
+            <span className="hidden sm:inline">
+              {isPreview ? '编辑' : '预览'}
+            </span>
             <span className="sm:hidden">{isPreview ? '编辑' : '预览'}</span>
           </button>
         </div>
@@ -212,7 +220,7 @@ const MarkdownEditor = ({ value, onChange, placeholder = "支持 Markdown 语法
             }}
           />
         ) : (
-          <div 
+          <div
             className="px-4 py-3 min-h-[200px] prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
           />

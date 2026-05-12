@@ -78,50 +78,52 @@ export interface BlogPost {
 // Store 状态接口
 export interface PortfolioState {
   personalInfo: PersonalInfo;
-  recentNews: any[];
+  recentNews: BlogPost[];
   projects: Project[];
   publications: Publication[];
   internships: Internship[];
   honors: Honor[];
   academicBlogs: BlogPost[];
   engineeringBlogs: BlogPost[];
-  
+
   activeSection: string;
   learningCategory: 'academic' | 'engineering';
   resumeCategory: 'projects' | 'publications' | 'internships' | 'honors';
-  
+
   isAdminMode: boolean;
-  customContent: Record<string, any>;
-  
+  customContent: Record<string, unknown>;
+
   resumeTabOrder: string[];
   customTabNames: Record<string, string>;
-  
+
   setPersonalInfo: (info: PersonalInfo) => void;
   setActiveSection: (section: string) => void;
   setLearningCategory: (category: 'academic' | 'engineering') => void;
-  setResumeCategory: (category: 'projects' | 'publications' | 'internships' | 'honors') => void;
+  setResumeCategory: (
+    category: 'projects' | 'publications' | 'internships' | 'honors',
+  ) => void;
   setIsAdminMode: (mode: boolean) => void;
-  setCustomContent: (content: Record<string, any>) => void;
+  setCustomContent: (content: Record<string, unknown>) => void;
   setResumeTabOrder: (order: string[]) => void;
   setCustomTabNames: (names: Record<string, string>) => void;
-  
+
   // Actions for data manipulation
   addProject: (project: Project) => void;
   updateProject: (id: string, project: Partial<Project>) => void;
   deleteProject: (id: string) => void;
-  
+
   addInternship: (internship: Internship) => void;
   updateInternship: (id: string, internship: Partial<Internship>) => void;
   deleteInternship: (id: string) => void;
-  
+
   addPublication: (pub: Publication) => void;
   updatePublication: (id: string, pub: Partial<Publication>) => void;
   deletePublication: (id: string) => void;
-  
+
   addHonor: (honor: Honor) => void;
   updateHonor: (id: string, honor: Partial<Honor>) => void;
   deleteHonor: (id: string) => void;
-  
+
   addBlog: (blog: BlogPost) => void;
   updateBlog: (id: string, blog: Partial<BlogPost>) => void;
   deleteBlog: (id: string) => void;
@@ -155,7 +157,7 @@ export interface LearningSectionProps {
   engineeringBlogs: BlogPost[];
   isAdminMode: boolean;
   onAdd: (type: string) => void;
-  onEdit: (type: string, item: any, index: number) => void;
+  onEdit: (type: string, item: unknown, index: number) => void;
   onDelete: (type: string, id: string) => void;
 }
 
@@ -166,15 +168,17 @@ export interface PageTransitionProps {
 
 export interface ResumeSectionProps {
   resumeCategory: 'projects' | 'publications' | 'internships' | 'honors';
-  setResumeCategory: (category: 'projects' | 'publications' | 'internships' | 'honors') => void;
+  setResumeCategory: (
+    category: 'projects' | 'publications' | 'internships' | 'honors',
+  ) => void;
   projects: Project[];
   publications: Publication[];
   internships: Internship[];
   honors: Honor[];
-  customContent: Record<string, any>;
+  customContent: Record<string, unknown>;
   isAdminMode: boolean;
   onAdd: (type: string) => void;
-  onEdit: (type: string, item: any, index: number) => void;
+  onEdit: (type: string, item: unknown, index: number) => void;
   onDelete: (type: string, id: string) => void;
 }
 
@@ -185,7 +189,7 @@ export interface LearningSectionFullProps {
   engineeringBlogs: BlogPost[];
   isAdminMode: boolean;
   onAdd: (type: string) => void;
-  onEdit: (type: string, item: any, index: number) => void;
+  onEdit: (type: string, item: unknown, index: number) => void;
   onDelete: (type: string, id: string) => void;
 }
 
@@ -195,9 +199,9 @@ export interface AdminPanelProps {
 
 export interface InlineEditorProps {
   type: string;
-  initialData: any;
+  initialData: unknown;
   index: number;
-  onSave: (data: any) => void;
+  onSave: (data: unknown) => void;
   onCancel: () => void;
 }
 
@@ -209,18 +213,18 @@ export interface ProjectEditorProps {
 
 export interface ModuleRendererProps {
   type: string;
-  data: any;
+  data: unknown;
   isDetail?: boolean;
 }
 
 // 工具组件接口
 export interface VersionManagerProps {
   onClose: () => void;
-  onRestore: (data: any) => void;
+  onRestore: (data: unknown) => void;
 }
 
 export interface DataValidationProps {
-  onDataFix: (fixedData: any) => void;
+  onDataFix: (fixedData: unknown) => void;
 }
 
 export interface AutoBackupProps {
@@ -241,8 +245,8 @@ export interface DateRangePickerProps {
 }
 
 export interface GuestBookProps {
-  entries: any[];
-  onAddEntry: (entry: any) => void;
+  entries: unknown[];
+  onAddEntry: (entry: unknown) => void;
 }
 
 export interface HeroProps {
@@ -269,7 +273,7 @@ export interface MediaViewerProps {
 }
 
 export interface ProjectTemplatesProps {
-  onSelectTemplate: (template: any) => void;
+  onSelectTemplate: (template: unknown) => void;
 }
 
 export interface SearchBoxProps {
@@ -284,9 +288,9 @@ export interface SectionTitleEditorProps {
 }
 
 export interface SmartRecommendationsProps {
-  currentItem: any;
+  currentItem: unknown;
   currentType: string;
-  onItemClick: (item: any, type: string) => void;
+  onItemClick: (item: unknown, type: string) => void;
 }
 
 export interface TagCloudProps {
@@ -295,8 +299,8 @@ export interface TagCloudProps {
 }
 
 export interface ArticleListProps {
-  items: any[];
+  items: unknown[];
   type: string;
-  onEdit: (item: any, index: number) => void;
+  onEdit: (item: unknown, index: number) => void;
   onDelete: (id: string) => void;
 }

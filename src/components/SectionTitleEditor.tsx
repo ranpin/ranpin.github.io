@@ -1,13 +1,12 @@
-import { Props } from '../types';
 import React, { useState, useEffect } from 'react';
 
-const SectionTitleEditor = ({ 
-  sectionKey, 
-  defaultTitle, 
+const SectionTitleEditor = ({
+  sectionKey,
+  defaultTitle,
   icon = 'fas fa-folder',
   onTitleChange,
   className = '',
-  size = 'text-xl' // 新增size属性，支持不同大小
+  size = 'text-xl', // 新增size属性，支持不同大小
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
@@ -42,11 +41,14 @@ const SectionTitleEditor = ({
     if (editingTitle.trim()) {
       const newTitles = {
         ...customTitles,
-        [sectionKey]: editingTitle.trim()
+        [sectionKey]: editingTitle.trim(),
       };
       setCustomTitles(newTitles);
-      localStorage.setItem('portfolio_custom_section_titles', JSON.stringify(newTitles));
-      
+      localStorage.setItem(
+        'portfolio_custom_section_titles',
+        JSON.stringify(newTitles),
+      );
+
       if (onTitleChange) {
         onTitleChange(editingTitle.trim());
       }
@@ -67,8 +69,11 @@ const SectionTitleEditor = ({
       const newTitles = { ...customTitles };
       delete newTitles[sectionKey];
       setCustomTitles(newTitles);
-      localStorage.setItem('portfolio_custom_section_titles', JSON.stringify(newTitles));
-      
+      localStorage.setItem(
+        'portfolio_custom_section_titles',
+        JSON.stringify(newTitles),
+      );
+
       if (onTitleChange) {
         onTitleChange(defaultTitle);
       }
@@ -118,7 +123,7 @@ const SectionTitleEditor = ({
         <i className={`${icon} text-blue-500 mr-2`}></i>
         {getDisplayTitle()}
       </h3>
-      
+
       {isAdminMode && (
         <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button

@@ -1,6 +1,7 @@
 {
   "name": "ranpin-portfolio",
   "version": "1.0.0",
+  "type": "module",
   "description": "Ranpin的个人学术项目分享网站",
   "homepage": "https://ranpin.github.io/",
   "scripts": {

@@ -1,14 +1,13 @@
-import { Props } from '../types';
 import React, { useState, useRef, useEffect } from 'react';
 
-const LazyImage = ({ 
-  src, 
-  alt, 
-  className = '', 
+const LazyImage = ({
+  src,
+  alt,
+  className = '',
   placeholder = null,
   fallback = null,
   onLoad = null,
-  onError = null 
+  onError = null,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -25,8 +24,8 @@ const LazyImage = ({
       },
       {
         threshold: 0.1,
-        rootMargin: '50px'
-      }
+        rootMargin: '50px',
+      },
     );
 
     if (imgRef.current) {
@@ -48,14 +47,18 @@ const LazyImage = ({
 
   // 默认占位符
   const defaultPlaceholder = (
-    <div className={`bg-gray-200 animate-pulse flex items-center justify-center ${className}`}>
+    <div
+      className={`bg-gray-200 animate-pulse flex items-center justify-center ${className}`}
+    >
       <i className="fas fa-image text-gray-400 text-2xl"></i>
     </div>
   );
 
   // 默认错误回退
   const defaultFallback = (
-    <div className={`bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center ${className}`}>
+    <div
+      className={`bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center ${className}`}
+    >
       <div className="text-center text-gray-500">
         <i className="fas fa-exclamation-triangle text-xl mb-2"></i>
         <p className="text-sm">图片加载失败</p>
@@ -67,16 +70,16 @@ const LazyImage = ({
     <div ref={imgRef} className={`relative overflow-hidden ${className}`}>
       {/* 占位符 */}
       {!isInView && (placeholder || defaultPlaceholder)}
-      
+
       {/* 错误回退 */}
       {hasError && (fallback || defaultFallback)}
-      
+
       {/* 实际图片 */}
       {isInView && !hasError && (
         <>
           {/* 加载中的占位符 */}
           {!isLoaded && (placeholder || defaultPlaceholder)}
-          
+
           <img
             src={src}
             alt={alt}

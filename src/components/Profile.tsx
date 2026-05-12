@@ -4,13 +4,21 @@ import { PersonalInfo } from '../types';
 
 interface ProfileProps {
   personalInfo: PersonalInfo;
-  onEditPersonalInfo?: (data: any) => void;
+  onEditPersonalInfo?: (data: unknown) => void;
   onInsertAt?: (index: number, type: string) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onInsertAt }) => {
+const Profile: React.FC<ProfileProps> = ({
+  personalInfo,
+  onEditPersonalInfo,
+  onInsertAt,
+}) => {
   // 布局顺序状态
-  const [layoutOrder, setLayoutOrder] = useState(['profile', 'interests', 'social']);
+  const [layoutOrder, setLayoutOrder] = useState([
+    'profile',
+    'interests',
+    'social',
+  ]);
   const [draggedItem, setDraggedItem] = useState(null);
 
   // 从本地存储加载布局顺序
@@ -38,20 +46,23 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
 
   const handleDrop = (e, targetId) => {
     e.preventDefault();
-    
+
     if (draggedItem && draggedItem !== targetId) {
       const newOrder = [...layoutOrder];
       const draggedIndex = newOrder.indexOf(draggedItem);
       const targetIndex = newOrder.indexOf(targetId);
-      
+
       // 移动元素
       newOrder.splice(draggedIndex, 1);
       newOrder.splice(targetIndex, 0, draggedItem);
-      
+
       setLayoutOrder(newOrder);
-      localStorage.setItem('portfolio_profile_layout', JSON.stringify(newOrder));
+      localStorage.setItem(
+        'portfolio_profile_layout',
+        JSON.stringify(newOrder),
+      );
     }
-    
+
     setDraggedItem(null);
   };
 
@@ -61,7 +72,7 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
 
   // 渲染各个模块
   const renderProfileSection = () => (
-    <div 
+    <div
       key="profile"
       draggable
       onDragStart={(e) => handleDragStart(e, 'profile')}
@@ -80,9 +91,9 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
       )}
       <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg overflow-hidden">
         {personalInfo.avatar && personalInfo.avatar.startsWith('http') ? (
-          <img 
-            src={personalInfo.avatar} 
-            alt="头像" 
+          <img
+            src={personalInfo.avatar}
+            alt="头像"
             className="w-full h-full object-cover"
             loading="eager"
             onError={(e) => {
@@ -91,19 +102,21 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
             }}
           />
         ) : personalInfo.avatar && personalInfo.avatar.startsWith('data:') ? (
-          <img 
-            src={personalInfo.avatar} 
-            alt="头像" 
+          <img
+            src={personalInfo.avatar}
+            alt="头像"
             className="w-full h-full object-cover"
             loading="eager"
           />
         ) : (
-          personalInfo.avatar || "A"
+          personalInfo.avatar || 'A'
         )}
       </div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-3">{personalInfo.name}</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-3">
+        {personalInfo.name}
+      </h1>
       <p className="text-base text-gray-600 mb-6">{personalInfo.title}</p>
-      
+
       <div className="space-y-2 text-sm text-gray-600">
         <div className="flex items-center justify-center space-x-2">
           <i className="fas fa-map-marker-alt text-blue-500 w-4"></i>
@@ -116,7 +129,14 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
         {personalInfo.socialLinks?.scholar && (
           <div className="flex items-center justify-center space-x-2">
             <i className="fas fa-graduation-cap text-blue-500 w-4"></i>
-            <a href={personalInfo.socialLinks.scholar} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">Google Scholar</a>
+            <a
+              href={personalInfo.socialLinks.scholar}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Google Scholar
+            </a>
           </div>
         )}
       </div>
@@ -124,7 +144,7 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
   );
 
   const renderInterestsSection = () => (
-    <div 
+    <div
       key="interests"
       draggable
       onDragStart={(e) => handleDragStart(e, 'interests')}
@@ -147,7 +167,10 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
       </h3>
       <div className="flex flex-wrap gap-3">
         {(personalInfo.researchInterests || []).map((tag) => (
-          <span key={tag} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+          <span
+            key={tag}
+            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+          >
             {tag}
           </span>
         ))}
@@ -156,7 +179,7 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
   );
 
   const renderSocialSection = () => (
-    <div 
+    <div
       key="social"
       draggable
       onDragStart={(e) => handleDragStart(e, 'social')}
@@ -179,27 +202,55 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
       </h3>
       <div className="grid grid-cols-2 gap-4">
         {personalInfo.socialLinks?.github && (
-          <a href={personalInfo.socialLinks.github} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors group">
+          <a
+            href={personalInfo.socialLinks.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors group"
+          >
             <i className="fab fa-github text-gray-700 group-hover:text-gray-900 mr-2"></i>
-            <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">GitHub</span>
+            <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+              GitHub
+            </span>
           </a>
         )}
         {personalInfo.socialLinks?.linkedin && (
-          <a href={personalInfo.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors group">
+          <a
+            href={personalInfo.socialLinks.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors group"
+          >
             <i className="fab fa-linkedin text-blue-700 group-hover:text-blue-900 mr-2"></i>
-            <span className="text-sm font-medium text-blue-700 group-hover:text-blue-900">LinkedIn</span>
+            <span className="text-sm font-medium text-blue-700 group-hover:text-blue-900">
+              LinkedIn
+            </span>
           </a>
         )}
         {personalInfo.socialLinks?.scholar && (
-          <a href={personalInfo.socialLinks.scholar} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-4 bg-red-100 hover:bg-red-200 rounded-xl transition-colors group">
+          <a
+            href={personalInfo.socialLinks.scholar}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-4 bg-red-100 hover:bg-red-200 rounded-xl transition-colors group"
+          >
             <i className="fas fa-graduation-cap text-red-700 group-hover:text-red-900 mr-2"></i>
-            <span className="text-sm font-medium text-red-700 group-hover:text-red-900">Scholar</span>
+            <span className="text-sm font-medium text-red-700 group-hover:text-red-900">
+              Scholar
+            </span>
           </a>
         )}
         {personalInfo.socialLinks?.rss && (
-          <a href={personalInfo.socialLinks.rss} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-colors group">
+          <a
+            href={personalInfo.socialLinks.rss}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-colors group"
+          >
             <i className="fas fa-rss text-orange-700 group-hover:text-orange-900 mr-2"></i>
-            <span className="text-sm font-medium text-orange-700 group-hover:text-orange-900">RSS</span>
+            <span className="text-sm font-medium text-orange-700 group-hover:text-orange-900">
+              RSS
+            </span>
           </a>
         )}
       </div>
@@ -211,10 +262,10 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo, onEditPersonalInfo, onI
     const sectionMap = {
       profile: renderProfileSection,
       interests: renderInterestsSection,
-      social: renderSocialSection
+      social: renderSocialSection,
     };
 
-    return layoutOrder.map(sectionId => sectionMap[sectionId]());
+    return layoutOrder.map((sectionId) => sectionMap[sectionId]());
   };
 
   return (
