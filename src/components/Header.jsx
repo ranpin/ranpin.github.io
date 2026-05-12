@@ -11,7 +11,8 @@ const Header = ({ activeSection, setActiveSection, onOpenAdmin, personalInfo }) 
   const navItems = [
     { id: 'home', label: '首页', icon: 'fas fa-home' },
     { id: 'resume', label: '个人简历', icon: 'fas fa-user' },
-    { id: 'learning', label: '学习记录', icon: 'fas fa-book' }
+    { id: 'learning', label: '学习记录', icon: 'fas fa-book' },
+    { id: 'stargate', label: '星际之门', icon: 'fas fa-star' }
   ];
 
   // 检查是否已经登录管理模式
