@@ -146,6 +146,32 @@ const App = () => {
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [undoTimer, setUndoTimer] = useState(null);
 
+  // 数据状态管理（从 localStorage 加载， fallback 到初始数据）
+  const [personalInfo, setPersonalInfo] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.personalInfo, initialPersonalInfo, 'personalInfo')
+  );
+  const [recentNews, setRecentNews] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.recentNews, initialRecentNews, 'news')
+  );
+  const [projects, setProjects] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.projects, initialProjects, 'project')
+  );
+  const [publications, setPublications] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.publications, initialPublications, 'publication')
+  );
+  const [internships, setInternships] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.internships, initialInternships, 'internship')
+  );
+  const [honors, setHonors] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.honors, initialHonors, 'honor')
+  );
+  const [academicBlogs, setAcademicBlogs] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.academicBlogs, initialAcademicBlogs, 'blog-academic')
+  );
+  const [engineeringBlogs, setEngineeringBlogs] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.engineeringBlogs, initialEngineeringBlogs, 'blog-engineering')
+  );
+
   // 获取分类显示名称
   const getTabDisplayName = (key) => {
     if (customTabNames[key]) return customTabNames[key];
