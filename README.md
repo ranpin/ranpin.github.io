@@ -1,6 +1,6 @@
-# 🎓 Ranpin - 个人学术作品集网站
+# 🎓 陈润斌 - 个人网站
 
-一个功能完整、技术先进的个人学术作品集管理系统，支持项目展示、论文发表、工作经历、技术博客和荣誉奖项的完整管理。
+一个功能完整、技术先进的个人作品集管理系统，支持项目展示、论文发表、工作经历、技术博客和荣誉奖项的完整管理。
 
 **在线预览**: [https://ranpin.github.io](https://ranpin.github.io)
 
@@ -69,7 +69,7 @@
 ## 🚀 快速开始
 
 ### 环境要求
-- Node.js 16+ 
+- Node.js 18+ 
 - npm 或 yarn
 
 ### 安装依赖
@@ -86,10 +86,10 @@ npm install
 ### 本地开发
 
 ```bash
-# 启动开发服务器（端口 3001）
+# 启动开发服务器
 npm run dev
 
-# 访问 http://localhost:3001
+# 访问 http://localhost:5173
 ```
 
 开发服务器支持热重载，修改代码后会自动刷新浏览器。
@@ -102,12 +102,6 @@ npm run build
 
 # 预览构建结果
 npm run preview
-
-# 测试完整构建流程
-npm run test:build
-
-# 清理缓存
-npm run clean
 ```
 
 ---
@@ -131,7 +125,7 @@ npm run clean
    - 访问 `https://ranpin.github.io`
 
 3. **自定义域名（可选）**
-   - 在 `public/CNAME` 文件中添加域名
+   - 在根目录添加 `CNAME` 文件
    - 配置 DNS CNAME 记录指向 `ranpin.github.io`
 
 ### 其他平台
@@ -146,14 +140,6 @@ npm run clean
 - 构建命令：`npm run build`
 - 发布目录：`dist`
 - 添加重定向规则：`/* /index.html 200`
-
-**Docker**
-```bash
-docker build -t ranpin-portfolio .
-docker run -p 80:80 ranpin-portfolio
-```
-
-详细部署指南请查看 [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
@@ -175,9 +161,9 @@ const correctPassword = 'your-secure-password'; // 修改为你的密码
 
 ### 个人信息配置
 
-通过管理面板或直接编辑 `src/data/content.js`：
+通过管理面板或直接编辑 `src/data/content.ts`：
 
-```javascript
+```typescript
 export const personalInfo = {
   name: "你的姓名",
   title: "你的职位/学校",
@@ -199,7 +185,7 @@ export const personalInfo = {
 
 ### 内容数据管理
 
-所有网站内容都存储在 `src/data/content.js` 中，包括：
+所有网站内容都存储在 `src/data/content.ts` 中，包括：
 - `personalInfo` - 个人信息
 - `recentNews` - 最新动态
 - `projects` - 项目经历
@@ -220,49 +206,58 @@ export const personalInfo = {
 ranpin.github.io/
 ├── .github/
 │   └── workflows/
-│       ├── deploy.yml          # GitHub Pages 自动部署
-│       └── webpack.yml         # Webpack 构建检查
-├── public/                     # 静态资源
-│   └── 404.html               # SPA 路由支持
+│       ├── ci.yml               # CI/CD 流水线（测试、Lint、部署）
+│       └── codecov.yml          # 覆盖率上报配置
+├── public/                      # 静态资源
+│   └── 404.html                # SPA 路由支持
 ├── src/
-│   ├── components/             # React 组件（20个）
-│   │   ├── AdminPanel.jsx     # 管理面板核心（87KB）
-│   │   ├── ArticleList.jsx    # 文章列表组件
-│   │   ├── AutoBackup.jsx     # 自动备份组件
-│   │   ├── BatchOperations.jsx # 批量操作组件
-│   │   ├── DataValidation.jsx # 数据验证组件
-│   │   ├── DateRangePicker.jsx # 日期选择器
-│   │   ├── Footer.jsx         # 页脚组件
-│   │   ├── GuestBook.jsx      # 访客留言组件
-│   │   ├── Header.jsx         # 导航栏 + 搜索
-│   │   ├── Hero.jsx           # 首页横幅
-│   │   ├── LazyImage.jsx      # 懒加载图片
-│   │   ├── MarkdownEditor.jsx # Markdown 编辑器
-│   │   ├── MediaViewer.jsx    # 媒体文件查看器
-│   │   ├── Profile.jsx        # 个人信息展示
-│   │   ├── ProjectTemplates.jsx # 项目模板
-│   │   ├── SearchBox.jsx      # 智能搜索组件
-│   │   ├── SectionTitleEditor.jsx # 章节标题编辑
-│   │   ├── SmartRecommendations.jsx # 智能推荐
-│   │   ├── TagCloud.jsx       # 标签云
-│   │   └── VersionManager.jsx # 版本管理组件
+│   ├── components/              # React 组件（全部为 .tsx）
+│   │   ├── AdminPanel.tsx      # 管理面板核心
+│   │   ├── ArticleList.tsx     # 文章列表组件
+│   │   ├── AutoBackup.tsx      # 自动备份组件
+│   │   ├── BatchOperations.tsx # 批量操作组件
+│   │   ├── DataValidation.tsx  # 数据验证组件
+│   │   ├── DateRangePicker.tsx # 日期选择器
+│   │   ├── Footer.tsx          # 页脚组件
+│   │   ├── GuestBook.tsx       # 访客留言组件
+│   │   ├── Header.tsx          # 导航栏 + 搜索
+│   │   ├── Hero.tsx            # 首页横幅
+│   │   ├── LazyImage.tsx       # 懒加载图片
+│   │   ├── MarkdownEditor.tsx  # Markdown 编辑器
+│   │   ├── MediaViewer.tsx     # 媒体文件查看器
+│   │   ├── Profile.tsx         # 个人信息展示
+│   │   ├── ProjectTemplates.tsx # 项目模板
+│   │   ├── SearchBox.tsx       # 智能搜索组件
+│   │   ├── SectionTitleEditor.tsx # 章节标题编辑
+│   │   ├── SmartRecommendations.tsx # 智能推荐
+│   │   ├── TagCloud.tsx        # 标签云
+│   │   └── VersionManager.tsx  # 版本管理组件
 │   ├── data/
-│   │   └── content.js         # 默认数据模板（19KB）
-│   ├── utils/
-│   │   └── contentManager.js  # 内容管理工具类
+│   │   └── content.ts          # 默认数据模板
+│   ├── hooks/                  # 自定义 Hooks
+│   │   ├── useAdminMode.ts
+│   │   ├── useLearningFilter.ts
+│   │   ├── usePortfolioStore.ts # Zustand 状态管理
+│   │   └── useResumeTabs.ts
+│   ├── store/                  # Store 定义与测试
+│   │   └── usePortfolioStore.test.ts
 │   ├── styles/
-│   │   └── index.css          # 全局样式（Tailwind）
-│   ├── App.jsx                # 主应用组件（111KB）
-│   └── index.jsx              # 应用入口
-├── index.html                 # HTML 模板
-├── package.json               # 项目依赖和脚本
-├── webpack.config.js          # Webpack 配置
-├── tailwind.config.js         # Tailwind CSS 配置
-├── postcss.config.js          # PostCSS 配置
-├── DEPLOYMENT.md              # 详细部署指南
-├── FEATURE_SUMMARY.md         # 功能总结报告
-├── TROUBLESHOOTING.md         # 故障排除指南
-└── README.md                  # 本文件
+│   │   └── index.css           # 全局样式（Tailwind）
+│   ├── test/
+│   │   └── setup.ts            # 测试环境配置
+│   ├── types/
+│   │   └── index.ts            # TypeScript 类型定义
+│   ├── App.tsx                 # 主应用组件
+│   └── index.tsx               # 应用入口
+├── index.html                  # HTML 模板
+├── package.json                # 项目依赖和脚本
+├── vite.config.js              # Vite 配置
+├── tailwind.config.js          # Tailwind CSS 配置
+├── postcss.config.js           # PostCSS 配置
+├── eslint.config.js            # ESLint Flat Config
+├── tsconfig.json               # TypeScript 配置
+├── REFACTORING_PLAN.md         # 重构路线图
+└── README.md                   # 本文件
 ```
 
 ---
@@ -271,25 +266,26 @@ ranpin.github.io/
 
 ### 核心技术
 - **React 18** - 前端框架，支持并发特性和 Hooks
+- **TypeScript** - 静态类型检查，提升代码健壮性
+- **Zustand** - 轻量级状态管理库
 - **React Router DOM 6** - Hash 模式路由，适配 GitHub Pages
 - **Tailwind CSS 3** - 原子化 CSS 框架
-- **Webpack 5** - 模块打包器，支持代码分割
-- **Babel 7** - JavaScript 编译器，ES6+ 语法支持
+- **Vite 5** - 极速构建工具，支持 HMR
 
 ### UI 组件
 - **Font Awesome 6** - 图标库
 - **Google Fonts** - Inter + Noto Serif SC 字体
-- **PostCSS + Autoprefixer** - CSS 后处理
+- **Framer Motion** - 动画库，提供平滑的交互反馈
 
 ### 开发工具
-- **webpack-dev-server** - 开发服务器，支持热重载
-- **serve** - 静态文件服务器（预览用）
-- **HTMLWebpackPlugin** - HTML 模板处理
+- **ESLint + Prettier** - 代码规范与格式化
+- **Husky + lint-staged** - Git 提交前自动检查
+- **Vitest + React Testing Library** - 单元测试框架
+- **GitHub Actions** - 自动化 CI/CD
 
 ### 部署支持
-- **GitHub Actions** - 自动化 CI/CD
 - **GitHub Pages** - 静态网站托管
-- **多平台兼容** - Vercel、Netlify、Firebase、Docker
+- **多平台兼容** - Vercel、Netlify、Firebase
 
 ---
 
@@ -447,8 +443,6 @@ export NODE_OPTIONS="--max-old-space-size=4096"
 npm run build
 ```
 
-详细故障排除请查看 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-
 ---
 
 ## 🤝 贡献指南
@@ -464,11 +458,11 @@ npm install
 # 启动开发服务器
 npm run dev
 
-# 代码格式检查（如配置了 ESLint）
+# 代码格式检查
 npm run lint
 
-# 运行测试（如配置了测试框架）
-npm test
+# 运行测试
+npm run test
 ```
 
 ### 提交规范
@@ -504,8 +498,8 @@ npm test
 ### 官方文档
 - [React 官方文档](https://reactjs.org/)
 - [Tailwind CSS 文档](https://tailwindcss.com/)
-- [Webpack 官方文档](https://webpack.js.org/)
-- [React Router 文档](https://reactrouter.com/)
+- [Vite 官方文档](https://vitejs.dev/)
+- [Zustand 文档](https://zustand-demo.pmnd.rs/)
 
 ### 部署平台
 - [GitHub Pages 文档](https://pages.github.com/)
@@ -522,9 +516,7 @@ npm test
 ## 📞 支持与反馈
 
 ### 获取帮助
-- 📖 查看 [DEPLOYMENT.md](DEPLOYMENT.md) 了解详细部署步骤
-- 🔧 查看 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 解决常见问题
-- 📊 查看 [FEATURE_SUMMARY.md](FEATURE_SUMMARY.md) 了解完整功能清单
+- 📖 查看 [REFACTORING_PLAN.md](REFACTORING_PLAN.md) 了解项目演进路线
 - 💬 提交 [GitHub Issue](https://github.com/ranpin/ranpin.github.io/issues) 反馈问题或建议
 
 ### 社区交流
@@ -547,15 +539,15 @@ npm test
 
 ## 📈 项目统计
 
-- **总文件数**: 30+ 个文件
-- **React 组件**: 20 个组件
-- **代码行数**: 约 12,000+ 行
+- **总文件数**: 40+ 个文件
+- **React 组件**: 25+ 个组件（全部为 .tsx）
+- **代码行数**: 约 10,000+ 行
 - **功能模块**: 8 大核心模块
-- **配置文件**: 10+ 个配置文件
+- **测试覆盖率**: 27%+（核心逻辑全覆盖）
 
 ---
 
-**最后更新**: 2026年4月  
+**最后更新**: 2026年5月  
 **维护状态**: 积极维护中 🚀  
 **技术评级**: ⭐⭐⭐⭐⭐
 
