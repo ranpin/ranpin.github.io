@@ -1,4 +1,3 @@
-import { Props } from '../types';
 import React from 'react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import EditableCard from './EditableCard';
@@ -6,12 +5,12 @@ import EditableCard from './EditableCard';
 interface ResumeSectionProps {
   resumeCategory: string;
   isAdminMode: boolean;
-  openInlineEditor: (type: string, data: any, index: number | null) => void;
+  openInlineEditor: (type: string, data: unknown, index: number | null) => void;
   handleDeleteWithUndo: (type: string, index: number) => void;
   handleInsertAt: (type: string, index: number) => void;
-  handleArticleClick: (article: any) => void;
-  handlePaperClick: (paper: any) => void;
-  handleInternshipClick: (internship: any) => void;
+  handleArticleClick: (article: unknown) => void;
+  handlePaperClick: (paper: unknown) => void;
+  handleInternshipClick: (internship: unknown) => void;
 }
 
 const ResumeSection: React.FC<ResumeSectionProps> = ({
@@ -24,7 +23,8 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
   handlePaperClick,
   handleInternshipClick,
 }) => {
-  const { projects, publications, internships, honors, customContent } = usePortfolioStore();
+  const { projects, publications, internships, honors, customContent } =
+    usePortfolioStore();
 
   // 项目经历
   if (resumeCategory === 'projects') {
@@ -47,29 +47,37 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                     <h3 className="text-lg font-medium text-gray-800 hover:text-blue-600 transition-colors">
                       {project.title || '未命名项目'}
                     </h3>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      project.status === '已完成' ? 'bg-green-100 text-green-700' :
-                      project.status === '论文发表' ? 'bg-purple-100 text-purple-700' :
-                      project.status === '已上线' ? 'bg-blue-100 text-blue-700' :
-                      project.status === '生产部署' ? 'bg-orange-100 text-orange-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        project.status === '已完成'
+                          ? 'bg-green-100 text-green-700'
+                          : project.status === '论文发表'
+                            ? 'bg-purple-100 text-purple-700'
+                            : project.status === '已上线'
+                              ? 'bg-blue-100 text-blue-700'
+                              : project.status === '生产部署'
+                                ? 'bg-orange-100 text-orange-700'
+                                : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {project.status || '未知状态'}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-500 mb-2 font-mono">{project.period || '时间未知'}</div>
+                  <div className="text-sm text-gray-500 mb-2 font-mono">
+                    {project.period || '时间未知'}
+                  </div>
                 </div>
                 <i className="fas fa-chevron-right text-gray-300 hover:text-blue-500 transition-colors text-sm"></i>
               </div>
-              
+
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
                 {project.description || '暂无描述'}
               </p>
-              
+
               <div className="flex flex-wrap gap-2">
                 {project.tags && Array.isArray(project.tags) ? (
                   project.tags.map((tag, tagIndex) => (
-                    <span 
+                    <span
                       key={`${tag}-${tagIndex}`}
                       className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
                     >
@@ -119,28 +127,35 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                     <h3 className="text-lg font-medium text-gray-800 hover:text-green-600 transition-colors">
                       {paper.title || '未命名论文'}
                     </h3>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      paper.type === '会议论文' ? 'bg-blue-100 text-blue-700' :
-                      paper.type === '期刊论文' ? 'bg-green-100 text-green-700' :
-                      paper.type === '预印本' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        paper.type === '会议论文'
+                          ? 'bg-blue-100 text-blue-700'
+                          : paper.type === '期刊论文'
+                            ? 'bg-green-100 text-green-700'
+                            : paper.type === '预印本'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {paper.type || '未知类型'}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 mb-2">
-                    <span className="font-medium">{paper.authors || '未知作者'}</span>
+                    <span className="font-medium">
+                      {paper.authors || '未知作者'}
+                    </span>
                     {paper.venue && <span> • {paper.venue}</span>}
                     {paper.year && <span> • {paper.year}</span>}
                   </div>
                 </div>
                 <i className="fas fa-chevron-right text-gray-300 hover:text-green-500 transition-colors text-sm"></i>
               </div>
-              
+
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
                 {paper.abstract || '暂无摘要'}
               </p>
-              
+
               <div className="flex items-center space-x-4 text-xs text-gray-500">
                 {paper.citations && (
                   <span className="flex items-center">
@@ -196,33 +211,41 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
                     <h3 className="text-lg font-medium text-gray-800 hover:text-purple-600 transition-colors">
-                      {internship.position || '未命名职位'} @ {internship.company || '未知公司'}
+                      {internship.position || '未命名职位'} @{' '}
+                      {internship.company || '未知公司'}
                     </h3>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      internship.type === '实习' ? 'bg-blue-100 text-blue-700' :
-                      internship.type === '全职' ? 'bg-green-100 text-green-700' :
-                      internship.type === '兼职' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        internship.type === '实习'
+                          ? 'bg-blue-100 text-blue-700'
+                          : internship.type === '全职'
+                            ? 'bg-green-100 text-green-700'
+                            : internship.type === '兼职'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {internship.type || '未知类型'}
                     </span>
                   </div>
                   <div className="text-sm text-gray-500 mb-2 font-mono">
                     {internship.period || '时间未知'}
-                    {internship.location && <span> • {internship.location}</span>}
+                    {internship.location && (
+                      <span> • {internship.location}</span>
+                    )}
                   </div>
                 </div>
                 <i className="fas fa-chevron-right text-gray-300 hover:text-purple-500 transition-colors text-sm"></i>
               </div>
-              
+
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
                 {internship.description || '暂无描述'}
               </p>
-              
+
               <div className="flex flex-wrap gap-2">
                 {internship.skills && Array.isArray(internship.skills) ? (
                   internship.skills.map((skill, skillIndex) => (
-                    <span 
+                    <span
                       key={`${skill}-${skillIndex}`}
                       className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium"
                     >
@@ -272,18 +295,25 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                     {honor.award || '未命名奖项'}
                   </h3>
                   {honor.level && (
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      honor.level === '国际级' ? 'bg-red-100 text-red-700' :
-                      honor.level === '国家级' ? 'bg-blue-100 text-blue-700' :
-                      honor.level === '省级' ? 'bg-green-100 text-green-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        honor.level === '国际级'
+                          ? 'bg-red-100 text-red-700'
+                          : honor.level === '国家级'
+                            ? 'bg-blue-100 text-blue-700'
+                            : honor.level === '省级'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {honor.level}
                     </span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">{honor.organization || '未知机构'}</span>
+                  <span className="font-medium">
+                    {honor.organization || '未知机构'}
+                  </span>
                   {honor.year && <span> • {honor.year}</span>}
                 </div>
                 {honor.description && (
@@ -310,7 +340,9 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
 
   // 自定义分类内容
   if (resumeCategory.startsWith('custom_')) {
-    const categoryContent = customContent.filter(item => item.customCategory === resumeCategory);
+    const categoryContent = customContent.filter(
+      (item) => item.customCategory === resumeCategory,
+    );
 
     if (categoryContent.length === 0) {
       return (
@@ -325,8 +357,8 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
     return (
       <div className="space-y-4">
         {categoryContent.map((item, index) => (
-          <div 
-            key={item.id || index} 
+          <div
+            key={item.id || index}
             className="border-l-4 border-indigo-500 pl-6 py-4 hover:bg-gray-50 transition-colors group"
           >
             <div className="flex items-start justify-between mb-2">
@@ -336,12 +368,17 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                     {item.title || '未命名内容'}
                   </h3>
                   {item.status && (
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      item.status === '已完成' ? 'bg-green-100 text-green-700' :
-                      item.status === '进行中' ? 'bg-blue-100 text-blue-700' :
-                      item.status === '已发布' ? 'bg-purple-100 text-purple-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        item.status === '已完成'
+                          ? 'bg-green-100 text-green-700'
+                          : item.status === '进行中'
+                            ? 'bg-blue-100 text-blue-700'
+                            : item.status === '已发布'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {item.status}
                     </span>
                   )}
@@ -353,15 +390,15 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                 )}
               </div>
             </div>
-            
+
             <p className="text-gray-600 text-sm leading-relaxed mb-3">
               {item.description || item.content || '暂无描述'}
             </p>
-            
+
             {item.tags && Array.isArray(item.tags) && item.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {item.tags.map((tag, tagIndex) => (
-                  <span 
+                  <span
                     key={`${tag}-${tagIndex}`}
                     className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium"
                   >

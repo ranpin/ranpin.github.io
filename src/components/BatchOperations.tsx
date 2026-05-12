@@ -1,12 +1,11 @@
-import { Props } from '../types';
 import React, { useState } from 'react';
 
-const BatchOperations = ({ 
-  items, 
-  type, 
-  onBatchDelete, 
-  onBatchEdit, 
-  onClose 
+const BatchOperations = ({
+  items,
+  type,
+  onBatchDelete,
+  onBatchEdit,
+  onClose,
 }) => {
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
@@ -18,7 +17,7 @@ const BatchOperations = ({
     if (selectAll) {
       setSelectedItems(new Set());
     } else {
-      setSelectedItems(new Set(items.map(item => item.id)));
+      setSelectedItems(new Set(items.map((item) => item.id)));
     }
     setSelectAll(!selectAll);
   };
@@ -38,7 +37,7 @@ const BatchOperations = ({
   // 执行批量操作
   const executeBatchAction = () => {
     const selectedItemsArray = Array.from(selectedItems);
-    
+
     if (selectedItemsArray.length === 0) {
       alert('请先选择要操作的项目！');
       return;
@@ -46,7 +45,11 @@ const BatchOperations = ({
 
     switch (batchAction) {
       case 'delete':
-        if (window.confirm(`确定要删除选中的 ${selectedItemsArray.length} 个项目吗？此操作不可撤销！`)) {
+        if (
+          window.confirm(
+            `确定要删除选中的 ${selectedItemsArray.length} 个项目吗？此操作不可撤销！`,
+          )
+        ) {
           onBatchDelete(selectedItemsArray);
           onClose();
         }
@@ -69,18 +72,51 @@ const BatchOperations = ({
     switch (type) {
       case 'projects':
         return [
-          { name: 'status', label: '项目状态', type: 'select', options: ['已完成', '进行中', '已上线', '论文发表', '生产部署', '开源项目', '商业项目'] },
-          { name: 'tags', label: '添加标签', type: 'text', placeholder: '用逗号分隔' }
+          {
+            name: 'status',
+            label: '项目状态',
+            type: 'select',
+            options: [
+              '已完成',
+              '进行中',
+              '已上线',
+              '论文发表',
+              '生产部署',
+              '开源项目',
+              '商业项目',
+            ],
+          },
+          {
+            name: 'tags',
+            label: '添加标签',
+            type: 'text',
+            placeholder: '用逗号分隔',
+          },
         ];
       case 'publications':
         return [
-          { name: 'type', label: '论文类型', type: 'select', options: ['会议论文', '期刊论文', '预印本', '专利'] },
-          { name: 'year', label: '发表年份', type: 'text' }
+          {
+            name: 'type',
+            label: '论文类型',
+            type: 'select',
+            options: ['会议论文', '期刊论文', '预印本', '专利'],
+          },
+          { name: 'year', label: '发表年份', type: 'text' },
         ];
       case 'internships':
         return [
-          { name: 'type', label: '工作类型', type: 'select', options: ['实习', '全职', '兼职', '项目合作'] },
-          { name: 'skills', label: '添加技能', type: 'text', placeholder: '用逗号分隔' }
+          {
+            name: 'type',
+            label: '工作类型',
+            type: 'select',
+            options: ['实习', '全职', '兼职', '项目合作'],
+          },
+          {
+            name: 'skills',
+            label: '添加技能',
+            type: 'text',
+            placeholder: '用逗号分隔',
+          },
         ];
       default:
         return [];
@@ -172,8 +208,10 @@ const BatchOperations = ({
 
           {/* 右侧操作面板 */}
           <div className="w-80 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">批量操作</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              批量操作
+            </h3>
+
             <div className="space-y-4">
               {/* 操作类型选择 */}
               <div>
@@ -196,7 +234,9 @@ const BatchOperations = ({
               {/* 批量编辑字段 */}
               {batchAction === 'edit' && editableFields.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700">编辑字段</h4>
+                  <h4 className="text-sm font-medium text-gray-700">
+                    编辑字段
+                  </h4>
                   {editableFields.map((field) => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -205,25 +245,31 @@ const BatchOperations = ({
                       {field.type === 'select' ? (
                         <select
                           value={batchEditData[field.name] || ''}
-                          onChange={(e) => setBatchEditData(prev => ({
-                            ...prev,
-                            [field.name]: e.target.value
-                          }))}
+                          onChange={(e) =>
+                            setBatchEditData((prev) => ({
+                              ...prev,
+                              [field.name]: e.target.value,
+                            }))
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">不修改</option>
-                          {field.options.map(option => (
-                            <option key={option} value={option}>{option}</option>
+                          {field.options.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
                           ))}
                         </select>
                       ) : (
                         <input
                           type="text"
                           value={batchEditData[field.name] || ''}
-                          onChange={(e) => setBatchEditData(prev => ({
-                            ...prev,
-                            [field.name]: e.target.value
-                          }))}
+                          onChange={(e) =>
+                            setBatchEditData((prev) => ({
+                              ...prev,
+                              [field.name]: e.target.value,
+                            }))
+                          }
                           placeholder={field.placeholder}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -241,10 +287,9 @@ const BatchOperations = ({
                     <div className="text-sm">
                       <p className="font-medium text-yellow-800">操作预览</p>
                       <p className="text-yellow-700 mt-1">
-                        {batchAction === 'delete' 
+                        {batchAction === 'delete'
                           ? `将删除 ${selectedItems.size} 个项目`
-                          : `将修改 ${selectedItems.size} 个项目的指定字段`
-                        }
+                          : `将修改 ${selectedItems.size} 个项目的指定字段`}
                       </p>
                     </div>
                   </div>
@@ -269,7 +314,9 @@ const BatchOperations = ({
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <i className={`fas ${batchAction === 'delete' ? 'fa-trash' : 'fa-edit'} mr-2`}></i>
+                <i
+                  className={`fas ${batchAction === 'delete' ? 'fa-trash' : 'fa-edit'} mr-2`}
+                ></i>
                 执行操作
               </button>
             </div>

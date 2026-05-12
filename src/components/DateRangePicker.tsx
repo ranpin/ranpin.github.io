@@ -1,7 +1,6 @@
-import { Props } from '../types';
 import React, { useState } from 'react';
 
-const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }) => {
+const DateRangePicker = ({ value, onChange, placeholder = '选择日期范围' }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [startYear, setStartYear] = useState('');
   const [startMonth, setStartMonth] = useState('');
@@ -12,7 +11,9 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
   // 解析现有值
   React.useEffect(() => {
     if (value) {
-      const match = value.match(/(\d{4})\.(\d{2})\s*-\s*(\d{4})\.(\d{2})|(\d{4})\.(\d{2})\s*-\s*至今|(\d{4})年/);
+      const match = value.match(
+        /(\d{4})\.(\d{2})\s*-\s*(\d{4})\.(\d{2})|(\d{4})\.(\d{2})\s*-\s*至今|(\d{4})年/,
+      );
       if (match) {
         if (match[7]) {
           // 单年格式
@@ -43,19 +44,19 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
   // 生成日期范围字符串
   const generateDateRange = () => {
     if (!startYear) return '';
-    
+
     if (!startMonth) {
       return `${startYear}年`;
     }
-    
+
     if (isOngoing) {
       return `${startYear}.${startMonth.padStart(2, '0')} - 至今`;
     }
-    
+
     if (endYear && endMonth) {
       return `${startYear}.${startMonth.padStart(2, '0')} - ${endYear}.${endMonth.padStart(2, '0')}`;
     }
-    
+
     return `${startYear}.${startMonth.padStart(2, '0')}`;
   };
 
@@ -70,32 +71,37 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
   const quickOptions = (() => {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
-    
+
     return [
       {
         label: '本年度',
-        value: `${currentYear}年`
+        value: `${currentYear}年`,
       },
       {
         label: '去年',
-        value: `${currentYear - 1}年`
+        value: `${currentYear - 1}年`,
       },
       {
         label: '当前进行中',
-        value: `${currentYear}.${currentMonth.toString().padStart(2, '0')} - 至今`
+        value: `${currentYear}.${currentMonth.toString().padStart(2, '0')} - 至今`,
       },
       {
         label: '本学年',
-        value: `${currentYear - 1}.09 - ${currentYear}.06`
+        value: `${currentYear - 1}.09 - ${currentYear}.06`,
       },
       {
         label: '上学年',
-        value: `${currentYear - 2}.09 - ${currentYear - 1}.06`
+        value: `${currentYear - 2}.09 - ${currentYear - 1}.06`,
       },
       {
         label: '最近3个月',
-        value: `${currentYear}.${Math.max(1, currentMonth - 2).toString().padStart(2, '0')} - ${currentYear}.${currentMonth.toString().padStart(2, '0')}`
-      }
+        value: `${currentYear}.${Math.max(1, currentMonth - 2)
+          .toString()
+          .padStart(
+            2,
+            '0',
+          )} - ${currentYear}.${currentMonth.toString().padStart(2, '0')}`,
+      },
     ];
   })();
 
@@ -125,7 +131,9 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4">
           {/* 快速选择 */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">快速选择</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              快速选择
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {quickOptions.map((option, index) => (
                 <button
@@ -145,12 +153,16 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
 
           {/* 自定义日期范围 */}
           <div className="border-t pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-3">自定义日期范围</label>
-            
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              自定义日期范围
+            </label>
+
             {/* 开始日期 */}
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">开始年份</label>
+                <label className="block text-xs text-gray-600 mb-1">
+                  开始年份
+                </label>
                 <select
                   value={startYear}
                   onChange={(e) => setStartYear(e.target.value)}
@@ -160,13 +172,17 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
                   {Array.from({ length: 15 }, (_, i) => {
                     const year = new Date().getFullYear() + 2 - i;
                     return (
-                      <option key={year} value={year}>{year}</option>
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
                     );
                   })}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">开始月份</label>
+                <label className="block text-xs text-gray-600 mb-1">
+                  开始月份
+                </label>
                 <select
                   value={startMonth}
                   onChange={(e) => setStartMonth(e.target.value)}
@@ -174,7 +190,9 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
                 >
                   <option value="">月份</option>
                   {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>{i + 1}月</option>
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}月
+                    </option>
                   ))}
                 </select>
               </div>
@@ -196,7 +214,9 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
             {!isOngoing && (
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">结束年份</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    结束年份
+                  </label>
                   <select
                     value={endYear}
                     onChange={(e) => setEndYear(e.target.value)}
@@ -206,13 +226,17 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
                     {Array.from({ length: 15 }, (_, i) => {
                       const year = new Date().getFullYear() + 2 - i;
                       return (
-                        <option key={year} value={year}>{year}</option>
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
                       );
                     })}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">结束月份</label>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    结束月份
+                  </label>
                   <select
                     value={endMonth}
                     onChange={(e) => setEndMonth(e.target.value)}
@@ -220,7 +244,9 @@ const DateRangePicker = ({ value, onChange, placeholder = "选择日期范围" }
                   >
                     <option value="">月份</option>
                     {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>{i + 1}月</option>
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}月
+                      </option>
                     ))}
                   </select>
                 </div>

@@ -1,4 +1,3 @@
-import { Props } from '../types';
 import React, { useState, useEffect } from 'react';
 
 const GuestBook = () => {
@@ -10,7 +9,7 @@ const GuestBook = () => {
     name: '',
     email: '',
     website: '',
-    message: ''
+    message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,9 +27,13 @@ const GuestBook = () => {
   // 加载留言
   const loadMessages = () => {
     try {
-      const approvedMessages = JSON.parse(localStorage.getItem('portfolio_guest_messages') || '[]');
-      const pendingMessages = JSON.parse(localStorage.getItem('portfolio_pending_messages') || '[]');
-      
+      const approvedMessages = JSON.parse(
+        localStorage.getItem('portfolio_guest_messages') || '[]',
+      );
+      const pendingMessages = JSON.parse(
+        localStorage.getItem('portfolio_pending_messages') || '[]',
+      );
+
       setMessages(approvedMessages);
       setPendingMessages(pendingMessages);
     } catch (error) {
@@ -48,19 +51,24 @@ const GuestBook = () => {
         id: Date.now(),
         ...formData,
         timestamp: new Date().toISOString(),
-        status: 'pending'
+        status: 'pending',
       };
 
-      const currentPending = JSON.parse(localStorage.getItem('portfolio_pending_messages') || '[]');
+      const currentPending = JSON.parse(
+        localStorage.getItem('portfolio_pending_messages') || '[]',
+      );
       const updatedPending = [newMessage, ...currentPending];
-      
-      localStorage.setItem('portfolio_pending_messages', JSON.stringify(updatedPending));
+
+      localStorage.setItem(
+        'portfolio_pending_messages',
+        JSON.stringify(updatedPending),
+      );
       setPendingMessages(updatedPending);
 
       // 重置表单
       setFormData({ name: '', email: '', website: '', message: '' });
       setShowForm(false);
-      
+
       alert('留言提交成功！管理员审核后将会显示。');
     } catch (error) {
       console.error('提交留言失败:', error);
@@ -73,17 +81,32 @@ const GuestBook = () => {
   // 审核留言
   const approveMessage = (messageId) => {
     try {
-      const messageToApprove = pendingMessages.find(msg => msg.id === messageId);
+      const messageToApprove = pendingMessages.find(
+        (msg) => msg.id === messageId,
+      );
       if (!messageToApprove) return;
 
       // 添加到已审核列表
-      const currentApproved = JSON.parse(localStorage.getItem('portfolio_guest_messages') || '[]');
-      const updatedApproved = [{ ...messageToApprove, status: 'approved' }, ...currentApproved];
-      localStorage.setItem('portfolio_guest_messages', JSON.stringify(updatedApproved));
+      const currentApproved = JSON.parse(
+        localStorage.getItem('portfolio_guest_messages') || '[]',
+      );
+      const updatedApproved = [
+        { ...messageToApprove, status: 'approved' },
+        ...currentApproved,
+      ];
+      localStorage.setItem(
+        'portfolio_guest_messages',
+        JSON.stringify(updatedApproved),
+      );
 
       // 从待审核列表移除
-      const updatedPending = pendingMessages.filter(msg => msg.id !== messageId);
-      localStorage.setItem('portfolio_pending_messages', JSON.stringify(updatedPending));
+      const updatedPending = pendingMessages.filter(
+        (msg) => msg.id !== messageId,
+      );
+      localStorage.setItem(
+        'portfolio_pending_messages',
+        JSON.stringify(updatedPending),
+      );
 
       setMessages(updatedApproved);
       setPendingMessages(updatedPending);
@@ -98,12 +121,20 @@ const GuestBook = () => {
 
     try {
       if (isPending) {
-        const updatedPending = pendingMessages.filter(msg => msg.id !== messageId);
-        localStorage.setItem('portfolio_pending_messages', JSON.stringify(updatedPending));
+        const updatedPending = pendingMessages.filter(
+          (msg) => msg.id !== messageId,
+        );
+        localStorage.setItem(
+          'portfolio_pending_messages',
+          JSON.stringify(updatedPending),
+        );
         setPendingMessages(updatedPending);
       } else {
-        const updatedMessages = messages.filter(msg => msg.id !== messageId);
-        localStorage.setItem('portfolio_guest_messages', JSON.stringify(updatedMessages));
+        const updatedMessages = messages.filter((msg) => msg.id !== messageId);
+        localStorage.setItem(
+          'portfolio_guest_messages',
+          JSON.stringify(updatedMessages),
+        );
         setMessages(updatedMessages);
       }
     } catch (error) {
@@ -116,12 +147,12 @@ const GuestBook = () => {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-    
+
     if (diff < 60000) return '刚刚';
     if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
     if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
     if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
-    
+
     return date.toLocaleDateString('zh-CN');
   };
 
@@ -156,7 +187,9 @@ const GuestBook = () => {
       {/* 留言表单 */}
       {showForm && (
         <div className="mb-8 p-6 bg-gray-50 rounded-xl">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">写下你的留言</h4>
+          <h4 className="text-lg font-semibold text-gray-800 mb-4">
+            写下你的留言
+          </h4>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -167,7 +200,9 @@ const GuestBook = () => {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="请输入您的姓名"
                 />
@@ -180,7 +215,9 @@ const GuestBook = () => {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="your@email.com"
                 />
@@ -193,7 +230,9 @@ const GuestBook = () => {
               <input
                 type="url"
                 value={formData.website}
-                onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, website: e.target.value }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://your-website.com"
               />
@@ -206,7 +245,9 @@ const GuestBook = () => {
                 required
                 rows={4}
                 value={formData.message}
-                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, message: e.target.value }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
                 placeholder="写下您的想法、建议或问题..."
               />
@@ -250,7 +291,10 @@ const GuestBook = () => {
           </h4>
           <div className="space-y-4">
             {pendingMessages.map((message) => (
-              <div key={message.id} className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div
+                key={message.id}
+                className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
@@ -258,11 +302,13 @@ const GuestBook = () => {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h5 className="font-medium text-gray-900">{message.name}</h5>
+                        <h5 className="font-medium text-gray-900">
+                          {message.name}
+                        </h5>
                         {message.website && (
-                          <a 
-                            href={message.website} 
-                            target="_blank" 
+                          <a
+                            href={message.website}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 text-sm"
                           >
@@ -290,7 +336,9 @@ const GuestBook = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-gray-700 leading-relaxed">{message.message}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {message.message}
+                </p>
                 <div className="mt-2 text-xs text-gray-500">
                   {formatTime(message.timestamp)}
                 </div>
@@ -304,18 +352,23 @@ const GuestBook = () => {
       <div className="space-y-6">
         {messages.length > 0 ? (
           messages.map((message) => (
-            <div key={message.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+            <div
+              key={message.id}
+              className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl"
+            >
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                 {message.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-3">
-                    <h5 className="font-medium text-gray-900">{message.name}</h5>
+                    <h5 className="font-medium text-gray-900">
+                      {message.name}
+                    </h5>
                     {message.website && (
-                      <a 
-                        href={message.website} 
-                        target="_blank" 
+                      <a
+                        href={message.website}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm"
                         title="访问网站"
@@ -323,7 +376,9 @@ const GuestBook = () => {
                         <i className="fas fa-external-link-alt"></i>
                       </a>
                     )}
-                    <span className="text-sm text-gray-500">{formatTime(message.timestamp)}</span>
+                    <span className="text-sm text-gray-500">
+                      {formatTime(message.timestamp)}
+                    </span>
                   </div>
                   {isAdmin && (
                     <button
@@ -335,7 +390,9 @@ const GuestBook = () => {
                     </button>
                   )}
                 </div>
-                <p className="text-gray-700 leading-relaxed">{message.message}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {message.message}
+                </p>
               </div>
             </div>
           ))

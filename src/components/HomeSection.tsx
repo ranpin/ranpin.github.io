@@ -7,7 +7,7 @@ interface HomeSectionProps {
   personalInfo: PersonalInfo;
   recentNews: NewsItem[];
   isAdminMode: boolean;
-  openInlineEditor: (type: string, data: any, index: number | null) => void;
+  openInlineEditor: (type: string, data: unknown, index: number | null) => void;
   handleDeleteWithUndo: (type: string, index: number) => void;
   handleInsertAt: (type: string, index: number) => void;
 }
@@ -24,13 +24,13 @@ const HomeSection: React.FC<HomeSectionProps> = ({
     <div className="flex flex-col lg:flex-row gap-8">
       {/* 左侧个人信息侧边栏 */}
       <div className="lg:w-80 lg:flex-shrink-0">
-        <Profile 
-          personalInfo={personalInfo} 
+        <Profile
+          personalInfo={personalInfo}
           isAdminMode={isAdminMode}
           onEdit={() => openInlineEditor('personal-info', personalInfo, 0)}
         />
       </div>
-      
+
       {/* 右侧主内容区域 */}
       <div className="flex-1 min-w-0">
         <div className="max-w-4xl mx-auto">
@@ -52,12 +52,18 @@ const HomeSection: React.FC<HomeSectionProps> = ({
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-sm text-gray-500 font-mono">{news.date}</span>
+                        <span className="text-sm text-gray-500 font-mono">
+                          {news.date}
+                        </span>
                         {news.type && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">{news.type}</span>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                            {news.type}
+                          </span>
                         )}
                       </div>
-                      <p className="text-gray-800 leading-relaxed">{news.content}</p>
+                      <p className="text-gray-800 leading-relaxed">
+                        {news.content}
+                      </p>
                     </div>
                   </div>
                 </div>

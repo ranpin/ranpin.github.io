@@ -1,16 +1,16 @@
-import { Props } from '../types';
 import React from 'react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import EditableCard from './EditableCard';
+import { BlogPost } from '../types';
 
 interface LearningSectionFullProps {
   learningCategory: string;
   setLearningCategory: (category: string) => void;
   isAdminMode: boolean;
-  openInlineEditor: (type: string, data: any, index: number | null) => void;
+  openInlineEditor: (type: string, data: unknown, index: number | null) => void;
   handleDeleteWithUndo: (type: string, index: number) => void;
   handleInsertAt: (type: string, index: number) => void;
-  handleBlogClick: (blog: any) => void;
+  handleBlogClick: (blog: BlogPost) => void;
 }
 
 const LearningSectionFull: React.FC<LearningSectionFullProps> = ({
@@ -82,20 +82,22 @@ const LearningSectionFull: React.FC<LearningSectionFullProps> = ({
                     </div>
                     <div className="text-sm text-gray-500 mb-2 font-mono">
                       {blog.date || '日期未知'}
-                      {blog.readTime && <span> • 阅读时间 {blog.readTime}</span>}
+                      {blog.readTime && (
+                        <span> • 阅读时间 {blog.readTime}</span>
+                      )}
                     </div>
                   </div>
                   <i className="fas fa-chevron-right text-gray-300 hover:text-purple-500 transition-colors text-sm"></i>
                 </div>
-                
+
                 <p className="text-gray-600 text-sm leading-relaxed mb-3">
                   {blog.summary || '暂无摘要'}
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {blog.tags && Array.isArray(blog.tags) ? (
                     blog.tags.map((tag, tagIndex) => (
-                      <span 
+                      <span
                         key={`${tag}-${tagIndex}`}
                         className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium"
                       >
@@ -133,7 +135,9 @@ const LearningSectionFull: React.FC<LearningSectionFullProps> = ({
               onEdit={() => openInlineEditor('blog-engineering', blog, index)}
               onDelete={() => handleDeleteWithUndo('blog-engineering', index)}
               onInsertBefore={() => handleInsertAt('blog-engineering', index)}
-              onInsertAfter={() => handleInsertAt('blog-engineering', index + 1)}
+              onInsertAfter={() =>
+                handleInsertAt('blog-engineering', index + 1)
+              }
               className="border-l-4 border-green-500 pl-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <div onClick={() => handleBlogClick(blog)}>
@@ -151,20 +155,22 @@ const LearningSectionFull: React.FC<LearningSectionFullProps> = ({
                     </div>
                     <div className="text-sm text-gray-500 mb-2 font-mono">
                       {blog.date || '日期未知'}
-                      {blog.readTime && <span> • 阅读时间 {blog.readTime}</span>}
+                      {blog.readTime && (
+                        <span> • 阅读时间 {blog.readTime}</span>
+                      )}
                     </div>
                   </div>
                   <i className="fas fa-chevron-right text-gray-300 hover:text-green-500 transition-colors text-sm"></i>
                 </div>
-                
+
                 <p className="text-gray-600 text-sm leading-relaxed mb-3">
                   {blog.summary || '暂无摘要'}
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {blog.tags && Array.isArray(blog.tags) ? (
                     blog.tags.map((tag, tagIndex) => (
-                      <span 
+                      <span
                         key={`${tag}-${tagIndex}`}
                         className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium"
                       >
