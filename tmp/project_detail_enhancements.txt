@@ -1,0 +1,55 @@
+
+              {/* 业务背景 - 面试重点 */}
+              {selectedArticle.businessContext && (
+                <div className="mb-12">
+                  <SectionTitleEditor
+                    sectionKey={`project_business_context_${selectedArticle.id}`}
+                    defaultTitle="业务背景"
+                    icon="fas fa-briefcase"
+                    size="text-2xl"
+                    className="mb-6 justify-center"
+                  />
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-8 max-w-4xl mx-auto">
+                    <p className="text-gray-700 leading-relaxed text-center text-lg">
+                      {selectedArticle.businessContext}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 你的角色 - 面试重点 */}
+              {selectedArticle.yourRole && (
+                <div className="mb-12">
+                  <SectionTitleEditor
+                    sectionKey={`project_your_role_${selectedArticle.id}`}
+                    defaultTitle="你的角色"
+                    icon="fas fa-user-tie"
+                    size="text-2xl"
+                    className="mb-6 justify-center"
+                  />
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-8 max-w-4xl mx-auto">
+                    <p className="text-gray-700 leading-relaxed text-center text-lg">
+                      {selectedArticle.yourRole}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 技术架构详解 - 面试重点 */}
+              {selectedArticle.architectureDetail && (
+                <div className="mb-12">
+                  <SectionTitleEditor
+                    sectionKey={`project_architecture_detail_${selectedArticle.id}`}
+                    defaultTitle="技术架构详解"
+                    icon="fas fa-sitemap"
+                    size="text-2xl"
+                    className="mb-6 justify-center"
+                  />
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 max-w-4xl mx-auto">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-center text-lg">
+                      {selectedArticle.architectureDetail}
+                    </p>
+                  </div>
+                </div>
+              )}
+
