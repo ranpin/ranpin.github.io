@@ -12,6 +12,7 @@ import SmartRecommendations from './components/SmartRecommendations';
 import SectionTitleEditor from './components/SectionTitleEditor';
 import ModuleRenderer from './components/ModuleRenderer';
 import { usePortfolioStore } from './store/usePortfolioStore';
+import { useResumeTabs } from './hooks/useResumeTabs';
 import { 
   personalInfo as initialPersonalInfo, 
   recentNews as initialRecentNews, 
@@ -50,14 +51,14 @@ const App = () => {
     customContent,
     
     // Actions - 数据更新
-    setPersonalInfo,
-    setRecentNews,
-    setProjects,
-    setPublications,
-    setInternships,
-    setHonors,
-    setAcademicBlogs,
-    setEngineeringBlogs,
+    setPersonalInfo: storeSetPersonalInfo,
+    setRecentNews: storeSetRecentNews,
+    setProjects: storeSetProjects,
+    setPublications: storeSetPublications,
+    setInternships: storeSetInternships,
+    setHonors: storeSetHonors,
+    setAcademicBlogs: storeSetAcademicBlogs,
+    setEngineeringBlogs: storeSetEngineeringBlogs,
     
     // Actions - UI 状态
     setActiveSection,
@@ -88,7 +89,19 @@ const App = () => {
     addDeletedItem,
     clearDeletedItems,
     hideUndoToast,
+    setUndoTimer,
+    undoTimer,
   } = usePortfolioStore();
+
+  // 使用自定义 Hooks 管理简历 Tab 逻辑
+  const {
+    editingTabId,
+    editingTabName,
+    setEditingTabName,
+    startEditingTab,
+    cancelEditingTab,
+    saveTabName,
+  } = useResumeTabs();
 
   // 数据迁移与防御性清洗函数
   const sanitizeData = (data, type) => {
@@ -143,10 +156,8 @@ const App = () => {
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [draggedTab, setDraggedTab] = useState(null);
   
-  // 分类导航编辑状态
+  // 分类导航编辑状态（已迁移至 useResumeTabs）
   const [isEditingTabs, setIsEditingTabs] = useState(false);
-  const [editingTabId, setEditingTabId] = useState(null);
-  const [editingTabName, setEditingTabName] = useState('');
   
   // 学习记录分页状态
   const [learningPage, setLearningPage] = useState(1);
@@ -259,8 +270,8 @@ const App = () => {
     
     // 设置定时器自动隐藏 toast
     const timer = setTimeout(() => {
-      setShowUndoToast(false);
-      setDeletedItems([]);
+      hideUndoToast();
+      clearDeletedItems();
     }, 5000);
     setUndoTimer(timer);
   };
@@ -276,8 +287,8 @@ const App = () => {
     addItemAt(collection, index, item);
     
     // 清除状态
-    setShowUndoToast(false);
-    setDeletedItems([]);
+    hideUndoToast();
+    clearDeletedItems();
     if (undoTimer) {
       clearTimeout(undoTimer);
       setUndoTimer(null);
@@ -354,26 +365,15 @@ const App = () => {
     openInlineEditor(type, emptyData, null);
   };
 
-  // Tab 编辑相关函数
-  const startEditingTab = (tabKey) => {
-    setEditingTabId(tabKey);
-    setEditingTabName(customTabNames[tabKey] || getTabDisplayName(tabKey));
-  };
-
-  const cancelEditingTab = () => {
-    setEditingTabId(null);
-    setEditingTabName('');
-  };
-
-  const saveTabName = () => {
-    if (editingTabId && editingTabName.trim()) {
-      setCustomTabNames({
-        ...customTabNames,
-        [editingTabId]: editingTabName.trim()
-      });
-    }
-    cancelEditingTab();
-  };
+  // 详情弹窗处理函数（补充缺失的 handlers）
+  const handleArticleClick = (item) => setSelectedArticle(item);
+  const handleCloseArticle = () => setSelectedArticle(null);
+  const handlePaperClick = (item) => setSelectedPaper(item);
+  const handleClosePaper = () => setSelectedPaper(null);
+  const handleBlogClick = (item) => setSelectedBlog(item);
+  const handleCloseBlog = () => setSelectedBlog(null);
+  const handleInternshipClick = (item) => setSelectedInternship(item);
+  const handleCloseInternship = () => setSelectedInternship(null);
 
   // 管理面板相关函数
   const handleResetData = () => {
@@ -656,7 +656,7 @@ const App = () => {
                       <li>• 拖拽分类按钮可以调整顺序</li>
                       <li>• 点击分类上的编辑图标可以修改名称</li>
                       <li>• 点击删除图标可以移除分类（数据不会丢失）</li>
-                      <li>• 点击"添加分类"可以创建新的自定义分类</li>
+                      <li>• 点击&quot;添加分类&quot;可以创建新的自定义分类</li>
                     </ul>
                   </div>
                 </div>
@@ -1026,7 +1026,6 @@ const App = () => {
                                         // 删除自定义内容
                                         const updatedContent = customContent.filter(c => c.id !== item.id);
                                         setCustomContent(updatedContent);
-                                        setRefreshKey(prev => prev + 1);
                                       }
                                     }}
                                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -2113,7 +2112,7 @@ const App = () => {
               <div className="p-8 overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar">
                 <ProjectEditor 
                   formData={inlineEditState.data || {}} 
-                  onChange={(field, value) => setInlineEditState(prev => ({ ...prev, data: { ...prev.data, [field]: value } }))} 
+                  onChange={(field, value) => openInlineEditor(inlineEditState.type, { ...inlineEditState.data, [field]: value }, inlineEditState.index)} 
                 />
               </div>
               <div className="sticky bottom-0 bg-gray-50/95 backdrop-blur border-t p-4 flex justify-end space-x-3 rounded-b-2xl">
@@ -2188,7 +2187,7 @@ const App = () => {
           </button>
           <button
             onClick={() => {
-              setShowUndoToast(false);
+              hideUndoToast();
               if (undoTimer) {
                 clearTimeout(undoTimer);
                 setUndoTimer(null);

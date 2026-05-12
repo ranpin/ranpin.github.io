@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 
 /**
@@ -13,6 +13,20 @@ export const useResumeTabs = () => {
     setResumeTabOrder,
     setCustomTabNames
   } = usePortfolioStore();
+
+  const [editingTabId, setEditingTabId] = useState(null);
+  const [editingTabName, setEditingTabName] = useState('');
+
+  // 获取 Tab 的默认显示名称
+  const getTabDisplayName = (key) => {
+    const tabConfig = {
+      projects: '项目经历',
+      publications: '论文发表',
+      internships: '实习经历',
+      honors: '荣誉奖项'
+    };
+    return tabConfig[key] || key;
+  };
 
   // 生成带有自定义名称和图标的 Tab 列表
   const tabs = useMemo(() => {
@@ -41,12 +55,25 @@ export const useResumeTabs = () => {
     setResumeTabOrder(items);
   };
 
-  // 更新自定义 Tab 名称
-  const updateTabName = (key, newName) => {
-    setCustomTabNames(prev => ({
-      ...prev,
-      [key]: newName
-    }));
+  // Tab 编辑逻辑
+  const startEditingTab = (tabKey) => {
+    setEditingTabId(tabKey);
+    setEditingTabName(customTabNames[tabKey] || getTabDisplayName(tabKey));
+  };
+
+  const cancelEditingTab = () => {
+    setEditingTabId(null);
+    setEditingTabName('');
+  };
+
+  const saveTabName = () => {
+    if (editingTabId && editingTabName.trim()) {
+      setCustomTabNames(prev => ({
+        ...prev,
+        [editingTabId]: editingTabName.trim()
+      }));
+    }
+    cancelEditingTab();
   };
 
   return {
@@ -54,6 +81,12 @@ export const useResumeTabs = () => {
     setActiveCategory: setResumeCategory,
     tabs,
     handleDragEnd,
-    updateTabName
+    updateTabName: (key, newName) => setCustomTabNames(prev => ({ ...prev, [key]: newName })),
+    editingTabId,
+    editingTabName,
+    setEditingTabName,
+    startEditingTab,
+    cancelEditingTab,
+    saveTabName
   };
 };
