@@ -1,15 +1,16 @@
 import { ReactNode } from 'react';
 
-// 核心数据模型
+// 核心数据模型 (与 usePortfolioStore.ts 保持一致)
 export interface PersonalInfo {
   name: string;
   title: string;
   location: string;
-  bio: {
-    summary: string;
-    details: string[];
-  };
-  contact: {
+  email: string;
+  avatar: string;
+  bio: { main: string; detail: string };
+  researchInterests: string[];
+  socialLinks: Record<string, string>;
+  contact?: {
     email: string;
     phone: string;
     github: string;
