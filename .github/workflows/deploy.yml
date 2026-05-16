@@ -24,9 +24,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # Force refresh to ensure Node.js 20 is used for Vite 5 compatibility
           node-version: '20'
-          cache: 'npm'
+          # Temporarily disable cache to force a fresh download and bypass potential corruption
+          cache: ''
           
       - name: Install dependencies
         run: npm ci
