@@ -21,25 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Setup Node.js 20 (Force Install)
+      - name: Setup Node.js 20 (Direct Binary)
         run: |
-          # Remove any existing node installations to avoid conflicts
-          sudo rm -rf /usr/local/bin/node /usr/local/bin/npm /usr/lib/node_modules
+          # Download Node.js 20 binary directly
+          curl -o node-v20.tar.gz https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz
+          tar -xzf node-v20.tar.gz
           
-          # Download and install Node.js 20 directly from official source
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm install 20
-          nvm use 20
-          nvm alias default 20
+          # Add to PATH for subsequent steps
+          echo "$(pwd)/node-v20.11.0-linux-x64/bin" >> $GITHUB_PATH
           
           # Verify version
-          echo "Node version: $(node -v)"
-          echo "NPM version: $(npm -v)"
-          
-          # Ensure the new node is in PATH for subsequent steps
-          echo "$(nvm which 20)/.." >> $GITHUB_PATH
+          node -v
+          npm -v
           
       - name: Install dependencies
         run: npm ci
