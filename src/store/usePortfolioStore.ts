@@ -116,14 +116,22 @@ export type CollectionKey =
 export interface InlineEditState {
   isVisible: boolean;
   type: string | null;
-  data: any;
+  data:
+    | PersonalInfo
+    | Project
+    | Publication
+    | Internship
+    | Honor
+    | BlogPost
+    | NewsItem
+    | null;
   index: number | null;
 }
 
 export interface InsertMenuState {
   isVisible: boolean;
   index: number | null;
-  sectionType: string | null;
+  sectionType: CollectionKey | 'recentNews' | null;
 }
 
 export interface PortfolioState {
@@ -146,7 +154,7 @@ export interface PortfolioState {
   learningPage: number;
   learningFilter: string;
   isAdminMode: boolean;
-  customContent: any[];
+  customContent: (Project | Publication | Internship | Honor | BlogPost)[];
 
   // Inline 编辑状态
   inlineEditState: InlineEditState;
@@ -157,7 +165,7 @@ export interface PortfolioState {
   // 删除撤回状态
   deletedItems: any[];
   showUndoToast: boolean;
-  undoTimer: any;
+  undoTimer: NodeJS.Timeout | null;
 
   // Actions - 数据更新
   setPersonalInfo: (data: PersonalInfo) => void;
@@ -182,10 +190,24 @@ export interface PortfolioState {
   setIsAdminMode: (mode: boolean) => void;
 
   // Actions - 自定义内容
-  setCustomContent: (content: any[]) => void;
+  setCustomContent: (
+    content: (Project | Publication | Internship | Honor | BlogPost)[],
+  ) => void;
 
   // Actions - Inline 编辑
-  openInlineEditor: (type: string, data: any, index: number | null) => void;
+  openInlineEditor: (
+    type: string,
+    data:
+      | PersonalInfo
+      | Project
+      | Publication
+      | Internship
+      | Honor
+      | BlogPost
+      | NewsItem
+      | null,
+    index: number | null,
+  ) => void;
   closeInlineEditor: () => void;
 
   // Actions - 积木选择器
@@ -196,7 +218,7 @@ export interface PortfolioState {
   addDeletedItem: (item: any) => void;
   clearDeletedItems: () => void;
   hideUndoToast: () => void;
-  setUndoTimer: (timer: any) => void;
+  setUndoTimer: (timer: NodeJS.Timeout | null) => void;
 
   // Actions - Tab 管理
   addNewTab: () => void;
@@ -206,62 +228,81 @@ export interface PortfolioState {
   updateItem: (
     collection: CollectionKey,
     id: number | string,
-    data: any,
+    data: Partial<Project | Publication | Internship | Honor | BlogPost>,
   ) => void;
   deleteItem: (collection: CollectionKey, id: number | string) => void;
-  addItem: (collection: CollectionKey, newItem: any) => void;
+  addItem: (
+    collection: CollectionKey,
+    newItem: Omit<
+      Project | Publication | Internship | Honor | BlogPost,
+      'id'
+    > & { id?: number | string },
+  ) => void;
 
   // Actions - 批量更新
-  updateItemAt: (collection: CollectionKey, index: number, data: any) => void;
+  updateItemAt: (
+    collection: CollectionKey,
+    index: number,
+    data: Partial<
+      Project | Publication | Internship | Honor | BlogPost | NewsItem
+    >,
+  ) => void;
   deleteItemAt: (collection: CollectionKey, index: number) => void;
-  addItemAt: (collection: CollectionKey, index: number, newItem: any) => void;
+  addItemAt: (
+    collection: CollectionKey,
+    index: number,
+    newItem: Omit<
+      Project | Publication | Internship | Honor | BlogPost | NewsItem,
+      'id'
+    > & { id?: number | string },
+  ) => void;
 }
 
 // 数据清洗函数（从 App.jsx 迁移）
-const sanitizeData = (data: any, type: string): any => {
+const sanitizeData = <T extends Project[] | Internship[] | PersonalInfo>(
+  data: T,
+  type: 'project' | 'internship' | 'personalInfo',
+): T => {
   if (!data) return data;
 
   if (type === 'project') {
-    return Array.isArray(data)
-      ? data.map((p) => ({
-          ...p,
-          tags: p.tags || [],
-          businessContext: p.businessContext || '',
-          yourRole: p.yourRole || '',
-          architectureDetail: p.architectureDetail || '',
-          technicalChallenges: p.technicalChallenges || [],
-          results: p.results || [],
-          achievements: p.achievements || [],
-          interviewHighlights: p.interviewHighlights || [],
-          discussionTopics: p.discussionTopics || [],
-          demoImage: p.demoImage || '',
-          architectureImage: p.architectureImage || '',
-          demoVideo: p.demoVideo || '',
-          resultChart: p.resultChart || '',
-          githubUrl: p.githubUrl || '',
-          liveUrl: p.liveUrl || '',
-        }))
-      : data;
+    return (data as Project[]).map((p) => ({
+      ...p,
+      tags: p.tags || [],
+      businessContext: p.businessContext || '',
+      yourRole: p.yourRole || '',
+      architectureDetail: p.architectureDetail || '',
+      technicalChallenges: p.technicalChallenges || [],
+      results: p.results || [],
+      achievements: p.achievements || [],
+      interviewHighlights: p.interviewHighlights || [],
+      discussionTopics: p.discussionTopics || [],
+      demoImage: p.demoImage || '',
+      architectureImage: p.architectureImage || '',
+      demoVideo: p.demoVideo || '',
+      resultChart: p.resultChart || '',
+      githubUrl: p.githubUrl || '',
+      liveUrl: p.liveUrl || '',
+    })) as unknown as T;
   }
 
   if (type === 'internship') {
-    return Array.isArray(data)
-      ? data.map((i) => ({
-          ...i,
-          contributions: i.contributions || [],
-          skills: i.skills || [],
-        }))
-      : data;
+    return (data as Internship[]).map((i) => ({
+      ...i,
+      contributions: i.contributions || [],
+      skills: i.skills || [],
+    })) as unknown as T;
   }
 
   if (type === 'personalInfo') {
+    const info = data as PersonalInfo;
     return {
-      ...data,
+      ...info,
       bio: {
-        main: data.bio?.main || '',
-        detail: data.bio?.detail || '',
+        main: info.bio?.main || '',
+        detail: info.bio?.detail || '',
       },
-    };
+    } as unknown as T;
   }
 
   return data;

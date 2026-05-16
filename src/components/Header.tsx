@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   personalInfo,
   isAdminMode: propIsAdminMode,
-  onToggleAdmin,
+  onToggleAdmin: _onToggleAdmin,
 }) => {
   const [isAdminMode, setIsAdminMode] = useState(propIsAdminMode || false);
   const [adminPassword, setAdminPassword] = useState('');
