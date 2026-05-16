@@ -7,7 +7,16 @@ import StargateSection from './components/StargateSection';
 import GlobalModals from './components/GlobalModals';
 import InlineEditWrapper from './components/InlineEditWrapper';
 import AdminPanel from './components/AdminPanel';
-import { usePortfolioStore } from './store/usePortfolioStore';
+import {
+  usePortfolioStore,
+  Project,
+  Publication,
+  BlogPost,
+  Internship,
+  PersonalInfo,
+  Honor,
+  NewsItem,
+} from './store/usePortfolioStore';
 import { useResumeTabs } from './hooks/useResumeTabs';
 
 const App = () => {
@@ -48,10 +57,11 @@ const App = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // 全局弹窗状态（已迁移至 Store，此处为兼容旧代码的临时处理，后续需进一步迁移）
-  const [selectedArticle, setSelectedArticle] = useState<any>(null);
-  const [selectedPaper, setSelectedPaper] = useState<any>(null);
-  const [selectedBlog, setSelectedBlog] = useState<any>(null);
-  const [selectedInternship, setSelectedInternship] = useState<any>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Project | null>(null);
+  const [selectedPaper, setSelectedPaper] = useState<Publication | null>(null);
+  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [selectedInternship, setSelectedInternship] =
+    useState<Internship | null>(null);
 
   // 处理函数定义...
   const handleCloseArticle = () => setSelectedArticle(null);
@@ -59,77 +69,96 @@ const App = () => {
   const handleCloseBlog = () => setSelectedBlog(null);
   const handleCloseInternship = () => setSelectedInternship(null);
 
-  const handleRecommendClick = (item: any, type: string) => {
-    if (type === 'project') setSelectedArticle(item);
-    else if (type === 'publication') setSelectedPaper(item);
-    else if (type.includes('blog')) setSelectedBlog(item);
-    else if (type === 'internship') setSelectedInternship(item);
+  const handleRecommendClick = (
+    item: Project | Publication | BlogPost | Internship,
+    type: string,
+  ) => {
+    if (type === 'project') setSelectedArticle(item as Project);
+    else if (type === 'publication') setSelectedPaper(item as Publication);
+    else if (type.includes('blog')) setSelectedBlog(item as BlogPost);
+    else if (type === 'internship') setSelectedInternship(item as Internship);
   };
 
-  const handleInlineSave = (_data: any) => {
+  const handleInlineSave = (
+    _data:
+      | PersonalInfo
+      | Project
+      | Publication
+      | Internship
+      | Honor
+      | BlogPost
+      | NewsItem
+      | null,
+  ) => {
     closeInlineEditor();
   };
 
   const handleResetData = () => {};
   const handleExportData = () => {};
   const handleImportData = () => {};
-  const handleUndoDelete = () => {};
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         activeSection={activeSection}
+        setActiveSection={setActiveSection}
         onSectionChange={setActiveSection}
         isAdminMode={isAdminMode}
         onToggleAdmin={() => setIsAdminMode(!isAdminMode)}
-        onOpenAdminPanel={() => setShowAdminPanel(true)}
+        onOpenAdmin={() => setShowAdminPanel(true)}
+        personalInfo={personalInfo}
       />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 首页内容 */}
+      <main className="container mx-auto px-4 py-8">
         {activeSection === 'home' && (
           <HomeSection
             personalInfo={personalInfo}
             recentNews={recentNews}
+            onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
-            openInlineEditor={openInlineEditor}
-            handleDeleteWithUndo={(_type, _index) => {}}
-            handleInsertAt={(_type, _index) => {}}
+            onUpdateItemAt={(index, data) => {
+              /* TODO */
+            }}
+            onDeleteItemAt={(index) => {
+              /* TODO */
+            }}
+            onAddItemAt={(index, item) => {
+              /* TODO */
+            }}
           />
         )}
 
-        {/* 个人简历内容 */}
         {activeSection === 'resume' && (
           <ResumeSection
             resumeCategory={resumeCategory}
+            projects={[]} // TODO: 从 store 获取
+            publications={[]} // TODO: 从 store 获取
+            internships={[]} // TODO: 从 store 获取
+            honors={[]} // TODO: 从 store 获取
+            onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
-            openInlineEditor={openInlineEditor}
-            handleDeleteWithUndo={(_type, _index) => {}}
-            handleInsertAt={(_type, _index) => {}}
-            handleArticleClick={setSelectedArticle}
-            handlePaperClick={setSelectedPaper}
-            handleInternshipClick={setSelectedInternship}
           />
         )}
 
-        {/* 学习记录区域 */}
         {activeSection === 'learning' && (
           <LearningSectionFull
             learningCategory={learningCategory}
-            setLearningCategory={setLearningCategory}
+            academicBlogs={[]} // TODO: 从 store 获取
+            engineeringBlogs={[]} // TODO: 从 store 获取
+            onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
-            openInlineEditor={openInlineEditor}
-            handleDeleteWithUndo={(_type, _index) => {}}
-            handleInsertAt={(_type, _index) => {}}
-            handleBlogClick={setSelectedBlog}
           />
         )}
 
-        {/* 星际之门 */}
-        {activeSection === 'stargate' && <StargateSection />}
+        {activeSection === 'stargate' && (
+          <StargateSection
+            customContent={[]} // TODO: 从 store 获取
+            onRecommendClick={handleRecommendClick}
+            isAdminMode={isAdminMode}
+          />
+        )}
       </main>
 
-      {/* 全局弹窗 */}
       <GlobalModals
         selectedArticle={selectedArticle}
         selectedPaper={selectedPaper}
@@ -139,54 +168,39 @@ const App = () => {
         onClosePaper={handleClosePaper}
         onCloseBlog={handleCloseBlog}
         onCloseInternship={handleCloseInternship}
-        onRecommendClick={handleRecommendClick}
       />
 
-      {/* 内联编辑器 */}
-      <InlineEditWrapper
-        inlineEditState={inlineEditState}
-        closeInlineEditor={closeInlineEditor}
-        handleInlineSave={handleInlineSave}
-        openInlineEditor={openInlineEditor}
-      />
-
-      {/* 管理面板 */}
-      {showAdminPanel && (
-        <AdminPanel
-          isVisible={showAdminPanel}
-          onClose={() => setShowAdminPanel(false)}
-          onResetData={handleResetData}
-          onExportData={handleExportData}
-          onImportData={handleImportData}
+      {inlineEditState.isVisible && (
+        <InlineEditWrapper
+          isVisible={inlineEditState.isVisible}
+          type={inlineEditState.type || ''}
+          data={inlineEditState.data}
+          index={inlineEditState.index}
+          onSave={handleInlineSave}
+          onClose={closeInlineEditor}
         />
       )}
 
-      {/* 撤回删除提示 Toast */}
-      {showUndoToast && deletedItems.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-4 animate-slide-up">
-          <span className="text-sm">
-            已删除{' '}
-            {deletedItems[deletedItems.length - 1].item.title ||
-              deletedItems[deletedItems.length - 1].item.content ||
-              '项目'}
-          </span>
-          <button
-            onClick={handleUndoDelete}
-            className="px-4 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
-          >
-            撤销
-          </button>
+      {showAdminPanel && (
+        <AdminPanel
+          onClose={() => setShowAdminPanel(false)}
+          onReset={handleResetData}
+          onExport={handleExportData}
+          onImport={handleImportData}
+        />
+      )}
+
+      {showUndoToast && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">
+          已删除项目
           <button
             onClick={() => {
+              /* TODO: 实现撤销逻辑 */
               hideUndoToast();
-              if (undoTimer) {
-                clearTimeout(undoTimer);
-                setUndoTimer(null);
-              }
             }}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="ml-4 text-blue-400 hover:text-blue-300"
           >
-            <i className="fas fa-times"></i>
+            撤销
           </button>
         </div>
       )}
