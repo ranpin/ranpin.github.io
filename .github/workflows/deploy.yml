@@ -29,16 +29,21 @@ jobs:
           
           # Add to PATH for subsequent steps
           echo "$(pwd)/node-v20.19.0-linux-x64/bin" >> $GITHUB_PATH
+          echo "NODE_BIN_DIR=$(pwd)/node-v20.19.0-linux-x64/bin" >> $GITHUB_ENV
           
           # Verify version
           node -v
           npm -v
           
       - name: Install dependencies
-        run: npm ci
+        run: |
+          export PATH="$NODE_BIN_DIR:$PATH"
+          npm ci
         
       - name: Build
-        run: npm run build
+        run: |
+          export PATH="$NODE_BIN_DIR:$PATH"
+          npm run build
         
       - name: Copy 404.html for SPA routing
         run: |
