@@ -23,12 +23,12 @@ jobs:
         
       - name: Setup Node.js 20 (Direct Binary)
         run: |
-          # Download Node.js 20 binary directly
-          curl -o node-v20.tar.gz https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz
+          # Download Node.js 20.19.0 binary directly (required by Vite 5.4+)
+          curl -o node-v20.tar.gz https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.gz
           tar -xzf node-v20.tar.gz
           
           # Add to PATH for subsequent steps
-          echo "$(pwd)/node-v20.11.0-linux-x64/bin" >> $GITHUB_PATH
+          echo "$(pwd)/node-v20.19.0-linux-x64/bin" >> $GITHUB_PATH
           
           # Verify version
           node -v
