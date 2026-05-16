@@ -11,8 +11,214 @@ import {
   engineeringBlogs as initialEngineeringBlogs,
 } from '../data/content';
 
+// --- 类型定义 (与 src/types/index.ts 保持一致) ---
+
+export interface PersonalInfo {
+  name: string;
+  title: string;
+  location: string;
+  email: string;
+  avatar: string;
+  bio: { main: string; detail: string };
+  researchInterests: string[];
+  socialLinks: Record<string, string>;
+  contact?: {
+    email: string;
+    phone: string;
+    github: string;
+    linkedin: string;
+  };
+}
+
+export interface NewsItem {
+  date: string;
+  content: string;
+}
+
+export interface Project {
+  id: number | string;
+  title: string;
+  period?: string;
+  duration?: string;
+  description: string;
+  tags: string[];
+  status?: string;
+  github?: string;
+  demo?: string;
+  businessContext?: string;
+  yourRole?: string;
+  architectureDetail?: string;
+  technicalChallenges?: string[];
+  results?: string[];
+  achievements?: string[];
+  interviewHighlights?: string[];
+  discussionTopics?: string[];
+  demoImage?: string;
+  architectureImage?: string;
+  demoVideo?: string;
+  resultChart?: string;
+  githubUrl?: string;
+  liveUrl?: string;
+}
+
+export interface Publication {
+  id: number | string;
+  title: string;
+  authors: string;
+  venue: string;
+  year: string | number;
+  link?: string;
+  pdf?: string;
+  abstract?: string;
+  pdfUrl?: string;
+}
+
+export interface Internship {
+  id: number | string;
+  company: string;
+  role: string;
+  period?: string;
+  duration?: string;
+  description: string;
+  contributions: string[];
+  skills: string[];
+}
+
+export interface Honor {
+  id: number | string;
+  title: string;
+  issuer: string;
+  date: string;
+  description?: string;
+}
+
+export interface BlogPost {
+  id: number | string;
+  title: string;
+  date?: string;
+  summary?: string;
+  content?: string;
+  category?: 'academic' | 'engineering';
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  link?: string;
+}
+
+export type CollectionKey =
+  | 'projects'
+  | 'publications'
+  | 'internships'
+  | 'honors'
+  | 'academicBlogs'
+  | 'engineeringBlogs';
+
+export interface InlineEditState {
+  isVisible: boolean;
+  type: string | null;
+  data: any;
+  index: number | null;
+}
+
+export interface InsertMenuState {
+  isVisible: boolean;
+  index: number | null;
+  sectionType: string | null;
+}
+
+export interface PortfolioState {
+  // 数据状态
+  personalInfo: PersonalInfo;
+  recentNews: NewsItem[];
+  projects: Project[];
+  publications: Publication[];
+  internships: Internship[];
+  honors: Honor[];
+  academicBlogs: BlogPost[];
+  engineeringBlogs: BlogPost[];
+
+  // UI 状态
+  activeSection: string;
+  learningCategory: string;
+  resumeCategory: string;
+  resumeTabOrder: string[];
+  customTabNames: Record<string, string>;
+  learningPage: number;
+  learningFilter: string;
+  isAdminMode: boolean;
+  customContent: any[];
+
+  // Inline 编辑状态
+  inlineEditState: InlineEditState;
+
+  // 积木选择器状态
+  insertMenuState: InsertMenuState;
+
+  // 删除撤回状态
+  deletedItems: any[];
+  showUndoToast: boolean;
+  undoTimer: any;
+
+  // Actions - 数据更新
+  setPersonalInfo: (data: PersonalInfo) => void;
+  setRecentNews: (data: NewsItem[]) => void;
+  setProjects: (data: Project[]) => void;
+  setPublications: (data: Publication[]) => void;
+  setInternships: (data: Internship[]) => void;
+  setHonors: (data: Honor[]) => void;
+  setAcademicBlogs: (data: BlogPost[]) => void;
+  setEngineeringBlogs: (data: BlogPost[]) => void;
+
+  // Actions - UI 状态更新
+  setActiveSection: (section: string) => void;
+  setLearningCategory: (category: string) => void;
+  setResumeCategory: (category: string) => void;
+  setResumeTabOrder: (order: string[]) => void;
+  setCustomTabNames: (names: Record<string, string>) => void;
+  setLearningPage: (page: number) => void;
+  setLearningFilter: (filter: string) => void;
+
+  // Actions - 管理员模式
+  setIsAdminMode: (mode: boolean) => void;
+
+  // Actions - 自定义内容
+  setCustomContent: (content: any[]) => void;
+
+  // Actions - Inline 编辑
+  openInlineEditor: (type: string, data: any, index: number | null) => void;
+  closeInlineEditor: () => void;
+
+  // Actions - 积木选择器
+  openInsertMenu: (index: number | null, sectionType: string | null) => void;
+  closeInsertMenu: () => void;
+
+  // Actions - 删除撤回
+  addDeletedItem: (item: any) => void;
+  clearDeletedItems: () => void;
+  hideUndoToast: () => void;
+  setUndoTimer: (timer: any) => void;
+
+  // Actions - Tab 管理
+  addNewTab: () => void;
+  deleteTab: (key: string) => void;
+
+  // Actions - 通用 CRUD
+  updateItem: (
+    collection: CollectionKey,
+    id: number | string,
+    data: any,
+  ) => void;
+  deleteItem: (collection: CollectionKey, id: number | string) => void;
+  addItem: (collection: CollectionKey, newItem: any) => void;
+
+  // Actions - 批量更新
+  updateItemAt: (collection: CollectionKey, index: number, data: any) => void;
+  deleteItemAt: (collection: CollectionKey, index: number) => void;
+  addItemAt: (collection: CollectionKey, index: number, newItem: any) => void;
+}
+
 // 数据清洗函数（从 App.jsx 迁移）
-const sanitizeData = (data, type) => {
+const sanitizeData = (data: any, type: string): any => {
   if (!data) return data;
 
   if (type === 'project') {
@@ -62,7 +268,7 @@ const sanitizeData = (data, type) => {
 };
 
 // 创建持久化 store
-export const usePortfolioStore = create(
+export const usePortfolioStore = create<PortfolioState>()(
   persist(
     (set, _get) => ({
       // 数据状态

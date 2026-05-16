@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import ResumeSection from './components/ResumeSection';
 import LearningSectionFull from './components/LearningSectionFull';
@@ -48,10 +48,10 @@ const App = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // 全局弹窗状态（已迁移至 Store，此处为兼容旧代码的临时处理，后续需进一步迁移）
-  const [selectedArticle, setSelectedArticle] = useState(null);
-  const [selectedPaper, setSelectedPaper] = useState(null);
-  const [selectedBlog, setSelectedBlog] = useState(null);
-  const [selectedInternship, setSelectedInternship] = useState(null);
+  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const [selectedPaper, setSelectedPaper] = useState<any>(null);
+  const [selectedBlog, setSelectedBlog] = useState<any>(null);
+  const [selectedInternship, setSelectedInternship] = useState<any>(null);
 
   // 处理函数定义...
   const handleCloseArticle = () => setSelectedArticle(null);
@@ -59,14 +59,14 @@ const App = () => {
   const handleCloseBlog = () => setSelectedBlog(null);
   const handleCloseInternship = () => setSelectedInternship(null);
 
-  const handleRecommendClick = (item, type) => {
+  const handleRecommendClick = (item: any, type: string) => {
     if (type === 'project') setSelectedArticle(item);
     else if (type === 'publication') setSelectedPaper(item);
     else if (type.includes('blog')) setSelectedBlog(item);
     else if (type === 'internship') setSelectedInternship(item);
   };
 
-  const handleInlineSave = (_data) => {
+  const handleInlineSave = (_data: any) => {
     closeInlineEditor();
   };
 
