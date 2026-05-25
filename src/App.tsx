@@ -150,10 +150,16 @@ const App = () => {
         {activeSection === 'learning' && (
           <LearningSectionFull
             learningCategory={learningCategory}
-            academicBlogs={academicBlogs}
-            engineeringBlogs={engineeringBlogs}
-            onRecommendClick={handleRecommendClick}
+            setLearningCategory={setLearningCategory}
             isAdminMode={isAdminMode}
+            openInlineEditor={openInlineEditor}
+            handleDeleteWithUndo={(type, index) => {
+              /* TODO: 实现删除撤回逻辑 */
+            }}
+            handleInsertAt={(type, index) => {
+              /* TODO: 实现插入逻辑 */
+            }}
+            handleBlogClick={(blog) => setSelectedBlog(blog)}
           />
         )}
 
