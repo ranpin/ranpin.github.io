@@ -25,6 +25,13 @@ const App = () => {
     // 数据状态
     personalInfo,
     recentNews,
+    projects,
+    publications,
+    internships,
+    honors,
+    academicBlogs,
+    engineeringBlogs,
+    customContent,
 
     // UI 状态
     activeSection,
@@ -131,10 +138,10 @@ const App = () => {
         {activeSection === 'resume' && (
           <ResumeSection
             resumeCategory={resumeCategory}
-            projects={[]} // TODO: 从 store 获取
-            publications={[]} // TODO: 从 store 获取
-            internships={[]} // TODO: 从 store 获取
-            honors={[]} // TODO: 从 store 获取
+            projects={projects}
+            publications={publications}
+            internships={internships}
+            honors={honors}
             onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
           />
@@ -143,8 +150,8 @@ const App = () => {
         {activeSection === 'learning' && (
           <LearningSectionFull
             learningCategory={learningCategory}
-            academicBlogs={[]} // TODO: 从 store 获取
-            engineeringBlogs={[]} // TODO: 从 store 获取
+            academicBlogs={academicBlogs}
+            engineeringBlogs={engineeringBlogs}
             onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
           />
@@ -152,7 +159,7 @@ const App = () => {
 
         {activeSection === 'stargate' && (
           <StargateSection
-            customContent={[]} // TODO: 从 store 获取
+            customContent={customContent}
             onRecommendClick={handleRecommendClick}
             isAdminMode={isAdminMode}
           />
