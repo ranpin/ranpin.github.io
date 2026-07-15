@@ -1,47 +1,25 @@
 import React from 'react';
 import ModuleRenderer from './ModuleRenderer';
 import SmartRecommendations from './SmartRecommendations';
-
-interface Article {
-  title: string;
-  [key: string]: unknown;
-}
-interface Paper {
-  title: string;
-  venue?: string;
-  year?: string;
-  authors?: string;
-  citations?: number;
-  type?: string;
-  abstract?: string;
-  [key: string]: unknown;
-}
-interface Blog {
-  title: string;
-  content?: string;
-  date?: string;
-  tags?: string[];
-  category?: string;
-  [key: string]: unknown;
-}
-interface Internship {
-  company: string;
-  position: string;
-  duration?: string;
-  description?: string;
-  [key: string]: unknown;
-}
+import Icon from './Icon';
+import type {
+  Project,
+  Publication,
+  BlogPost,
+  Internship,
+  ContentItem,
+} from '../types';
 
 interface GlobalModalsProps {
-  selectedArticle: Article | null;
-  selectedPaper: Paper | null;
-  selectedBlog: Blog | null;
+  selectedArticle: Project | null;
+  selectedPaper: Publication | null;
+  selectedBlog: BlogPost | null;
   selectedInternship: Internship | null;
   onCloseArticle: () => void;
   onClosePaper: () => void;
   onCloseBlog: () => void;
   onCloseInternship: () => void;
-  onRecommendClick: (item: unknown, type: string) => void;
+  onRecommendClick: (item: ContentItem, type: string) => void;
 }
 
 const GlobalModals: React.FC<GlobalModalsProps> = ({
@@ -69,7 +47,7 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                 onClick={onCloseArticle}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors ml-4 flex-shrink-0"
               >
-                <i className="fas fa-times text-gray-600"></i>
+                <Icon name="times" className="text-gray-600" />
               </button>
             </div>
             <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
@@ -100,7 +78,7 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                 onClick={onClosePaper}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors ml-4 flex-shrink-0"
               >
-                <i className="fas fa-times text-gray-600"></i>
+                <Icon name="times" className="text-gray-600" />
               </button>
             </div>
             <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
@@ -119,14 +97,15 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                 </p>
                 {selectedPaper.citations && (
                   <p className="text-gray-500">
-                    <i className="fas fa-quote-right mr-2"></i>被引用{' '}
-                    {selectedPaper.citations} 次
+                    <Icon name="quote-right" className="mr-2" />
+                    被引用 {selectedPaper.citations} 次
                   </p>
                 )}
               </div>
               <div className="mb-12">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center flex items-center justify-center">
-                  <i className="fas fa-file-alt text-blue-500 mr-3"></i>论文摘要
+                  <Icon name="file-alt" className="text-blue-500 mr-3" />
+                  论文摘要
                 </h3>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {selectedPaper.abstract}
@@ -154,17 +133,17 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                 onClick={onCloseBlog}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors ml-4 flex-shrink-0"
               >
-                <i className="fas fa-times text-gray-600"></i>
+                <Icon name="times" className="text-gray-600" />
               </button>
             </div>
             <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
               <div className="flex items-center space-x-4 mb-6 text-sm text-gray-500">
                 <span>
-                  <i className="far fa-calendar-alt mr-2"></i>
+                  <Icon name="calendar-alt" className="mr-2" />
                   {selectedBlog.date}
                 </span>
                 <span>
-                  <i className="fas fa-tag mr-2"></i>
+                  <Icon name="tag" className="mr-2" />
                   {selectedBlog.category}
                 </span>
               </div>
@@ -193,7 +172,7 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                 onClick={onCloseInternship}
                 className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors ml-4 flex-shrink-0"
               >
-                <i className="fas fa-times text-gray-600"></i>
+                <Icon name="times" className="text-gray-600" />
               </button>
             </div>
             <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">

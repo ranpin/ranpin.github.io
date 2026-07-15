@@ -1,75 +1,52 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SearchBox from './SearchBox';
-import { PersonalInfo } from '../types';
+import Icon from './Icon';
+import type { PersonalInfo } from '../types';
 
 interface HeaderProps {
   activeSection: string;
-  setActiveSection?: (section: string) => void;
+  setActiveSection: (section: string) => void;
   onSectionChange?: (section: string) => void;
-  onOpenAdmin?: () => void;
   personalInfo: PersonalInfo;
-  isAdminMode?: boolean;
-  onToggleAdmin?: () => void;
 }
+
+const navItems = [
+  { id: 'home', label: '首页', shortLabel: '首页', icon: 'home' },
+  { id: 'resume', label: '个人简历', shortLabel: '简历', icon: 'user' },
+  { id: 'learning', label: '学习记录', shortLabel: '学习', icon: 'book' },
+  { id: 'stargate', label: '星际之门', shortLabel: '星际之门', icon: 'star' },
+];
+
+const Avatar: React.FC<{ personalInfo: PersonalInfo; size: string }> = ({
+  personalInfo,
+  size,
+}) => {
+  const { avatar } = personalInfo;
+  if (avatar && (avatar.startsWith('http') || avatar.startsWith('data:'))) {
+    return (
+      <img
+        src={avatar}
+        alt="头像"
+        className="w-full h-full object-cover"
+        loading="eager"
+      />
+    );
+  }
+  return <span className={size}>{avatar || 'A'}</span>;
+};
 
 const Header: React.FC<HeaderProps> = ({
   activeSection,
   setActiveSection,
   onSectionChange,
-  onOpenAdmin,
   personalInfo,
-  isAdminMode: propIsAdminMode,
-  onToggleAdmin: _onToggleAdmin,
 }) => {
-  const [isAdminMode, setIsAdminMode] = useState(propIsAdminMode || false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showMobileProfile, setShowMobileProfile] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
-  const navItems = [
-    { id: 'home', label: '首页', icon: 'fas fa-home' },
-    { id: 'resume', label: '个人简历', icon: 'fas fa-user' },
-    { id: 'learning', label: '学习记录', icon: 'fas fa-book' },
-    { id: 'stargate', label: '星际之门', icon: 'fas fa-star' },
-  ];
-
-  // 检查是否已经登录管理模式
-  useEffect(() => {
-    const adminStatus = localStorage.getItem('portfolio_admin_mode');
-    if (adminStatus === 'true') {
-      setIsAdminMode(true);
-    }
-  }, []);
-
-  // 处理管理员登录
-  const handleAdminLogin = () => {
-    // 简单的密码验证，你可以根据需要修改密码
-    const correctPassword = 'Ranpin@'; // 建议修改为更安全的密码
-
-    if (adminPassword === correctPassword) {
-      setIsAdminMode(true);
-      localStorage.setItem('portfolio_admin_mode', 'true');
-      setShowPasswordInput(false);
-      setAdminPassword('');
-      // 不再自动弹出旧 AdminPanel，积木式编辑按钮已在页面显示
-    } else {
-      alert('密码错误！');
-      setAdminPassword('');
-    }
-  };
-
-  // 退出管理模式
-  const handleAdminLogout = () => {
-    setIsAdminMode(false);
-    localStorage.removeItem('portfolio_admin_mode');
-  };
-
-  // 处理密码输入框的回车键
-  const handlePasswordKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleAdminLogin();
-    }
+  const go = (id: string) => {
+    if (onSectionChange) onSectionChange(id);
+    else setActiveSection(id);
   };
 
   return (
@@ -77,244 +54,85 @@ const Header: React.FC<HeaderProps> = ({
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <nav className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center min-h-[60px]">
-            {/* 仅在小屏移动端显示个人信息 - 只在 sm 以下显示 */}
+            {/* 移动端个人信息入口 */}
             <div className="sm:hidden flex items-center flex-shrink-0 min-w-0">
               <button
                 onClick={() => setShowMobileProfile(true)}
                 className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-2 transition-colors min-w-0"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden flex-shrink-0">
-                  {personalInfo.avatar &&
-                  personalInfo.avatar.startsWith('http') ? (
-                    <img
-                      src={personalInfo.avatar}
-                      alt="头像"
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : personalInfo.avatar &&
-                    personalInfo.avatar.startsWith('data:') ? (
-                    <img
-                      src={personalInfo.avatar}
-                      alt="头像"
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                    />
-                  ) : (
-                    personalInfo.avatar || 'A'
-                  )}
+                  <Avatar personalInfo={personalInfo} size="" />
                 </div>
                 <div className="text-left min-w-0 flex-1">
                   <h2 className="text-sm font-semibold text-gray-800 truncate">
                     {personalInfo.name}
                   </h2>
                 </div>
-                <i className="fas fa-chevron-right text-gray-400 text-xs flex-shrink-0"></i>
+                <Icon
+                  name="chevron-right"
+                  className="text-gray-400 text-xs flex-shrink-0"
+                />
               </button>
             </div>
 
+            {/* 导航菜单 */}
             <div className="flex-1 flex items-center justify-center min-w-0">
-              {/* 导航菜单 - 居中显示 */}
               <div className="flex space-x-1 sm:space-x-4 lg:space-x-8 overflow-x-auto py-3 lg:py-4 scrollbar-hide">
                 {navItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      if (onSectionChange) onSectionChange(item.id);
-                      else if (setActiveSection) setActiveSection(item.id);
-                    }}
+                    onClick={() => go(item.id)}
                     className={`flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                       activeSection === item.id
                         ? 'bg-blue-100 text-blue-700'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
-                    <i className={`${item.icon} text-xs sm:text-sm`}></i>
+                    <Icon name={item.icon} className="text-xs sm:text-sm" />
                     <span className="hidden sm:inline">{item.label}</span>
-                    <span className="sm:hidden text-xs">
-                      {item.id === 'home'
-                        ? '首页'
-                        : item.id === 'resume'
-                          ? '简历'
-                          : item.id === 'learning'
-                            ? '学习'
-                            : item.label}
-                    </span>
+                    <span className="sm:hidden text-xs">{item.shortLabel}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 右侧按钮区域 - 移动端优化 */}
-            <div className="py-3 lg:py-4 flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
-              {/* 搜索按钮 - 所有屏幕尺寸都显示图标 */}
-              <div>
-                <button
-                  onClick={() => setShowMobileSearch(true)}
-                  className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200"
-                  title="搜索"
-                >
-                  <i className="fas fa-search text-sm"></i>
-                </button>
-              </div>
-              {!isAdminMode ? (
-                // 未登录管理模式时显示登录按钮
-                <>
-                  {!showPasswordInput ? (
-                    <button
-                      onClick={() => setShowPasswordInput(true)}
-                      className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:space-x-2 sm:px-3 sm:py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200 text-xs sm:text-sm"
-                      title="管理员登录"
-                    >
-                      <i className="fas fa-user-shield text-xs sm:text-sm"></i>
-                    </button>
-                  ) : (
-                    // 桌面端显示内联输入框
-                    <div className="hidden sm:flex items-center space-x-1">
-                      <input
-                        type="password"
-                        placeholder="密码"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        onKeyPress={handlePasswordKeyPress}
-                        className="px-3 py-2 border border-gray-300 rounded text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        autoFocus
-                      />
-                      <button
-                        onClick={handleAdminLogin}
-                        className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                      >
-                        <i className="fas fa-sign-in-alt text-xs"></i>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowPasswordInput(false);
-                          setAdminPassword('');
-                        }}
-                        className="px-3 py-2 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100 transition-colors"
-                      >
-                        <i className="fas fa-times text-xs"></i>
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // 已登录管理模式时显示管理按钮和退出按钮
-                <>
-                  <button
-                    onClick={onOpenAdmin}
-                    className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:space-x-2 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 text-xs sm:text-sm"
-                    title="打开内容管理面板 (Ctrl/Cmd + Shift + A)"
-                  >
-                    <i className="fas fa-cog text-xs sm:text-sm"></i>
-                    <span className="hidden sm:inline">管理</span>
-                  </button>
-                  <button
-                    onClick={handleAdminLogout}
-                    className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:space-x-2 sm:px-3 sm:py-2 text-gray-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200 text-xs sm:text-sm"
-                    title="退出管理模式"
-                  >
-                    <i className="fas fa-sign-out-alt text-xs sm:text-sm"></i>
-                  </button>
-                </>
-              )}
+            {/* 搜索按钮 */}
+            <div className="py-3 lg:py-4 flex items-center flex-shrink-0">
+              <button
+                onClick={() => setShowSearch(true)}
+                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                title="搜索"
+              >
+                <Icon name="search" className="text-sm" />
+              </button>
             </div>
           </div>
         </nav>
       </header>
 
-      {/* 移动端管理员登录弹窗 */}
-      {showPasswordInput && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 sm:hidden"
-          onClick={() => {
-            setShowPasswordInput(false);
-            setAdminPassword('');
-          }}
-        >
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div
-              className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm transform transition-all duration-300"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-user-shield text-white text-2xl"></i>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  管理员登录
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  请输入管理员密码以访问管理功能
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <input
-                  type="password"
-                  placeholder="请输入管理员密码"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  onKeyPress={handlePasswordKeyPress}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  autoFocus
-                />
-
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleAdminLogin}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium"
-                  >
-                    <i className="fas fa-sign-in-alt mr-2"></i>
-                    登录
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowPasswordInput(false);
-                      setAdminPassword('');
-                    }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                  >
-                    <i className="fas fa-times mr-2"></i>
-                    取消
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 搜索弹窗 - 所有设备通用 */}
-      {showMobileSearch && (
+      {/* 搜索弹窗 */}
+      {showSearch && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-50"
-          onClick={() => setShowMobileSearch(false)}
+          onClick={() => setShowSearch(false)}
         >
-          <div className="fixed inset-0 flex items-center justify-center p-4">
+          <div className="fixed inset-0 flex items-start justify-center p-4 pt-20">
             <div
-              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl transform transition-all duration-300"
+              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* 搜索头部 */}
               <div className="flex items-center justify-between p-6 border-b">
                 <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                  <i className="fas fa-search text-blue-500 mr-3"></i>
+                  <Icon name="search" className="text-blue-500 mr-3" />
                   全局搜索
                 </h3>
                 <button
-                  onClick={() => setShowMobileSearch(false)}
+                  onClick={() => setShowSearch(false)}
                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
                 >
-                  <i className="fas fa-times text-gray-600"></i>
+                  <Icon name="times" className="text-gray-600" />
                 </button>
               </div>
-
-              {/* 搜索框 */}
               <div className="p-6">
                 <SearchBox
                   placeholder="搜索项目、论文、博客、工作经历..."
@@ -322,17 +140,9 @@ const Header: React.FC<HeaderProps> = ({
                   onSearch={(results, action) => {
                     if (action === 'select' && results.length > 0) {
                       const result = results[0];
-                      setShowMobileSearch(false);
-                      // 根据搜索结果类型跳转到对应页面
-                      if (result.type === 'project') {
-                        setActiveSection('resume');
-                      } else if (result.type === 'publication') {
-                        setActiveSection('resume');
-                      } else if (result.type.includes('blog')) {
-                        setActiveSection('learning');
-                      } else if (result.type === 'internship') {
-                        setActiveSection('resume');
-                      }
+                      setShowSearch(false);
+                      if (result.type.includes('blog')) go('learning');
+                      else go('resume');
                     }
                   }}
                 />
@@ -348,9 +158,8 @@ const Header: React.FC<HeaderProps> = ({
           className="fixed inset-0 z-50 bg-black bg-opacity-50 sm:hidden"
           onClick={() => setShowMobileProfile(false)}
         >
-          <div className="fixed inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-xl transform transition-transform duration-300">
+          <div className="fixed inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-xl">
             <div className="p-6" onClick={(e) => e.stopPropagation()}>
-              {/* 关闭按钮 */}
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-800">
                   个人信息
@@ -359,36 +168,13 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => setShowMobileProfile(false)}
                   className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
                 >
-                  <i className="fas fa-times text-gray-600"></i>
+                  <Icon name="times" className="text-gray-600" />
                 </button>
               </div>
 
-              {/* 个人头像和基本信息 */}
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 shadow-lg overflow-hidden">
-                  {personalInfo.avatar &&
-                  personalInfo.avatar.startsWith('http') ? (
-                    <img
-                      src={personalInfo.avatar}
-                      alt="头像"
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : personalInfo.avatar &&
-                    personalInfo.avatar.startsWith('data:') ? (
-                    <img
-                      src={personalInfo.avatar}
-                      alt="头像"
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                    />
-                  ) : (
-                    personalInfo.avatar || 'A'
-                  )}
+                  <Avatar personalInfo={personalInfo} size="" />
                 </div>
                 <h1 className="text-xl font-bold text-gray-800 mb-2">
                   {personalInfo.name}
@@ -396,36 +182,21 @@ const Header: React.FC<HeaderProps> = ({
                 <p className="text-base text-gray-600 mb-4">
                   {personalInfo.title}
                 </p>
-
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center justify-center space-x-2">
-                    <i className="fas fa-map-marker-alt text-blue-500 w-4"></i>
+                    <Icon name="map-marker-alt" className="text-blue-500 w-4" />
                     <span>{personalInfo.location}</span>
                   </div>
                   <div className="flex items-center justify-center space-x-2">
-                    <i className="fas fa-envelope text-blue-500 w-4"></i>
+                    <Icon name="envelope" className="text-blue-500 w-4" />
                     <span>{personalInfo.email}</span>
                   </div>
-                  {personalInfo.socialLinks?.scholar && (
-                    <div className="flex items-center justify-center space-x-2">
-                      <i className="fas fa-graduation-cap text-blue-500 w-4"></i>
-                      <a
-                        href={personalInfo.socialLinks.scholar}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        Google Scholar
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* 研究兴趣 */}
               <div className="mb-6">
                 <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                  <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                  <Icon name="lightbulb" className="text-yellow-500 mr-2" />
                   研究兴趣
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -440,10 +211,9 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              {/* 社交链接 */}
               <div>
                 <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                  <i className="fas fa-share-alt text-blue-500 mr-2"></i>
+                  <Icon name="share-alt" className="text-blue-500 mr-2" />
                   社交链接
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -452,10 +222,10 @@ const Header: React.FC<HeaderProps> = ({
                       href={personalInfo.socialLinks.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors group"
+                      className="flex items-center justify-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                     >
-                      <i className="fab fa-github text-gray-700 group-hover:text-gray-900 mr-2"></i>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                      <Icon name="github" className="text-gray-700 mr-2" />
+                      <span className="text-sm font-medium text-gray-700">
                         GitHub
                       </span>
                     </a>
@@ -465,37 +235,11 @@ const Header: React.FC<HeaderProps> = ({
                       href={personalInfo.socialLinks.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center p-3 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors group"
+                      className="flex items-center justify-center p-3 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
                     >
-                      <i className="fab fa-linkedin text-blue-700 group-hover:text-blue-900 mr-2"></i>
-                      <span className="text-sm font-medium text-blue-700 group-hover:text-blue-900">
+                      <Icon name="linkedin" className="text-blue-700 mr-2" />
+                      <span className="text-sm font-medium text-blue-700">
                         LinkedIn
-                      </span>
-                    </a>
-                  )}
-                  {personalInfo.socialLinks?.scholar && (
-                    <a
-                      href={personalInfo.socialLinks.scholar}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center p-3 bg-red-100 hover:bg-red-200 rounded-lg transition-colors group"
-                    >
-                      <i className="fas fa-graduation-cap text-red-700 group-hover:text-red-900 mr-2"></i>
-                      <span className="text-sm font-medium text-red-700 group-hover:text-red-900">
-                        Scholar
-                      </span>
-                    </a>
-                  )}
-                  {personalInfo.socialLinks?.rss && (
-                    <a
-                      href={personalInfo.socialLinks.rss}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center p-3 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors group"
-                    >
-                      <i className="fas fa-rss text-orange-700 group-hover:text-orange-900 mr-2"></i>
-                      <span className="text-sm font-medium text-orange-700 group-hover:text-orange-900">
-                        RSS
                       </span>
                     </a>
                   )}

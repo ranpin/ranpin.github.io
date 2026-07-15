@@ -1,14 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./index.html",
-  ],
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './index.html'],
   theme: {
     extend: {
       fontFamily: {
-        'serif': ['Noto Serif SC', 'serif'],
-        'sans': ['Inter', 'sans-serif'],
+        serif: ['Songti SC', 'STSong', 'Noto Serif CJK SC', 'serif'],
+        sans: [
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'PingFang SC',
+          'Microsoft YaHei',
+          'sans-serif',
+        ],
       },
       colors: {
         'warm-gray': {
@@ -23,7 +27,7 @@ module.exports = {
           800: '#292524',
           900: '#1c1917',
         },
-        'sage': {
+        sage: {
           50: '#f6f7f6',
           100: '#e3e8e3',
           200: '#c7d2c7',
@@ -34,12 +38,12 @@ module.exports = {
           700: '#3d4f3d',
           800: '#334133',
           900: '#2b362b',
-        }
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out',
         'slide-up': 'slideUp 0.8s ease-out',
-        'float': 'float 3s ease-in-out infinite',
+        float: 'float 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -53,9 +57,9 @@ module.exports = {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],
-}
+};

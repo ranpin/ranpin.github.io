@@ -1,7 +1,16 @@
-// 网站内容数据管理文件 - 增强版(添加面试友好字段)
-// 你可以直接在这里修改所有网站内容,无需修改组件代码
+// 网站内容数据管理文件 —— 这是全站唯一的数据源。
+// 你可以直接在这里修改所有网站内容,无需修改组件代码。
+import type {
+  PersonalInfo,
+  NewsItem,
+  Project,
+  Publication,
+  Internship,
+  Honor,
+  BlogPost,
+} from '../types';
 
-export const personalInfo = {
+export const personalInfo: PersonalInfo = {
   name: 'Ranpin',
   title: 'Banma Network - LLM Engineering Framework Engineer',
   location: '杭州,中国',
@@ -17,11 +26,11 @@ export const personalInfo = {
     github: 'https://github.com/ranpin',
     linkedin: '',
     scholar: '',
-    rss: '/rss.xml',
+    rss: '',
   },
 };
 
-export const recentNews = [
+export const recentNews: NewsItem[] = [
   {
     date: '2026.04',
     content:
@@ -37,7 +46,7 @@ export const recentNews = [
   },
 ];
 
-export const projects = [
+export const projects: Project[] = [
   {
     id: 1,
     title: 'Lantu基座大模型SDK开发与联调',
@@ -369,9 +378,9 @@ export const projects = [
   },
 ];
 
-export const publications = [];
+export const publications: Publication[] = [];
 
-export const internships = [
+export const internships: Internship[] = [
   {
     id: 1,
     company: 'Banma Network',
@@ -424,7 +433,7 @@ export const internships = [
   },
 ];
 
-export const honors = [
+export const honors: Honor[] = [
   {
     id: 1,
     year: '2026',
@@ -445,7 +454,7 @@ export const honors = [
   },
 ];
 
-export const academicBlogs = [
+export const academicBlogs: BlogPost[] = [
   {
     id: 1,
     title: '端侧大模型推理优化实践',
@@ -508,7 +517,7 @@ export const academicBlogs = [
   },
 ];
 
-export const engineeringBlogs = [
+export const engineeringBlogs: BlogPost[] = [
   {
     id: 1,
     title: 'vLLM在端侧的适配与优化',
