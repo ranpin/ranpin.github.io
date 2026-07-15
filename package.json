@@ -16,7 +16,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
     "test:build": "npm run build && npm run preview",
     "clean": "rm -rf dist node_modules/.cache",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "keywords": [
     "portfolio",
