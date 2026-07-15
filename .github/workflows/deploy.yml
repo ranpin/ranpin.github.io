@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -20,42 +20,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Setup Node.js 20 (Direct Binary)
-        run: |
-          # Download Node.js 20.19.0 binary directly (required by Vite 5.4+)
-          curl -o node-v20.tar.gz https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.gz
-          tar -xzf node-v20.tar.gz
-          
-          # Add to PATH for subsequent steps
-          echo "$(pwd)/node-v20.19.0-linux-x64/bin" >> $GITHUB_PATH
-          echo "NODE_BIN_DIR=$(pwd)/node-v20.19.0-linux-x64/bin" >> $GITHUB_ENV
-          
-          # Verify version
-          node -v
-          npm -v
-          
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
       - name: Install dependencies
-        run: |
-          export PATH="$NODE_BIN_DIR:$PATH"
-          npm ci
-        
+        run: npm ci
+
       - name: Build
-        run: |
-          export PATH="$NODE_BIN_DIR:$PATH"
-          npx vite build
-        
-      - name: Copy 404.html for SPA routing
-        run: |
-          if [ -f public/404.html ]; then
-            cp public/404.html dist/404.html
-          else
-            echo "public/404.html not found, skipping copy."
-          fi
-        
-      - name: List dist contents
-        run: ls -la dist/
-        
+        run: npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

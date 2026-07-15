@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+// 核心数据模型 —— 与 src/data/content.ts 的实际形状对齐。
+// 字段大多为可选，以兼容不同条目提供的字段差异。
 
-// 核心数据模型 (与 usePortfolioStore.ts 保持一致)
 export interface PersonalInfo {
   name: string;
   title: string;
@@ -10,298 +10,115 @@ export interface PersonalInfo {
   bio: { main: string; detail: string };
   researchInterests: string[];
   socialLinks: Record<string, string>;
-  contact?: {
-    email: string;
-    phone: string;
-    github: string;
-    linkedin: string;
-  };
+}
+
+export interface NewsItem {
+  date: string;
+  content: string;
+  type?: string;
+}
+
+export interface TechnicalChallenge {
+  challenge: string;
+  solution?: string;
+  impact?: string;
+}
+
+export interface ProjectResult {
+  metric?: string;
+  value?: string;
+  baseline?: string;
+  improvement?: string;
 }
 
 export interface Project {
-  id: string;
+  id: number | string;
   title: string;
+  period?: string;
   description: string;
   tags: string[];
+  status?: string;
+  github?: string;
+  demo?: string;
   businessContext?: string;
   yourRole?: string;
   architectureDetail?: string;
-  technicalChallenges?: string[];
-  results?: string[];
+  abstract?: string;
+  methodology?: string;
+  technicalChallenges?: (TechnicalChallenge | string)[];
+  results?: ProjectResult[];
   achievements?: string[];
   interviewHighlights?: string[];
   discussionTopics?: string[];
   demoImage?: string;
   architectureImage?: string;
-  demoVideo?: string;
-  resultChart?: string;
   githubUrl?: string;
   liveUrl?: string;
 }
 
-export interface Internship {
-  id: string;
-  company: string;
-  role: string;
-  duration: string;
-  contributions: string[];
-  skills: string[];
-}
-
 export interface Publication {
-  id: string;
+  id: number | string;
   title: string;
-  authors: string;
-  venue: string;
-  year: number;
-  abstract: string;
+  authors?: string;
+  venue?: string;
+  year?: string | number;
+  type?: string;
+  abstract?: string;
+  citations?: number;
+  link?: string;
   pdfUrl?: string;
+  codeUrl?: string;
 }
 
-export interface Honor {
-  id: string;
-  title: string;
-  issuer: string;
-  date: string;
+export interface SkillGained {
+  name: string;
   description: string;
 }
 
+export interface Internship {
+  id: number | string;
+  company: string;
+  position?: string;
+  role?: string;
+  period?: string;
+  duration?: string;
+  location?: string;
+  type?: string;
+  department?: string;
+  description: string;
+  responsibilities?: string | string[];
+  contributions?: string | string[];
+  achievements?: string[];
+  skills?: string[];
+  skillsGained?: SkillGained[];
+  summary?: string;
+  projectImage?: string;
+  resultsImage?: string;
+}
+
+export interface Honor {
+  id: number | string;
+  year?: string | number;
+  award?: string;
+  organization?: string;
+  title?: string;
+  issuer?: string;
+  date?: string;
+  level?: string;
+  description?: string;
+}
+
 export interface BlogPost {
-  id: string;
+  id: number | string;
   title: string;
-  content: string;
-  category: 'academic' | 'engineering';
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
+  date?: string;
+  category?: string;
+  summary?: string;
+  content?: string;
+  tags?: string[];
+  readTime?: string;
+  link?: string;
 }
 
-// Store 状态接口
-export interface PortfolioState {
-  personalInfo: PersonalInfo;
-  recentNews: BlogPost[];
-  projects: Project[];
-  publications: Publication[];
-  internships: Internship[];
-  honors: Honor[];
-  academicBlogs: BlogPost[];
-  engineeringBlogs: BlogPost[];
-
-  activeSection: string;
-  learningCategory: 'academic' | 'engineering';
-  resumeCategory: 'projects' | 'publications' | 'internships' | 'honors';
-
-  isAdminMode: boolean;
-  customContent: Record<string, unknown>;
-
-  resumeTabOrder: string[];
-  customTabNames: Record<string, string>;
-
-  setPersonalInfo: (info: PersonalInfo) => void;
-  setActiveSection: (section: string) => void;
-  setLearningCategory: (category: 'academic' | 'engineering') => void;
-  setResumeCategory: (
-    category: 'projects' | 'publications' | 'internships' | 'honors',
-  ) => void;
-  setIsAdminMode: (mode: boolean) => void;
-  setCustomContent: (content: Record<string, unknown>) => void;
-  setResumeTabOrder: (order: string[]) => void;
-  setCustomTabNames: (names: Record<string, string>) => void;
-
-  // Actions for data manipulation
-  addProject: (project: Project) => void;
-  updateProject: (id: string, project: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
-
-  addInternship: (internship: Internship) => void;
-  updateInternship: (id: string, internship: Partial<Internship>) => void;
-  deleteInternship: (id: string) => void;
-
-  addPublication: (pub: Publication) => void;
-  updatePublication: (id: string, pub: Partial<Publication>) => void;
-  deletePublication: (id: string) => void;
-
-  addHonor: (honor: Honor) => void;
-  updateHonor: (id: string, honor: Partial<Honor>) => void;
-  deleteHonor: (id: string) => void;
-
-  addBlog: (blog: BlogPost) => void;
-  updateBlog: (id: string, blog: Partial<BlogPost>) => void;
-  deleteBlog: (id: string) => void;
-}
-
-// 组件 Props 接口
-export interface ProfileProps {
-  personalInfo: PersonalInfo;
-  isAdminMode: boolean;
-  onEdit: () => void;
-}
-
-export interface HeaderProps {
-  activeSection: string;
-  setActiveSection: (section: string) => void;
-  personalInfo: PersonalInfo;
-}
-
-export interface EditableCardProps {
-  children: ReactNode;
-  isAdminMode?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  className?: string;
-}
-
-export interface LearningSectionProps {
-  learningCategory: 'academic' | 'engineering';
-  setLearningCategory: (category: 'academic' | 'engineering') => void;
-  academicBlogs: BlogPost[];
-  engineeringBlogs: BlogPost[];
-  isAdminMode: boolean;
-  onAdd: (type: string) => void;
-  onEdit: (type: string, item: unknown, index: number) => void;
-  onDelete: (type: string, id: string) => void;
-}
-
-export interface PageTransitionProps {
-  children: ReactNode;
-  isActive: boolean;
-}
-
-export interface ResumeSectionProps {
-  resumeCategory: 'projects' | 'publications' | 'internships' | 'honors';
-  setResumeCategory: (
-    category: 'projects' | 'publications' | 'internships' | 'honors',
-  ) => void;
-  projects: Project[];
-  publications: Publication[];
-  internships: Internship[];
-  honors: Honor[];
-  customContent: Record<string, unknown>;
-  isAdminMode: boolean;
-  onAdd: (type: string) => void;
-  onEdit: (type: string, item: unknown, index: number) => void;
-  onDelete: (type: string, id: string) => void;
-}
-
-export interface LearningSectionFullProps {
-  learningCategory: 'academic' | 'engineering';
-  setLearningCategory: (category: 'academic' | 'engineering') => void;
-  academicBlogs: BlogPost[];
-  engineeringBlogs: BlogPost[];
-  isAdminMode: boolean;
-  onAdd: (type: string) => void;
-  onEdit: (type: string, item: unknown, index: number) => void;
-  onDelete: (type: string, id: string) => void;
-}
-
-export interface AdminPanelProps {
-  onClose: () => void;
-}
-
-export interface InlineEditorProps {
-  type: string;
-  initialData: unknown;
-  index: number;
-  onSave: (data: unknown) => void;
-  onCancel: () => void;
-}
-
-export interface ProjectEditorProps {
-  initialData: Project | null;
-  onSave: (data: Project) => void;
-  onCancel: () => void;
-}
-
-export interface ModuleRendererProps {
-  type: string;
-  data: unknown;
-  isDetail?: boolean;
-}
-
-// 工具组件接口
-export interface VersionManagerProps {
-  onClose: () => void;
-  onRestore: (data: unknown) => void;
-}
-
-export interface DataValidationProps {
-  onDataFix: (fixedData: unknown) => void;
-}
-
-export interface AutoBackupProps {
-  isEnabled: boolean;
-  onToggle: (enabled: boolean) => void;
-}
-
-export interface BatchOperationsProps {
-  selectedItems: string[];
-  onBatchDelete: (ids: string[]) => void;
-  onBatchExport: (ids: string[]) => void;
-}
-
-export interface DateRangePickerProps {
-  startDate: string;
-  endDate: string;
-  onChange: (start: string, end: string) => void;
-}
-
-export interface GuestBookProps {
-  entries: unknown[];
-  onAddEntry: (entry: unknown) => void;
-}
-
-export interface HeroProps {
-  personalInfo: PersonalInfo;
-}
-
-export interface LazyImageProps {
-  src: string;
-  alt: string;
-  className?: string;
-  loading?: 'lazy' | 'eager';
-}
-
-export interface MarkdownEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}
-
-export interface MediaViewerProps {
-  url: string;
-  type: 'image' | 'video';
-  onClose: () => void;
-}
-
-export interface ProjectTemplatesProps {
-  onSelectTemplate: (template: unknown) => void;
-}
-
-export interface SearchBoxProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}
-
-export interface SectionTitleEditorProps {
-  title: string;
-  onSave: (newTitle: string) => void;
-}
-
-export interface SmartRecommendationsProps {
-  currentItem: unknown;
-  currentType: string;
-  onItemClick: (item: unknown, type: string) => void;
-}
-
-export interface TagCloudProps {
-  tags: string[];
-  onTagClick: (tag: string) => void;
-}
-
-export interface ArticleListProps {
-  items: unknown[];
-  type: string;
-  onEdit: (item: unknown, index: number) => void;
-  onDelete: (id: string) => void;
-}
+// 详情弹窗可展示的任意条目
+export type ContentItem = Project | Publication | Internship | Honor | BlogPost;
