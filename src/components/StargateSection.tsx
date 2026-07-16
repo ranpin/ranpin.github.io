@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon';
 
 const StargateSection: React.FC = () => {
   return (
@@ -6,12 +7,13 @@ const StargateSection: React.FC = () => {
       {/* 标题区域 */}
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center">
-          <i className="fas fa-star text-yellow-500 mr-4 animate-pulse"></i>
+          <Icon name="star" className="text-yellow-500 mr-4 animate-pulse" />
           星际之门
-          <i className="fas fa-star text-yellow-500 ml-4 animate-pulse"></i>
+          <Icon name="star" className="text-yellow-500 ml-4 animate-pulse" />
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          探索无限可能的创意宇宙 —— 这里汇集了我的一些有趣的设计、实验性项目和奇思妙想
+          探索无限可能的创意宇宙 ——
+          这里汇集了我的一些有趣的设计、实验性项目和奇思妙想
         </p>
       </div>
 
@@ -20,7 +22,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 1 - AI 艺术创作 */}
         <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fas fa-palette text-3xl"></i>
+            <Icon name="palette" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">AI 艺术实验室</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -36,7 +38,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 2 - 互动可视化 */}
         <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fas fa-chart-network text-3xl"></i>
+            <Icon name="chart-network" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">数据宇宙可视化</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -52,7 +54,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 3 - 游戏开发 */}
         <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fas fa-gamepad text-3xl"></i>
+            <Icon name="gamepad" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">迷你游戏工坊</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -68,7 +70,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 4 - 硬件创客 */}
         <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fas fa-microchip text-3xl"></i>
+            <Icon name="microchip" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">IoT 智能设备</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -84,7 +86,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 5 - 开源贡献 */}
         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fab fa-github text-3xl"></i>
+            <Icon name="github" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">开源工具箱</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -100,7 +102,7 @@ const StargateSection: React.FC = () => {
         {/* 示例卡片 6 - 写作与思考 */}
         <div className="bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <i className="fas fa-pen-fancy text-3xl"></i>
+            <Icon name="pen-fancy" className="text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2">思维碎片</h3>
           <p className="text-sm text-white text-opacity-90 mb-4">
@@ -118,7 +120,7 @@ const StargateSection: React.FC = () => {
       <div className="text-center">
         <div className="inline-block bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl px-8 py-6">
           <p className="text-gray-700 mb-2">
-            <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
+            <Icon name="lightbulb" className="text-yellow-500 mr-2" />
             更多精彩内容正在路上...
           </p>
           <p className="text-sm text-gray-600">

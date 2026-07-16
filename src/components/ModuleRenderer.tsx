@@ -1,13 +1,12 @@
 import React from 'react';
+import Icon from './Icon';
 
 /**
- * 统一模块渲染器
- * 确保编辑预览、详情页展示、列表页展示三者完全一致
+ * 统一模块渲染器：详情弹窗中项目 / 论文 / 实习 / 博客 / 荣誉的只读展示。
  */
 const ModuleRenderer = ({ type, data, isDetail = false }) => {
   if (!data) return null;
 
-  // 通用卡片样式
   const cardClass =
     'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md';
   const detailCardClass =
@@ -44,13 +43,12 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             )}
           </div>
 
-          {/* 业务背景与角色 */}
           {(data.businessContext || data.yourRole) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {data.businessContext && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">
-                    {data.customTitles?.businessContext || '业务背景'}
+                    业务背景
                   </h4>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     {data.businessContext}
@@ -60,7 +58,7 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
               {data.yourRole && (
                 <div className="bg-indigo-50 p-4 rounded-lg">
                   <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
-                    {data.customTitles?.yourRole || '你的角色'}
+                    我的角色
                   </h4>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     {data.yourRole}
@@ -70,29 +68,26 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 技术架构详解 */}
           {data.architectureDetail && (
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i className="fas fa-layer-group text-blue-500 mr-2"></i>
-                {data.customTitles?.architectureDetail || '技术架构详解'}
+                <Icon name="layer-group" className="text-blue-500 mr-2" />
+                技术架构详解
               </h3>
-              <div className="prose prose-sm max-w-none text-gray-600 bg-gray-50 p-4 rounded-lg">
+              <div className="prose prose-sm max-w-none text-gray-600 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
                 {data.architectureDetail}
               </div>
             </div>
           )}
 
-          {/* 核心难点与解决方案 (支持对象数组和字符串数组) */}
           {data.technicalChallenges && data.technicalChallenges.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i className="fas fa-bolt text-yellow-500 mr-2"></i>
-                {data.customTitles?.technicalChallenges || '核心技术难点'}
+                <Icon name="bolt" className="text-yellow-500 mr-2" />
+                核心技术难点
               </h3>
               <div className="space-y-3">
                 {data.technicalChallenges.map((item, idx) => {
-                  // 兼容旧数据（字符串）和新数据（对象）
                   const isObject = typeof item === 'object' && item !== null;
                   return (
                     <div
@@ -110,6 +105,14 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                           {item.solution}
                         </p>
                       )}
+                      {isObject && item.impact && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-semibold text-blue-600">
+                            效果：
+                          </span>
+                          {item.impact}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -117,12 +120,11 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 主要成果 (补全缺失的模块) */}
           {data.achievements && data.achievements.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i className="fas fa-trophy text-yellow-600 mr-2"></i>
-                {data.customTitles?.achievements || '主要成果'}
+                <Icon name="trophy" className="text-yellow-600 mr-2" />
+                主要成果
               </h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
                 {data.achievements.map((achievement, idx) => (
@@ -132,25 +134,24 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 实验结果 (补全缺失的模块) */}
           {data.results && data.results.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i className="fas fa-chart-bar text-purple-600 mr-2"></i>
-                {data.customTitles?.results || '实验结果'}
+                <Icon name="chart-bar" className="text-purple-600 mr-2" />
+                关键指标
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="border border-gray-200 px-4 py-2 text-left font-semibold">
-                        数据集
+                        指标
                       </th>
                       <th className="border border-gray-200 px-4 py-2 text-left font-semibold">
-                        准确率
+                        数值
                       </th>
                       <th className="border border-gray-200 px-4 py-2 text-left font-semibold">
-                        提升幅度
+                        基线 / 提升
                       </th>
                     </tr>
                   </thead>
@@ -161,13 +162,13 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                         className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                       >
                         <td className="border border-gray-200 px-4 py-2">
-                          {result.dataset}
+                          {result.metric}
                         </td>
                         <td className="border border-gray-200 px-4 py-2 text-green-600 font-semibold">
-                          {result.accuracy}
+                          {result.value}
                         </td>
-                        <td className="border border-gray-200 px-4 py-2 text-blue-600 font-semibold">
-                          {result.improvement}
+                        <td className="border border-gray-200 px-4 py-2 text-blue-600">
+                          {result.baseline || result.improvement}
                         </td>
                       </tr>
                     ))}
@@ -177,12 +178,11 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 可延伸讨论的话题 (补全缺失的模块) */}
           {data.discussionTopics && data.discussionTopics.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i className="fas fa-comments text-green-600 mr-2"></i>
-                {data.customTitles?.discussionTopics || '可延伸讨论的话题'}
+                <Icon name="comments" className="text-green-600 mr-2" />
+                可延伸讨论的话题
               </h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 bg-green-50/50 p-4 rounded-lg">
                 {data.discussionTopics.map((topic, idx) => (
@@ -192,7 +192,6 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 多媒体展示 (补全缺失的模块) */}
           {(data.demoImage || data.architectureImage) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {data.demoImage && (
@@ -200,6 +199,7 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   <img
                     src={data.demoImage}
                     alt="演示图"
+                    loading="lazy"
                     className="w-full h-auto object-cover"
                   />
                   <p className="text-xs text-center text-gray-500 py-2 bg-gray-50">
@@ -212,6 +212,7 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   <img
                     src={data.architectureImage}
                     alt="架构图"
+                    loading="lazy"
                     className="w-full h-auto object-cover"
                   />
                   <p className="text-xs text-center text-gray-500 py-2 bg-gray-50">
@@ -222,7 +223,6 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
             </div>
           )}
 
-          {/* 外部链接与技术栈 (统一字段名: githubUrl, liveUrl) */}
           {(data.tags?.length > 0 || data.githubUrl || data.liveUrl) && (
             <div className="flex flex-wrap gap-2 pt-4 border-t">
               {data.tags &&
@@ -241,7 +241,8 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   rel="noreferrer"
                   className="text-xs text-blue-600 hover:underline flex items-center"
                 >
-                  <i className="fab fa-github mr-1"></i>GitHub
+                  <Icon name="github" className="mr-1" />
+                  GitHub
                 </a>
               )}
               {data.liveUrl && (
@@ -251,7 +252,8 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   rel="noreferrer"
                   className="text-xs text-green-600 hover:underline flex items-center"
                 >
-                  <i className="fas fa-external-link-alt mr-1"></i>在线演示
+                  <Icon name="external-link-alt" className="mr-1" />
+                  在线演示
                 </a>
               )}
             </div>
@@ -278,19 +280,33 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
               </span>
             </div>
           </div>
-          {data.contributions && (
+          {data.description && (
+            <p className="text-sm text-gray-700 leading-relaxed mb-4">
+              {data.description}
+            </p>
+          )}
+          {data.achievements && data.achievements.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                主要贡献
+                主要成果
               </h4>
               <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                {Array.isArray(data.contributions)
-                  ? data.contributions.map((c, i) => <li key={i}>{c}</li>)
-                  : data.contributions
-                      .split('\n')
-                      .filter((l) => l)
-                      .map((c, i) => <li key={i}>{c}</li>)}
+                {data.achievements.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
               </ul>
+            </div>
+          )}
+          {data.skills && data.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-4">
+              {data.skills.map((s, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md"
+                >
+                  {s}
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -299,9 +315,7 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
     case 'publication':
       return (
         <div className={`${cardClass} p-5`}>
-          <h3 className="text-lg font-bold text-blue-700 hover:text-blue-900 transition-colors mb-1">
-            {data.title}
-          </h3>
+          <h3 className="text-lg font-bold text-blue-700 mb-1">{data.title}</h3>
           <p className="text-sm text-gray-600 mb-1">{data.authors}</p>
           <div className="flex items-center justify-between mt-2">
             <p className="text-xs text-gray-500 italic">
@@ -312,9 +326,10 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                 href={data.link}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-blue-500 hover:underline"
+                className="text-xs text-blue-500 hover:underline flex items-center"
               >
-                <i className="fas fa-external-link-alt mr-1"></i>链接
+                <Icon name="external-link-alt" className="mr-1" />
+                链接
               </a>
             )}
           </div>
@@ -357,16 +372,6 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   {tag}
                 </span>
               ))}
-            {data.link && (
-              <a
-                href={data.link}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-blue-500 hover:underline ml-auto"
-              >
-                <i className="fas fa-external-link-alt mr-1"></i>阅读
-              </a>
-            )}
           </div>
         </div>
       );
@@ -390,14 +395,14 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
           )}
           <div className="mt-3 flex items-center text-xs text-blue-200 space-x-3">
             {data.location && (
-              <span>
-                <i className="fas fa-map-marker-alt mr-1"></i>
+              <span className="flex items-center">
+                <Icon name="map-marker-alt" className="mr-1" />
                 {data.location}
               </span>
             )}
             {data.email && (
-              <span>
-                <i className="fas fa-envelope mr-1"></i>
+              <span className="flex items-center">
+                <Icon name="envelope" className="mr-1" />
                 {data.email}
               </span>
             )}

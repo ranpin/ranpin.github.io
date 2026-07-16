@@ -3,48 +3,41 @@ import { usePortfolioStore } from './usePortfolioStore';
 
 describe('usePortfolioStore', () => {
   beforeEach(() => {
-    // 重置 Store 到初始状态，确保测试隔离性
     usePortfolioStore.setState({
       activeSection: 'home',
       learningCategory: 'academic',
       resumeCategory: 'projects',
-      isAdminMode: false,
-      customContent: [],
-      inlineEditState: { isVisible: false, type: null, data: null, index: null },
-      insertMenuState: { isVisible: false, index: null, type: null },
     });
   });
 
-  it('should have initial state correctly set', () => {
+  it('loads read-only content from content.ts', () => {
     const state = usePortfolioStore.getState();
-    expect(state.activeSection).toBe('home');
-    expect(state.isAdminMode).toBe(false);
     expect(state.personalInfo).toBeDefined();
+    expect(state.personalInfo.name).toBeTruthy();
+    expect(Array.isArray(state.projects)).toBe(true);
+    expect(state.projects.length).toBeGreaterThan(0);
+    expect(Array.isArray(state.academicBlogs)).toBe(true);
   });
 
-  it('should update activeSection via setActiveSection', () => {
-    const { setActiveSection } = usePortfolioStore.getState();
-    setActiveSection('learning');
+  it('has expected initial UI state', () => {
+    const state = usePortfolioStore.getState();
+    expect(state.activeSection).toBe('home');
+    expect(state.learningCategory).toBe('academic');
+    expect(state.resumeCategory).toBe('projects');
+  });
+
+  it('updates activeSection via setActiveSection', () => {
+    usePortfolioStore.getState().setActiveSection('learning');
     expect(usePortfolioStore.getState().activeSection).toBe('learning');
   });
 
-  it('should toggle admin mode via setIsAdminMode', () => {
-    const { setIsAdminMode } = usePortfolioStore.getState();
-    
-    setIsAdminMode(true);
-    expect(usePortfolioStore.getState().isAdminMode).toBe(true);
-    
-    setIsAdminMode(false);
-    expect(usePortfolioStore.getState().isAdminMode).toBe(false);
+  it('updates resumeCategory via setResumeCategory', () => {
+    usePortfolioStore.getState().setResumeCategory('honors');
+    expect(usePortfolioStore.getState().resumeCategory).toBe('honors');
   });
 
-  it('should add custom content via setCustomContent', () => {
-    const { setCustomContent } = usePortfolioStore.getState();
-    const initialContent = usePortfolioStore.getState().customContent;
-    const newItem = { id: 'test-1', title: 'Test Item' };
-    
-    setCustomContent([...initialContent, newItem]);
-    const state = usePortfolioStore.getState();
-    expect(state.customContent).toContainEqual(newItem);
+  it('updates learningCategory via setLearningCategory', () => {
+    usePortfolioStore.getState().setLearningCategory('engineering');
+    expect(usePortfolioStore.getState().learningCategory).toBe('engineering');
   });
 });
