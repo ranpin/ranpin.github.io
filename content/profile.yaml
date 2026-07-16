@@ -1,0 +1,20 @@
+name: Ranpin
+title: Banma Network - LLM Engineering Framework Engineer
+location: 杭州,中国
+email: ranpinc@gmail.com
+avatar: R
+bio:
+  main: >-
+    专注于端侧大模型工程化与AI Agent系统开发的软件工程师,具备扎实的大模型推理优化、SDK开发、多模态记忆系统等领域的实践经验。
+  detail: >-
+    擅长C++/Python开发,熟悉vLLM、QNN等推理框架,在车机端大模型部署、性能优化、跨团队联调等方面有丰富经验。主导Lantu、BYD等多个车企项目的技术对接与交付,成功交付多个端侧大模型项目。
+researchInterests:
+  - 端侧大模型
+  - AI Agent
+  - 性能优化
+  - 多模态
+socialLinks:
+  github: https://github.com/ranpin
+  linkedin: ''
+  scholar: ''
+  rss: ''
