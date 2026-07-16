@@ -24,4 +24,12 @@ describe('App', () => {
     expect(screen.getByText('学术研究')).toBeInTheDocument();
     expect(screen.getByText('工程技术')).toBeInTheDocument();
   });
+
+  it('switches to 星际之门 and shows exploration notes', () => {
+    render(<App />);
+    fireEvent.click(screen.getAllByText('星际之门')[0]);
+    // 使命说明与种子笔记
+    expect(screen.getByText(/简历之外的探索空间/)).toBeInTheDocument();
+    expect(screen.getByText(/一次端侧显存泄漏的复盘/)).toBeInTheDocument();
+  });
 });
