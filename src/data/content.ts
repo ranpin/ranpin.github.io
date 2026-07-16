@@ -14,7 +14,7 @@ export const personalInfo: PersonalInfo = {
   name: 'Ranpin',
   title: 'Banma Network - LLM Engineering Framework Engineer',
   location: '杭州,中国',
-  email: 'ranpin@example.com',
+  email: 'ranpinc@gmail.com',
   avatar: 'R',
   bio: {
     main: '专注于端侧大模型工程化与AI Agent系统开发的软件工程师,具备扎实的大模型推理优化、SDK开发、多模态记忆系统等领域的实践经验。',
