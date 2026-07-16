@@ -13,6 +13,7 @@ import type {
   Internship,
   Honor,
   BlogPost,
+  Note,
 } from '../types';
 
 // 注意：import.meta.glob 的第二个参数必须是内联对象字面量（Vite 静态分析要求）。
@@ -114,6 +115,25 @@ export const academicBlogs = toBlogs(
 
 export const engineeringBlogs = toBlogs(
   import.meta.glob('/content/blog/engineering/*.md', {
+    eager: true,
+    query: '?raw',
+    import: 'default',
+  }) as RawGlob,
+);
+
+// 「星际之门」探索笔记：跳过 _ 开头的模板；生产环境隐藏 draft；按日期倒序
+const toNotes = (glob: RawGlob): Note[] =>
+  Object.entries(glob)
+    .filter(([path]) => !slugOf(path).startsWith('_'))
+    .map(([path, raw]) => {
+      const { data, body } = parseMarkdown(raw);
+      return { ...(data as object), id: slugOf(path), content: body } as Note;
+    })
+    .filter((n) => import.meta.env.DEV || !n.draft)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+export const notes = toNotes(
+  import.meta.glob('/content/notes/*.md', {
     eager: true,
     query: '?raw',
     import: 'default',
