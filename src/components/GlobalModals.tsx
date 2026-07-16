@@ -1,6 +1,5 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Markdown from './Markdown';
 import ModuleRenderer from './ModuleRenderer';
 import SmartRecommendations from './SmartRecommendations';
 import Icon from './Icon';
@@ -149,11 +148,9 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
                   {selectedBlog.category}
                 </span>
               </div>
-              <div className="prose prose-blue max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selectedBlog.content || ''}
-                </ReactMarkdown>
-              </div>
+              <Markdown className="prose-blue">
+                {selectedBlog.content}
+              </Markdown>
               <SmartRecommendations
                 currentItem={selectedBlog}
                 currentType="blog"
