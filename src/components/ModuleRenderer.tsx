@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from './Icon';
+import Markdown from './Markdown';
 
 /**
  * 统一模块渲染器：详情弹窗中项目 / 论文 / 实习 / 博客 / 荣誉的只读展示。
@@ -50,9 +51,9 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">
                     业务背景
                   </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
+                  <Markdown className="prose-sm">
                     {data.businessContext}
-                  </p>
+                  </Markdown>
                 </div>
               )}
               {data.yourRole && (
@@ -60,9 +61,7 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                   <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
                     我的角色
                   </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {data.yourRole}
-                  </p>
+                  <Markdown className="prose-sm">{data.yourRole}</Markdown>
                 </div>
               )}
             </div>
@@ -74,9 +73,9 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
                 <Icon name="layer-group" className="text-blue-500 mr-2" />
                 技术架构详解
               </h3>
-              <div className="prose prose-sm max-w-none text-gray-600 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
+              <Markdown className="prose-sm bg-gray-50 p-4 rounded-lg">
                 {data.architectureDetail}
-              </div>
+              </Markdown>
             </div>
           )}
 

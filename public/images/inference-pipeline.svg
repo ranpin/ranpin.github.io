@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 180" font-family="Inter, system-ui, sans-serif" role="img" aria-label="端侧推理链路示意图">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="860" height="180" fill="#fafaf9"/>
+  <text x="430" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#1e293b">端侧大模型推理链路</text>
+
+  <!-- stages -->
+  <g>
+    <rect x="20"  y="66" width="140" height="56" rx="10" fill="#eff6ff" stroke="#3b82f6"/>
+    <text x="90"  y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">图像输入</text>
+    <text x="90"  y="108" text-anchor="middle" font-size="11" fill="#64748b">摄像头帧</text>
+
+    <rect x="196" y="66" width="140" height="56" rx="10" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="266" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">预处理</text>
+    <text x="266" y="108" text-anchor="middle" font-size="11" fill="#64748b">尺寸统一/裁剪</text>
+
+    <rect x="372" y="66" width="150" height="56" rx="10" fill="#eef2ff" stroke="#6366f1"/>
+    <text x="447" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#4338ca">vLLM + QNN</text>
+    <text x="447" y="108" text-anchor="middle" font-size="11" fill="#64748b">量化推理</text>
+
+    <rect x="558" y="66" width="140" height="56" rx="10" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="628" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">后处理</text>
+    <text x="628" y="108" text-anchor="middle" font-size="11" fill="#64748b">结构化输出</text>
+
+    <rect x="734" y="66" width="110" height="56" rx="10" fill="#ecfdf5" stroke="#10b981"/>
+    <text x="789" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#047857">结果</text>
+    <text x="789" y="108" text-anchor="middle" font-size="11" fill="#64748b">~4s 端到端</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)">
+    <line x1="162" y1="94" x2="192" y2="94"/>
+    <line x1="338" y1="94" x2="368" y2="94"/>
+    <line x1="524" y1="94" x2="554" y2="94"/>
+    <line x1="700" y1="94" x2="730" y2="94"/>
+  </g>
+</svg>
