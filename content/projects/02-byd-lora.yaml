@@ -11,10 +11,10 @@ businessContext: >-
 yourRole: >-
   负责AADK框架的定制化改造,设计并实现多LoRA动态加载机制。与BYD技术团队对接需求,制定技术方案,完成代码开发和联调测试。
 architectureDetail: |
-  • aadkcore层: 扩展模型加载器,支持单个场景注册多个LoRA适配器
-  • oai_inference agent层: 解析请求中的agent_id,映射到对应的lora_name
-  • 路由层: 根据lora_name动态选择激活的LoRA,实现毫秒级切换
-  • 分支管理: 创建独立的byd分支,隔离定制代码与主线
+  - **aadkcore 层**：扩展模型加载器，支持单个场景注册多个 LoRA 适配器
+  - **oai_inference agent 层**：解析请求中的 agent_id，映射到对应的 lora_name
+  - **路由层**：根据 lora_name 动态选择激活的 LoRA，实现毫秒级切换
+  - **分支管理**：创建独立的 byd 分支，隔离定制代码与主线
 abstract: >-
   针对BYD的业务需求,对AADK框架进行定制化改造,实现多LoRA动态加载和切换机制。该方案显著提升了模型复用效率,支持灵活的场景扩展,为后续业务迭代奠定了坚实基础。
 methodology: >-
