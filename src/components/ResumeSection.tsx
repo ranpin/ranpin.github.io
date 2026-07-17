@@ -91,6 +91,19 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
                 {project.description}
               </p>
+              {project.results && project.results.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {project.results.slice(0, 2).map((r, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-baseline gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-md text-xs"
+                    >
+                      <span className="font-bold">{r.value}</span>
+                      <span className="text-green-600/80">{r.metric}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 {(project.tags || []).map((tag, i) => (
                   <span
