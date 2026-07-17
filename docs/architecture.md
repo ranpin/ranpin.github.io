@@ -1,49 +1,87 @@
-# 项目架构与技术栈
+# 架构与技术实现
 
-## 🏗️ 架构图
+## 概览
 
-![Project Architecture](https://i2rq7l4yrx.ai-app.pub)
+纯静态个人站点，无后端、无数据库。内容以仓库中的 **Markdown / YAML 文件**为唯一数据源，构建时由加载器读入并**预渲染（SSG）**为静态 HTML，部署到 GitHub Pages，运行时再 hydrate。
 
-## 🛠️ 技术栈概览
+## 技术栈
 
-### 核心框架
-- **React 18**: 采用并发特性与 Hooks 模式构建高效 UI。
-- **TypeScript**: 实现全量强类型覆盖，提升代码健壮性与开发体验。
-- **Zustand**: 轻量级状态管理库，负责全局数据持久化与分发。
-- **Vite 5**: 极速构建工具，提供毫秒级热更新（HMR）体验。
+| 层 | 选型 |
+|---|---|
+| UI | React 18 + TypeScript |
+| 构建 / 预渲染 | Vite 5 + `vite-react-ssg`（单页模式） |
+| 样式 | Tailwind CSS 3 + `@tailwindcss/typography` |
+| 状态 | Zustand（仅承载导航等 UI 状态） |
+| 内容解析 | `js-yaml`（YAML 与 Markdown frontmatter） |
+| 文章渲染 | `react-markdown` + `remark-gfm` + `rehype-highlight` |
+| 图标 / 字体 | `lucide-react`（SVG）/ `@fontsource/inter`（自托管） |
+| 质量 / 测试 | ESLint(flat) + Prettier + Husky + lint-staged + Vitest |
 
-### 样式与动画
-- **Tailwind CSS 3**: 原子化 CSS 框架，确保设计风格统一且易于维护。
-- **Framer Motion**: 为页面切换、列表增删及微交互提供流畅的动画效果。
-- **Google Fonts**: 选用 Inter 与 Noto Serif SC 字体，兼顾现代感与阅读舒适度。
+> 站点无路由库：页面「板块」通过 `App.tsx` 里的 `activeSection` 状态条件渲染切换。
 
-### 工程化底座
-- **ESLint + Prettier**: 自动化代码规范检查与格式化。
-- **Husky + lint-staged**: Git 提交前自动执行质量门禁，确保仓库整洁。
-- **Vitest + React Testing Library**: 单元测试框架，保障核心业务逻辑稳定性。
-- **GitHub Actions**: 自动化 CI/CD 流水线，支持多版本 Node.js 测试与自动部署。
-
-## 📂 目录结构说明
+## 数据流
 
 ```text
-src/
-├── components/          # UI 组件层（全部 .tsx）
-│   ├── sections/        # 业务板块组件 (Home, Resume, Learning...)
-│   ├── modals/          # 全局弹窗与编辑器
-│   └── common/          # 通用基础组件
-├── hooks/               # 自定义 Hooks (逻辑复用)
-├── store/               # Zustand Store 定义
-├── types/               # TypeScript 全局类型定义
-├── data/                # 静态数据模板
-└── App.tsx              # 应用入口与路由分发
+content/*.{yaml,md}
+      │  (import.meta.glob + js-yaml)
+      ▼
+src/data/content.ts            # 加载器：解析并导出类型化数据
+      │
+      ├──▶ usePortfolioStore   # 只读数据 + 导航 UI 状态
+      └──▶ 组件直接 import      # 如 SearchBox / SmartRecommendations
+      ▼
+组件渲染（文章正文经 <Markdown> 渲染）
 ```
 
-## 🚀 性能与优化
+- **加载器** `src/data/content.ts`：用 `import.meta.glob('/content/**', { query: '?raw' })` 在构建期收集文件原文，`js-yaml` 解析 YAML 与 Markdown frontmatter，导出 `personalInfo / recentNews / projects / internships / honors / academicBlogs / engineeringBlogs / notes / stats`。修改内容只需改 `content/` 下的文件，无需改代码。
+- **store** `src/store/usePortfolioStore.ts`：不再持久化、不含编辑逻辑，只提供只读数据与 `activeSection / resumeCategory / learningCategory` 等导航状态。
+- **草稿**：`content/notes/*.md` 的 frontmatter 可写 `draft: true`，生产构建自动隐藏，仅 `npm run dev` 可见。
 
-- **代码分割**: 利用 Vite 的动态导入特性，实现按需加载。
-- **渲染优化**: 核心展示组件均使用 `React.memo` 包裹，减少非必要重绘。
-- **图片懒加载**: 首屏关键资源优先加载，长列表图片采用原生 `loading="lazy"`。
-- **状态持久化**: 通过 Zustand 中间件自动同步 LocalStorage，避免手动操作带来的性能损耗。
+## 目录结构
 
----
-*最后更新时间: 2026年5月*
+```text
+content/                # 唯一数据源（见 content/README.md）
+├── profile.yaml        # 个人信息 + 首屏亮点（可选）
+├── news.yaml           # 最新动态
+├── honors.yaml         # 荣誉
+├── internships/*.yaml  # 工作/实习
+├── projects/*.yaml     # 项目（文件名前缀 NN 控制顺序）
+├── blog/{academic,engineering}/*.md   # 文章
+└── notes/*.md          # 星际之门：TIL / 踩坑复盘
+
+public/                 # images/、robots.txt、sitemap.xml、404.html
+src/
+├── components/         # Header, HomeSection, Profile, ResumeSection,
+│                       # LearningSectionFull, StargateSection, GlobalModals,
+│                       # ModuleRenderer, SmartRecommendations, SearchBox,
+│                       # Footer, Icon, Markdown
+├── store/usePortfolioStore.ts
+├── data/content.ts     # 内容加载器
+├── types/index.ts      # 类型定义
+├── styles/index.css
+├── App.tsx             # 入口，按 activeSection 渲染
+└── index.tsx           # ViteReactSSG 入口（导出 createRoot）
+```
+
+## 渲染与性能
+
+- **SSG 预渲染**：`src/index.tsx` 以 `ViteReactSSG(<App/>)` 单页模式导出，`npm run build` 输出含真实内容的 `dist/index.html`（利于 SEO 与分享抓取），客户端再 hydrate。
+- **代码分割**：详情弹窗 `GlobalModals` 与「星际之门」`StargateSection`（含较重的 highlight.js）用 `React.lazy` 按需加载，保持首屏主包精简。
+- **图片**：原生 `loading="lazy"`。
+- **字体**：自托管 Inter，去除 render-blocking 的外链字体/图标 CDN。
+- **SEO**：`index.html` 含 Open Graph / Twitter Card / canonical / `Person` JSON-LD；`public/` 提供 `robots.txt` 与 `sitemap.xml`。
+
+## 内容数据模型（项目详情字段规范）
+
+项目（`content/projects/*.yaml`）除基础字段（`title / period / status / tags / description`）外，支持以下"面试友好"字段，便于展示深度：
+
+- **businessContext**：业务背景，说明项目价值与要解决的问题
+- **yourRole**：你的角色与具体职责，体现个人贡献
+- **architectureDetail**：技术架构详解（Markdown，支持列表/代码）
+- **technicalChallenges**：核心难点，数组，每项 `{ challenge, solution, impact }`
+- **results**：关键指标，数组，每项 `{ metric, value, baseline?, improvement? }`（列表页卡片会直出前 2 项）
+- **achievements / interviewHighlights / discussionTopics**：成果 / 面试亮点 / 可延伸话题（字符串数组）
+- **abstract / methodology**：摘要 / 方法（可选）
+- **demoImage / architectureImage**：配图（放 `public/images/`，值为 `/images/...`）
+
+详情弹窗由统一的 `ModuleRenderer` 渲染，保证列表、详情展示一致。长文本字段经 `<Markdown>`（`prose` 排版 + 代码高亮）渲染。
