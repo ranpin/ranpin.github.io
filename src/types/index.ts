@@ -1,12 +1,19 @@
 // 核心数据模型 —— 与 src/data/content.ts 的实际形状对齐。
 // 字段大多为可选，以兼容不同条目提供的字段差异。
 
+export interface Highlight {
+  value: string;
+  label: string;
+}
+
 export interface PersonalInfo {
   name: string;
   title: string;
   location: string;
   email: string;
   avatar: string;
+  headline?: string;
+  highlights?: Highlight[];
   bio: { main: string; detail: string };
   researchInterests: string[];
   socialLinks: Record<string, string>;

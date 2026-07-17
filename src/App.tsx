@@ -3,7 +3,6 @@ import Header from './components/Header';
 import ResumeSection from './components/ResumeSection';
 import LearningSectionFull from './components/LearningSectionFull';
 import HomeSection from './components/HomeSection';
-import StargateSection from './components/StargateSection';
 import Footer from './components/Footer';
 import { usePortfolioStore } from './store/usePortfolioStore';
 import type {
@@ -16,6 +15,8 @@ import type {
 
 // 详情弹窗仅在打开时才需要，按需加载以减小首屏体积
 const GlobalModals = lazy(() => import('./components/GlobalModals'));
+// 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
+const StargateSection = lazy(() => import('./components/StargateSection'));
 
 const App = () => {
   const {
@@ -77,7 +78,15 @@ const App = () => {
           />
         )}
 
-        {activeSection === 'stargate' && <StargateSection />}
+        {activeSection === 'stargate' && (
+          <Suspense
+            fallback={
+              <div className="py-16 text-center text-gray-400">加载中…</div>
+            }
+          >
+            <StargateSection />
+          </Suspense>
+        )}
       </main>
 
       <Footer personalInfo={personalInfo} />
