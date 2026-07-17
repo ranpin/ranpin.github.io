@@ -7,6 +7,8 @@ import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
 import App from './App';
 import './styles/index.css';
+// 代码块语法高亮主题（配合 Markdown 组件的 rehype-highlight）
+import 'highlight.js/styles/github.css';
 
 // 单页站点：构建时预渲染为静态 HTML（SSG），运行时再 hydrate。
 export const createRoot = ViteReactSSG(
