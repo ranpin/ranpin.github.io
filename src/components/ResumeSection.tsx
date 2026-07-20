@@ -2,15 +2,16 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import Icon from './Icon';
 import ResumeCatalog from './ResumeCatalog';
 import ResumeDocument from './resume/ResumeDocument';
-import { downloadResumeYaml, isSameResume } from './resume/resumeIo';
+import { downloadResumeYaml, normalizeResume } from './resume/resumeIo';
 import { resumes } from '../data/content';
 import { useResumeStore } from '../store/useResumeStore';
 import type { Project, Publication, Internship } from '../types';
 import type { ResumeData } from '../types/resume';
 
-// 编辑器与 AI 面板仅在打开时才需要，按需加载（并避免进入 SSG 预渲染树）
+// 编辑器 / AI / 发布面板仅在打开时才需要，按需加载（并避免进入 SSG 预渲染树）
 const ResumeEditor = lazy(() => import('./resume/ResumeEditor'));
 const AiGeneratePanel = lazy(() => import('./resume/AiGeneratePanel'));
+const PublishDialog = lazy(() => import('./resume/PublishDialog'));
 
 interface ResumeSectionProps {
   resumeCategory: string;
@@ -49,8 +50,10 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
   const [view, setView] = useState<View>('resume');
   const [editing, setEditing] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   const drafts = useResumeStore((s) => s.drafts);
+  const publishedMap = useResumeStore((s) => s.published);
   const hydrated = useResumeStore((s) => s.hydrated);
   const activeId = useResumeStore((s) => s.activeId);
   const setActiveId = useResumeStore((s) => s.setActiveId);
@@ -71,12 +74,15 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
   const current: ResumeData | undefined =
     (selectedId && drafts[selectedId]) || published;
 
-  // 「有未发布改动」= 存在草稿且内容与已发布版本确有差异
+  // 「有未发布改动」= 存在草稿，且与内置基线、最近一次发布都不同
   const isDirty = (rid: string): boolean => {
     const dr = drafts[rid];
     if (!dr) return false;
+    const norm = normalizeResume(dr);
     const pub = resumes.find((r) => r.id === rid);
-    return pub ? !isSameResume(dr, pub) : true;
+    if (pub && normalizeResume(pub) === norm) return false;
+    if (publishedMap[rid] === norm) return false;
+    return true;
   };
   const hasDraft = !!(selectedId && hydrated && isDirty(selectedId));
 
@@ -167,6 +173,11 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
               onClick={() => setEditing(true)}
             />
             <ToolbarButton
+              icon="paper-plane"
+              label="发布到线上"
+              onClick={() => setPublishOpen(true)}
+            />
+            <ToolbarButton
               icon="print"
               label="导出 PDF"
               onClick={handleExportPdf}
@@ -196,8 +207,8 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
             <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-100 px-4 py-2.5 text-sm text-amber-800">
               <Icon name="exclamation-triangle" className="mt-0.5 shrink-0" />
               <span>
-                当前简历有<strong>本地修改</strong>（已自动保存在本浏览器）。要正式发布到线上，请「导出数据」并把 YAML
-                提交到 <code>content/resumes/</code>；或「重置为已发布版本」放弃本地修改。
+                当前简历有<strong>本地修改</strong>（已自动保存在本浏览器）。点
+                <strong>「发布到线上」</strong>一键提交部署；或「导出数据」手动提交；或「重置为已发布版本」放弃本地修改。
               </span>
             </div>
           )}
@@ -229,6 +240,17 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
             resumeId={selectedId}
             baseData={current}
             onClose={() => setAiOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* 一键发布到线上 */}
+      {publishOpen && current && selectedId && (
+        <Suspense fallback={null}>
+          <PublishDialog
+            resumeId={selectedId}
+            data={current}
+            onClose={() => setPublishOpen(false)}
           />
         </Suspense>
       )}
