@@ -17,6 +17,8 @@ import type {
 const GlobalModals = lazy(() => import('./components/GlobalModals'));
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
+// 文档目录运行时读取 edge-ai-docs 清单，按需加载
+const DocsSection = lazy(() => import('./components/DocsSection'));
 
 const App = () => {
   const {
@@ -76,6 +78,16 @@ const App = () => {
             setLearningCategory={setLearningCategory}
             onBlogClick={(b) => setSelectedBlog(b)}
           />
+        )}
+
+        {activeSection === 'docs' && (
+          <Suspense
+            fallback={
+              <div className="py-16 text-center text-gray-400">加载中…</div>
+            }
+          >
+            <DocsSection />
+          </Suspense>
         )}
 
         {activeSection === 'stargate' && (
