@@ -18,13 +18,6 @@ describe('App', () => {
     expect(screen.getByText('荣誉奖项')).toBeInTheDocument();
   });
 
-  it('switches to the learning section', () => {
-    render(<App />);
-    fireEvent.click(screen.getByText('学习记录'));
-    expect(screen.getByText('学术研究')).toBeInTheDocument();
-    expect(screen.getByText('工程技术')).toBeInTheDocument();
-  });
-
   it('switches to 星际之门 and shows exploration notes', async () => {
     render(<App />);
     fireEvent.click(screen.getAllByText('星际之门')[0]);

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Icon from './Icon';
-import {
-  projects,
-  publications,
-  academicBlogs,
-  engineeringBlogs,
-  internships,
-} from '../data/content';
+import { projects, publications, internships } from '../data/content';
 
 export interface SearchResult {
   type: string;
@@ -30,7 +24,7 @@ const matchTags = (tags: unknown, q: string): boolean =>
 
 const SearchBox: React.FC<SearchBoxProps> = ({
   onSearch,
-  placeholder = '搜索项目、论文、博客...',
+  placeholder = '搜索项目、论文、工作经历...',
   className = '',
 }) => {
   const [query, setQuery] = useState('');
@@ -82,38 +76,6 @@ const SearchBox: React.FC<SearchBoxProps> = ({
       }
     });
 
-    academicBlogs.forEach((b) => {
-      if (
-        includesText(b.title, q) ||
-        includesText(b.summary, q) ||
-        matchTags(b.tags, q)
-      ) {
-        results.push({
-          type: 'academic-blog',
-          title: b.title,
-          description: b.summary || '',
-          icon: 'graduation-cap',
-          color: 'text-purple-600',
-        });
-      }
-    });
-
-    engineeringBlogs.forEach((b) => {
-      if (
-        includesText(b.title, q) ||
-        includesText(b.summary, q) ||
-        matchTags(b.tags, q)
-      ) {
-        results.push({
-          type: 'engineering-blog',
-          title: b.title,
-          description: b.summary || '',
-          icon: 'cogs',
-          color: 'text-orange-600',
-        });
-      }
-    });
-
     internships.forEach((i) => {
       if (
         includesText(i.position, q) ||
@@ -144,8 +106,6 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     ({
       project: '项目',
       publication: '论文',
-      'academic-blog': '学术',
-      'engineering-blog': '工程',
       internship: '经历',
     })[type] || '其他';
 

@@ -1,17 +1,10 @@
 import { useState, lazy, Suspense } from 'react';
 import Header from './components/Header';
 import ResumeSection from './components/ResumeSection';
-import LearningSectionFull from './components/LearningSectionFull';
 import HomeSection from './components/HomeSection';
 import Footer from './components/Footer';
 import { usePortfolioStore } from './store/usePortfolioStore';
-import type {
-  Project,
-  Publication,
-  BlogPost,
-  Internship,
-  ContentItem,
-} from './types';
+import type { Project, Publication, Internship, ContentItem } from './types';
 
 // 详情弹窗仅在打开时才需要，按需加载以减小首屏体积
 const GlobalModals = lazy(() => import('./components/GlobalModals'));
@@ -25,16 +18,13 @@ const App = () => {
     personalInfo,
     recentNews,
     activeSection,
-    learningCategory,
     resumeCategory,
     setActiveSection,
-    setLearningCategory,
   } = usePortfolioStore();
 
   // 详情弹窗的选中项
   const [selectedArticle, setSelectedArticle] = useState<Project | null>(null);
   const [selectedPaper, setSelectedPaper] = useState<Publication | null>(null);
-  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [selectedInternship, setSelectedInternship] =
     useState<Internship | null>(null);
 
@@ -42,12 +32,11 @@ const App = () => {
     const t = type.toLowerCase();
     if (t === 'project') setSelectedArticle(item as Project);
     else if (t === 'publication') setSelectedPaper(item as Publication);
-    else if (t.includes('blog')) setSelectedBlog(item as BlogPost);
     else if (t === 'internship') setSelectedInternship(item as Internship);
   };
 
   const anyModalOpen =
-    selectedArticle || selectedPaper || selectedBlog || selectedInternship;
+    selectedArticle || selectedPaper || selectedInternship;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -69,14 +58,6 @@ const App = () => {
             onArticleClick={(p) => setSelectedArticle(p)}
             onPaperClick={(p) => setSelectedPaper(p)}
             onInternshipClick={(i) => setSelectedInternship(i)}
-          />
-        )}
-
-        {activeSection === 'learning' && (
-          <LearningSectionFull
-            learningCategory={learningCategory}
-            setLearningCategory={setLearningCategory}
-            onBlogClick={(b) => setSelectedBlog(b)}
           />
         )}
 
@@ -108,11 +89,9 @@ const App = () => {
           <GlobalModals
             selectedArticle={selectedArticle}
             selectedPaper={selectedPaper}
-            selectedBlog={selectedBlog}
             selectedInternship={selectedInternship}
             onCloseArticle={() => setSelectedArticle(null)}
             onClosePaper={() => setSelectedPaper(null)}
-            onCloseBlog={() => setSelectedBlog(null)}
             onCloseInternship={() => setSelectedInternship(null)}
             onRecommendClick={handleRecommendClick}
           />

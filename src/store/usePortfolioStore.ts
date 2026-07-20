@@ -6,8 +6,6 @@ import {
   publications as initialPublications,
   internships as initialInternships,
   honors as initialHonors,
-  academicBlogs as initialAcademicBlogs,
-  engineeringBlogs as initialEngineeringBlogs,
 } from '../data/content';
 import type {
   PersonalInfo,
@@ -16,7 +14,6 @@ import type {
   Publication,
   Internship,
   Honor,
-  BlogPost,
 } from '../types';
 
 // 向后兼容：允许从 store 处继续导入这些类型
@@ -27,7 +24,6 @@ export type {
   Publication,
   Internship,
   Honor,
-  BlogPost,
 } from '../types';
 
 // 纯静态站点：数据只读，来自 src/data/content.ts。
@@ -40,23 +36,15 @@ export interface PortfolioState {
   publications: Publication[];
   internships: Internship[];
   honors: Honor[];
-  academicBlogs: BlogPost[];
-  engineeringBlogs: BlogPost[];
 
   // 导航 / UI 状态
   activeSection: string;
-  learningCategory: string;
   resumeCategory: string;
   resumeTabOrder: string[];
-  learningPage: number;
-  learningFilter: string;
 
   // Actions —— 仅 UI 状态
   setActiveSection: (section: string) => void;
-  setLearningCategory: (category: string) => void;
   setResumeCategory: (category: string) => void;
-  setLearningPage: (page: number) => void;
-  setLearningFilter: (filter: string) => void;
 }
 
 export const usePortfolioStore = create<PortfolioState>()((set) => ({
@@ -67,20 +55,12 @@ export const usePortfolioStore = create<PortfolioState>()((set) => ({
   publications: initialPublications as Publication[],
   internships: initialInternships as Internship[],
   honors: initialHonors as Honor[],
-  academicBlogs: initialAcademicBlogs as BlogPost[],
-  engineeringBlogs: initialEngineeringBlogs as BlogPost[],
 
   // 导航 / UI 状态
   activeSection: 'home',
-  learningCategory: 'academic',
   resumeCategory: 'projects',
   resumeTabOrder: ['projects', 'publications', 'internships', 'honors'],
-  learningPage: 1,
-  learningFilter: 'all',
 
   setActiveSection: (section) => set({ activeSection: section }),
-  setLearningCategory: (category) => set({ learningCategory: category }),
   setResumeCategory: (category) => set({ resumeCategory: category }),
-  setLearningPage: (page) => set({ learningPage: page }),
-  setLearningFilter: (filter) => set({ learningFilter: filter }),
 }));
