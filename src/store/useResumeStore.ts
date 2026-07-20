@@ -13,6 +13,8 @@ import type { ResumeData } from '../types/resume';
 
 export interface ResumeStoreState {
   drafts: Record<string, ResumeData>;
+  // 最近一次「发布到仓库」时的内容指纹（normalizeResume 字符串），用于判定是否还有未发布改动
+  published: Record<string, string>;
   activeId: string | null;
   hydrated: boolean;
 
@@ -21,6 +23,8 @@ export interface ResumeStoreState {
   setDraft: (id: string, data: ResumeData) => void;
   /** 删除某 id 的草稿（恢复到已发布版本） */
   resetDraft: (id: string) => void;
+  /** 记录某 id 已发布的内容指纹 */
+  markPublished: (id: string, signature: string) => void;
   setHydrated: (v: boolean) => void;
 }
 
@@ -28,6 +32,7 @@ export const useResumeStore = create<ResumeStoreState>()(
   persist(
     (set) => ({
       drafts: {},
+      published: {},
       activeId: null,
       hydrated: false,
 
@@ -40,13 +45,15 @@ export const useResumeStore = create<ResumeStoreState>()(
           delete next[id];
           return { drafts: next };
         }),
+      markPublished: (id, signature) =>
+        set((s) => ({ published: { ...s.published, [id]: signature } })),
       setHydrated: (v) => set({ hydrated: v }),
     }),
     {
       name: 'ranpin-resume-drafts',
       storage: createJSONStorage(() => localStorage),
-      // 只持久化草稿，UI 状态（activeId/hydrated）不入库
-      partialize: (s) => ({ drafts: s.drafts }),
+      // 持久化草稿与已发布指纹，UI 状态（activeId/hydrated）不入库
+      partialize: (s) => ({ drafts: s.drafts, published: s.published }),
       skipHydration: true,
     },
   ),

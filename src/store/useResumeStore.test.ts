@@ -10,7 +10,12 @@ const sample: ResumeData = {
 
 describe('useResumeStore', () => {
   beforeEach(() => {
-    useResumeStore.setState({ drafts: {}, activeId: null, hydrated: false });
+    useResumeStore.setState({
+      drafts: {},
+      published: {},
+      activeId: null,
+      hydrated: false,
+    });
   });
 
   it('has empty initial state', () => {
@@ -30,5 +35,10 @@ describe('useResumeStore', () => {
   it('tracks the active resume id', () => {
     useResumeStore.getState().setActiveId('x');
     expect(useResumeStore.getState().activeId).toBe('x');
+  });
+
+  it('records published signatures', () => {
+    useResumeStore.getState().markPublished('x', 'sig-1');
+    expect(useResumeStore.getState().published.x).toBe('sig-1');
   });
 });
