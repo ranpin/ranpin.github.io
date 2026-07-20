@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../Icon';
 import ResumeDocument from './ResumeDocument';
+import RichTextField from './RichTextField';
 import { cloneResume, downloadResumeYaml } from './resumeIo';
 import { THEME_OPTIONS, TEMPLATE_OPTIONS } from './resumeTheme';
 import { useResumeStore } from '../../store/useResumeStore';
@@ -54,27 +55,6 @@ const Field: React.FC<{
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-    />
-  </label>
-);
-
-const Area: React.FC<{
-  label: string;
-  value?: string;
-  onChange: (v: string) => void;
-  rows?: number;
-  hint?: string;
-}> = ({ label, value, onChange, rows = 3, hint }) => (
-  <label className="block">
-    <span className="flex items-baseline justify-between text-xs font-medium text-gray-500 mb-1">
-      {label}
-      {hint && <span className="text-gray-400 font-normal">{hint}</span>}
-    </span>
-    <textarea
-      value={value ?? ''}
-      rows={rows}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y"
     />
   </label>
 );
@@ -214,6 +194,14 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
   const commas = (arr?: string[]) => (arr || []).join(', ');
   const toCommas = (v: string) => v.split(',').map((s) => s.trim());
 
+  // 显式「保存」：改动本就实时自动存本地草稿，这里给一个明确的确认反馈
+  const [saved, setSaved] = useState(false);
+  const handleSave = () => {
+    setDraft(resumeId, cloneResume(data));
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
+  };
+
   // 拖拽排序：拖动过程中实时把被拖项移动到目标位置
   const [drag, setDrag] = useState<{ key: ArrayKey; index: number } | null>(
     null,
@@ -249,6 +237,15 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleSave}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white transition-colors ${
+              saved ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            <Icon name={saved ? 'check' : 'save'} />
+            <span>{saved ? '已保存' : '保存'}</span>
+          </button>
           <button
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -397,9 +394,8 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
               />
             </div>
             <div className="mt-3">
-              <Area
+              <RichTextField
                 label="个人简介"
-                hint="支持 **粗体** *斜体* `代码` [链接](url)"
                 value={data.basics.summary}
                 rows={4}
                 onChange={(v) => update((d) => (d.basics.summary = v))}
@@ -474,7 +470,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                       }
                     />
                   </div>
-                  <Area
+                  <RichTextField
                     label="补充说明"
                     value={e.detail}
                     rows={2}
@@ -541,11 +537,10 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                       }
                     />
                   </div>
-                  <Area
+                  <RichTextField
                     label="工作要点"
-                    hint="每行一条"
                     value={lines(w.highlights)}
-                    rows={4}
+                    rows={5}
                     onChange={(v) =>
                       update(
                         (d) => d.work && (d.work[i].highlights = toLines(v)),
@@ -623,11 +618,10 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                       update((d) => d.projects && (d.projects[i].tech = toCommas(v)))
                     }
                   />
-                  <Area
+                  <RichTextField
                     label="项目要点"
-                    hint="每行一条"
                     value={lines(p.highlights)}
-                    rows={4}
+                    rows={5}
                     onChange={(v) =>
                       update(
                         (d) =>

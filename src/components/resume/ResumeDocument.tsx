@@ -1,6 +1,6 @@
 import React from 'react';
 import Icon from '../Icon';
-import { formatInline } from './inlineFormat';
+import RichText from './RichText';
 import { THEMES, type ThemeClasses } from './resumeTheme';
 import type {
   ResumeData,
@@ -111,22 +111,14 @@ const ContactList: React.FC<{ basics: ResumeBasics; onDark?: boolean }> = ({
   );
 };
 
-const Bullets: React.FC<{ items?: string[]; dense?: boolean }> = ({
-  items,
-  dense,
-}) => {
-  const rows = clean(items);
-  return rows.length > 0 ? (
-    <ul
-      className={`mt-1 list-disc pl-5 ${
-        dense ? 'space-y-0' : 'space-y-0.5'
-      } text-[13px] leading-relaxed text-gray-700`}
-    >
-      {rows.map((h, i) => (
-        <li key={i}>{formatInline(h)}</li>
-      ))}
-    </ul>
-  ) : null;
+// 要点：整块作为 Markdown 富文本渲染（支持箭头/序列号列表、加粗、字号、链接等）。
+// 未显式使用 markdown 标记的普通行，默认补成箭头列表项（保持简历要点的默认观感）。
+const LIST_MARKER = /^\s*([-*+]|\d+[.)]|>|#{1,6})\s/;
+const Highlights: React.FC<{ items?: string[] }> = ({ items }) => {
+  const md = clean(items)
+    .map((line) => (LIST_MARKER.test(line) ? line : `- ${line}`))
+    .join('\n');
+  return md ? <RichText className="mt-1">{md}</RichText> : null;
 };
 
 const Period: React.FC<{ text?: string }> = ({ text }) =>
@@ -158,11 +150,7 @@ const EducationSection: React.FC<{
             {[e.degree, e.major].filter(Boolean).join(' · ')}
             {e.gpa && <span> · GPA {e.gpa}</span>}
           </div>
-          {e.detail && (
-            <p className="text-[13px] text-gray-700 mt-0.5">
-              {formatInline(e.detail)}
-            </p>
-          )}
+          {e.detail && <RichText className="mt-0.5">{e.detail}</RichText>}
         </div>
       ))}
     </div>
@@ -190,7 +178,7 @@ const WorkSection: React.FC<{
           {w.location && (
             <div className="text-[12px] text-gray-500">{w.location}</div>
           )}
-          <Bullets items={w.highlights} dense={dense} />
+          <Highlights items={w.highlights} />
         </div>
       ))}
     </div>
@@ -223,7 +211,7 @@ const ProjectSection: React.FC<{
               {clean(p.tech).join(' / ')}
             </div>
           )}
-          <Bullets items={p.highlights} dense={dense} />
+          <Highlights items={p.highlights} />
           {p.link && (
             <a
               href={p.link}
@@ -325,9 +313,7 @@ const SummarySection: React.FC<{
     <SectionTitle icon="user" theme={theme}>
       个人简介
     </SectionTitle>
-    <p className="text-[13px] leading-relaxed text-gray-700">
-      {formatInline(summary)}
-    </p>
+    <RichText>{summary}</RichText>
   </section>
 );
 
