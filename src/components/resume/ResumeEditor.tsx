@@ -1,9 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from '../Icon';
 import ResumeDocument from './ResumeDocument';
 import { cloneResume, downloadResumeYaml } from './resumeIo';
+import { THEME_OPTIONS, TEMPLATE_OPTIONS } from './resumeTheme';
 import { useResumeStore } from '../../store/useResumeStore';
-import type { ResumeData } from '../../types/resume';
+import type {
+  ResumeData,
+  ResumeTemplate,
+  ResumeTheme,
+} from '../../types/resume';
+
+// 可拖拽排序的数组字段
+type ArrayKey = 'education' | 'work' | 'projects' | 'skills' | 'awards';
+
+const moveItem = (arr: unknown[], from: number, to: number): void => {
+  if (from === to || from < 0 || to < 0 || from >= arr.length || to >= arr.length)
+    return;
+  const [it] = arr.splice(from, 1);
+  arr.splice(to, 0, it);
+};
 
 /**
  * 超级简历式简历编辑器：左侧分区表单，右侧实时预览。
@@ -118,11 +133,42 @@ const EntryCard: React.FC<{
   onUp: () => void;
   onDown: () => void;
   onDelete: () => void;
+  dragging?: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  onDragEnter?: () => void;
   children: React.ReactNode;
-}> = ({ label, index, total, onUp, onDown, onDelete, children }) => (
-  <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-4 space-y-3">
+}> = ({
+  label,
+  index,
+  total,
+  onUp,
+  onDown,
+  onDelete,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onDragEnter,
+  children,
+}) => (
+  <div
+    onDragEnter={onDragEnter}
+    onDragOver={(e) => e.preventDefault()}
+    className={`rounded-xl border bg-gray-50/60 p-4 space-y-3 transition-shadow ${
+      dragging ? 'border-blue-400 shadow-md opacity-60' : 'border-gray-200'
+    }`}
+  >
     <div className="flex items-center justify-between">
-      <span className="text-xs font-semibold text-gray-400">
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+        <span
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          title="拖拽排序"
+          className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500"
+        >
+          <Icon name="arrows-alt" />
+        </span>
         {label} #{index + 1}
       </span>
       <div className="flex items-center gap-0.5">
@@ -167,6 +213,25 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
   const toLines = (v: string) => v.split('\n');
   const commas = (arr?: string[]) => (arr || []).join(', ');
   const toCommas = (v: string) => v.split(',').map((s) => s.trim());
+
+  // 拖拽排序：拖动过程中实时把被拖项移动到目标位置
+  const [drag, setDrag] = useState<{ key: ArrayKey; index: number } | null>(
+    null,
+  );
+  const dragProps = (key: ArrayKey, i: number) => ({
+    dragging: drag?.key === key && drag.index === i,
+    onDragStart: () => setDrag({ key, index: i }),
+    onDragEnd: () => setDrag(null),
+    onDragEnter: () => {
+      if (!drag || drag.key !== key || drag.index === i) return;
+      const from = drag.index;
+      update((d) => {
+        const arr = d[key] as unknown[] | undefined;
+        if (arr) moveItem(arr, from, i);
+      });
+      setDrag({ key, index: i });
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex flex-col">
@@ -236,6 +301,59 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                 onChange={(v) => update((d) => (d.target = v))}
               />
             </div>
+
+            {/* 模板 */}
+            <div className="mt-3">
+              <span className="block text-xs font-medium text-gray-500 mb-1.5">
+                模板版式
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {TEMPLATE_OPTIONS.map((t) => {
+                  const active = (data.template || 'classic') === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() =>
+                        update((d) => (d.template = t.id as ResumeTemplate))
+                      }
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        active
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 配色 */}
+            <div className="mt-3">
+              <span className="block text-xs font-medium text-gray-500 mb-1.5">
+                配色主题
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {THEME_OPTIONS.map((t) => {
+                  const active = (data.theme || 'blue') === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      title={t.label}
+                      onClick={() =>
+                        update((d) => (d.theme = t.id as ResumeTheme))
+                      }
+                      className={`w-8 h-8 rounded-full ${t.dot} ring-2 ring-offset-2 transition ${
+                        active ? 'ring-gray-800' : 'ring-transparent'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           </section>
 
           {/* 基本信息 */}
@@ -281,6 +399,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
             <div className="mt-3">
               <Area
                 label="个人简介"
+                hint="支持 **粗体** *斜体* `代码` [链接](url)"
                 value={data.basics.summary}
                 rows={4}
                 onChange={(v) => update((d) => (d.basics.summary = v))}
@@ -307,6 +426,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                   label="教育"
                   index={i}
                   total={(data.education || []).length}
+                  {...dragProps('education', i)}
                   onUp={() =>
                     update((d) => d.education && moveInArray(d.education, i, -1))
                   }
@@ -386,6 +506,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                   label="工作"
                   index={i}
                   total={(data.work || []).length}
+                  {...dragProps('work', i)}
                   onUp={() => update((d) => d.work && moveInArray(d.work, i, -1))}
                   onDown={() => update((d) => d.work && moveInArray(d.work, i, 1))}
                   onDelete={() => update((d) => d.work?.splice(i, 1))}
@@ -455,6 +576,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                   label="项目"
                   index={i}
                   total={(data.projects || []).length}
+                  {...dragProps('projects', i)}
                   onUp={() =>
                     update((d) => d.projects && moveInArray(d.projects, i, -1))
                   }
@@ -537,6 +659,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                   label="技能"
                   index={i}
                   total={(data.skills || []).length}
+                  {...dragProps('skills', i)}
                   onUp={() =>
                     update((d) => d.skills && moveInArray(d.skills, i, -1))
                   }
@@ -584,6 +707,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
                   label="荣誉"
                   index={i}
                   total={(data.awards || []).length}
+                  {...dragProps('awards', i)}
                   onUp={() =>
                     update((d) => d.awards && moveInArray(d.awards, i, -1))
                   }
@@ -620,9 +744,12 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
             </div>
           </section>
 
-          <p className="text-xs text-gray-400 pt-2">
-            改动实时保存在本浏览器（localStorage），刷新不丢。要正式发布到线上，请「导出数据」并把 YAML 提交到
-            content/resumes/。
+          <p className="text-xs text-gray-400 pt-2 leading-relaxed">
+            要点/简介支持内联富文本：<code>**粗体**</code>、<code>*斜体*</code>、
+            <code>`代码`</code>、<code>[链接](url)</code>；拖动条目左侧
+            <Icon name="arrows-alt" className="mx-0.5" />
+            可排序。改动实时保存在本浏览器（localStorage），刷新不丢；要正式发布到线上，请「导出数据」并把 YAML
+            提交到 content/resumes/。
           </p>
         </div>
 
