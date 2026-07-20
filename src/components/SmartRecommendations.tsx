@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Icon from './Icon';
-import {
-  projects,
-  publications,
-  academicBlogs,
-  engineeringBlogs,
-  internships,
-} from '../data/content';
+import { projects, publications, internships } from '../data/content';
 import type { ContentItem } from '../types';
 
 interface Recommendation {
@@ -25,8 +19,6 @@ interface SmartRecommendationsProps {
 const COLLECTIONS: { items: ContentItem[]; type: string }[] = [
   { items: projects as ContentItem[], type: 'project' },
   { items: publications as ContentItem[], type: 'publication' },
-  { items: academicBlogs as ContentItem[], type: 'academic-blog' },
-  { items: engineeringBlogs as ContentItem[], type: 'engineering-blog' },
   { items: internships as ContentItem[], type: 'internship' },
 ];
 
@@ -45,18 +37,6 @@ const TYPE_INFO: Record<
     color: 'text-green-600',
     bg: 'bg-green-50',
     name: '论文',
-  },
-  'academic-blog': {
-    icon: 'graduation-cap',
-    color: 'text-purple-600',
-    bg: 'bg-purple-50',
-    name: '学术',
-  },
-  'engineering-blog': {
-    icon: 'cogs',
-    color: 'text-orange-600',
-    bg: 'bg-orange-50',
-    name: '工程',
   },
   internship: {
     icon: 'briefcase',

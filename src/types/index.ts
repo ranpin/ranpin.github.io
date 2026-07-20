@@ -108,18 +108,6 @@ export interface Honor {
   description?: string;
 }
 
-export interface BlogPost {
-  id: number | string;
-  title: string;
-  date?: string;
-  category?: string;
-  summary?: string;
-  content?: string;
-  tags?: string[];
-  readTime?: string;
-  link?: string;
-}
-
 // 探索空间「星际之门」的笔记：学习笔记(TIL) / 踩坑复盘
 export interface Note {
   id: number | string;
@@ -132,4 +120,4 @@ export interface Note {
 }
 
 // 详情弹窗可展示的任意条目
-export type ContentItem = Project | Publication | Internship | Honor | BlogPost;
+export type ContentItem = Project | Publication | Internship | Honor;
