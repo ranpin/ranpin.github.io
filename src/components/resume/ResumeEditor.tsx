@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import Icon from '../Icon';
 import ResumeDocument from './ResumeDocument';
 import RichTextField from './RichTextField';
-import { cloneResume, downloadResumeYaml, isSameResume } from './resumeIo';
+import {
+  cloneResume,
+  downloadResumeYaml,
+  isSameResume,
+  normalizeResume,
+} from './resumeIo';
 import { THEME_OPTIONS, TEMPLATE_OPTIONS } from './resumeTheme';
 import { useResumeStore } from '../../store/useResumeStore';
+
+const PublishDialog = lazy(() => import('./PublishDialog'));
 import type {
   ResumeData,
   ResumeTemplate,
@@ -179,10 +186,15 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
   const draft = useResumeStore((s) => s.drafts[resumeId]);
   const setDraft = useResumeStore((s) => s.setDraft);
   const resetDraft = useResumeStore((s) => s.resetDraft);
+  const publishedSig = useResumeStore((s) => s.published[resumeId]);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   const data: ResumeData = draft ?? published;
-  // 是否与已发布版本有实质差异（决定是否显示「未发布」标记）
-  const dirty = !!draft && !isSameResume(data, published);
+  // 是否有未发布改动：与内置基线、最近一次发布都不同
+  const dirty =
+    !!draft &&
+    !isSameResume(data, published) &&
+    publishedSig !== normalizeResume(data);
 
   // 不可变更新：克隆当前数据 → 修改 → 写回草稿（首次编辑即自动生成草稿）
   const update = (fn: (d: ResumeData) => void) => {
@@ -256,6 +268,13 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
           >
             <Icon name="print" />
             <span className="hidden sm:inline">导出 PDF</span>
+          </button>
+          <button
+            onClick={() => setPublishOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-700 border border-gray-200 hover:bg-gray-50"
+          >
+            <Icon name="paper-plane" />
+            <span className="hidden sm:inline">发布到线上</span>
           </button>
           <button
             onClick={() => downloadResumeYaml(data)}
@@ -763,6 +782,17 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
           <Icon name="check" className="text-green-400" />
           已保存到本地浏览器
         </div>
+      )}
+
+      {/* 一键发布 */}
+      {publishOpen && (
+        <Suspense fallback={null}>
+          <PublishDialog
+            resumeId={resumeId}
+            data={data}
+            onClose={() => setPublishOpen(false)}
+          />
+        </Suspense>
       )}
     </div>
   );
