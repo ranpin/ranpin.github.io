@@ -23,6 +23,7 @@
 | `honors.yaml` | 荣誉奖项 |
 | `internships/*.yaml` | 工作/实习经历，一份一个文件 |
 | `projects/NN-xxx.yaml` | 项目经历，一个一个文件；文件名前缀数字 `NN` 决定排列顺序 |
+| `resumes/NN-xxx.yaml` | 简历文档，一份一个文件；显示在「个人简历 → 我的简历」横排（详见 `resumes/README.md`） |
 | `notes/*.md` | 「星际之门」探索空间：学习笔记(TIL) 与 踩坑复盘 |
 
 > YAML（`.yaml`）用来存**结构化字段**；探索笔记用 **Markdown（`.md`）**，正文支持标题、列表、代码块、图片、链接等格式。
