@@ -1,11 +1,12 @@
 import { useState, lazy, Suspense } from 'react';
 import Header from './components/Header';
-import ResumeSection from './components/ResumeSection';
 import HomeSection from './components/HomeSection';
 import Footer from './components/Footer';
 import { usePortfolioStore } from './store/usePortfolioStore';
 import type { Project, Publication, Internship, ContentItem } from './types';
 
+// 简历中心用到 Markdown 富文本渲染（react-markdown 较重），按需加载
+const ResumeSection = lazy(() => import('./components/ResumeSection'));
 // 详情弹窗仅在打开时才需要，按需加载以减小首屏体积
 const GlobalModals = lazy(() => import('./components/GlobalModals'));
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
@@ -53,12 +54,18 @@ const App = () => {
         )}
 
         {activeSection === 'resume' && (
-          <ResumeSection
-            resumeCategory={resumeCategory}
-            onArticleClick={(p) => setSelectedArticle(p)}
-            onPaperClick={(p) => setSelectedPaper(p)}
-            onInternshipClick={(i) => setSelectedInternship(i)}
-          />
+          <Suspense
+            fallback={
+              <div className="py-16 text-center text-gray-400">加载中…</div>
+            }
+          >
+            <ResumeSection
+              resumeCategory={resumeCategory}
+              onArticleClick={(p) => setSelectedArticle(p)}
+              onPaperClick={(p) => setSelectedPaper(p)}
+              onInternshipClick={(i) => setSelectedInternship(i)}
+            />
+          </Suspense>
         )}
 
         {activeSection === 'docs' && (
