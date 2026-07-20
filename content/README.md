@@ -23,46 +23,13 @@
 | `honors.yaml` | 荣誉奖项 |
 | `internships/*.yaml` | 工作/实习经历，一份一个文件 |
 | `projects/NN-xxx.yaml` | 项目经历，一个一个文件；文件名前缀数字 `NN` 决定排列顺序 |
-| `blog/academic/*.md` | 「学习记录 → 学术研究」下的文章 |
-| `blog/engineering/*.md` | 「学习记录 → 工程技术」下的文章 |
 | `notes/*.md` | 「星际之门」探索空间：学习笔记(TIL) 与 踩坑复盘 |
 
-> YAML（`.yaml`）用来存**结构化字段**；文章用 **Markdown（`.md`）**，正文支持标题、列表、代码块、图片、链接等格式。
+> YAML（`.yaml`）用来存**结构化字段**；探索笔记用 **Markdown（`.md`）**，正文支持标题、列表、代码块、图片、链接等格式。
+>
+> 成体系的学习文档 / 面试指南统一维护在独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs)，会显示在主站「技术文档」板块。
 
 ---
-
-## 新增一篇文章
-
-在 `content/blog/academic/` 或 `content/blog/engineering/` 下新建一个 `.md` 文件（文件名建议 `日期-英文短名.md`，如 `2026-05-01-my-post.md`），内容格式：
-
-```markdown
----
-title: 文章标题
-date: 2026.05.01
-category: 分类名（如 性能优化）
-readTime: 10分钟
-tags: [标签1, 标签2]
-summary: 一句话摘要，显示在列表里。
----
-
-这里是正文，用 **Markdown** 写。可以有：
-
-## 小标题
-
-- 列表项
-- `代码`
-
-​```python
-print("代码块也支持")
-​```
-
-> 引用块
-
-[链接](https://example.com) 和图片 ![说明](图片URL)
-```
-
-- 上半部分 `---` 之间是**元信息**（frontmatter）。
-- 下半部分是正文。文章列表按 `date` 从新到旧排序。
 
 ## 新增一条探索笔记（星际之门）
 
