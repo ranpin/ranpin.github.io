@@ -1,6 +1,23 @@
 /* 简历正文富文本（<RichText> 渲染 Markdown）的排版。
    紧凑、适配 A4；无序列表用箭头样式，有序列表保留序列号。 */
 
+/* 分页：屏幕显示多页 sheet，打印显示连续文档 */
+@media screen {
+  .resume-print-only {
+    display: none;
+  }
+}
+@media print {
+  .resume-screen-only {
+    display: none;
+  }
+}
+
+/* 每个可分页内容块之间的间距（用 padding 让测量 offsetHeight 计入）*/
+.rt-pageblock {
+  padding-bottom: 16px;
+}
+
 .resume-rt {
   font-size: 13px;
   line-height: 1.6;
@@ -86,4 +103,54 @@
 .resume-rt .rt-xl {
   font-size: 1.45em;
   font-weight: 600;
+}
+
+/* 对齐（display:block 让 span 能整行对齐）*/
+.resume-rt .rt-left {
+  display: block;
+  text-align: left;
+}
+.resume-rt .rt-center {
+  display: block;
+  text-align: center;
+}
+.resume-rt .rt-right {
+  display: block;
+  text-align: right;
+}
+
+/* 字体颜色 */
+.resume-rt {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.resume-rt .rt-c-red {
+  color: #dc2626;
+}
+.resume-rt .rt-c-orange {
+  color: #ea580c;
+}
+.resume-rt .rt-c-amber {
+  color: #d97706;
+}
+.resume-rt .rt-c-green {
+  color: #16a34a;
+}
+.resume-rt .rt-c-teal {
+  color: #0d9488;
+}
+.resume-rt .rt-c-blue {
+  color: #2563eb;
+}
+.resume-rt .rt-c-violet {
+  color: #7c3aed;
+}
+.resume-rt .rt-c-pink {
+  color: #db2777;
+}
+.resume-rt .rt-c-gray {
+  color: #6b7280;
+}
+.resume-rt .rt-c-black {
+  color: #111827;
 }
