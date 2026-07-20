@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 // 内容加载器 —— 全站内容的唯一数据源在仓库根部的 `content/` 目录：
 //   结构化内容用 YAML（profile / news / honors / internships / projects），
-//   文章用 Markdown（blog/academic, blog/engineering）。
-// 本文件在构建时通过 import.meta.glob 读入这些文件并解析，导出与旧版一致，
-// 因此 store 与所有组件无需改动。编辑内容 = 改 content/ 下的文件（见 content/README.md）。
+//   探索笔记用 Markdown（notes/）。
+// 本文件在构建时通过 import.meta.glob 读入这些文件并解析。
+// 编辑内容 = 改 content/ 下的文件（见 content/README.md）。
 import { load as parseYaml } from 'js-yaml';
 import type {
   PersonalInfo,
@@ -12,7 +12,6 @@ import type {
   Publication,
   Internship,
   Honor,
-  BlogPost,
   Note,
 } from '../types';
 
@@ -49,19 +48,7 @@ const parseMarkdown = (
   };
 };
 
-const toBlogs = (glob: RawGlob): BlogPost[] =>
-  Object.entries(glob)
-    .map(([path, raw]) => {
-      const { data, body } = parseMarkdown(raw);
-      return {
-        ...(data as object),
-        id: slugOf(path),
-        content: body,
-      } as BlogPost;
-    })
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-// --- 导出（与旧版 content.ts 保持一致的形状） ---
+// --- 导出 ---
 
 export const personalInfo = loadOne<PersonalInfo>(
   import.meta.glob('/content/profile.yaml', {
@@ -104,22 +91,6 @@ export const projects: Project[] = loadMany<Project>(
 ).map(([path, v]) => ({ ...v, id: slugOf(path) }));
 
 export const publications: Publication[] = [];
-
-export const academicBlogs = toBlogs(
-  import.meta.glob('/content/blog/academic/*.md', {
-    eager: true,
-    query: '?raw',
-    import: 'default',
-  }) as RawGlob,
-);
-
-export const engineeringBlogs = toBlogs(
-  import.meta.glob('/content/blog/engineering/*.md', {
-    eager: true,
-    query: '?raw',
-    import: 'default',
-  }) as RawGlob,
-);
 
 // 「星际之门」探索笔记：跳过 _ 开头的模板；生产环境隐藏 draft；按日期倒序
 const toNotes = (glob: RawGlob): Note[] =>

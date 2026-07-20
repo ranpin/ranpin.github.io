@@ -1,24 +1,15 @@
 import React from 'react';
-import Markdown from './Markdown';
 import ModuleRenderer from './ModuleRenderer';
 import SmartRecommendations from './SmartRecommendations';
 import Icon from './Icon';
-import type {
-  Project,
-  Publication,
-  BlogPost,
-  Internship,
-  ContentItem,
-} from '../types';
+import type { Project, Publication, Internship, ContentItem } from '../types';
 
 interface GlobalModalsProps {
   selectedArticle: Project | null;
   selectedPaper: Publication | null;
-  selectedBlog: BlogPost | null;
   selectedInternship: Internship | null;
   onCloseArticle: () => void;
   onClosePaper: () => void;
-  onCloseBlog: () => void;
   onCloseInternship: () => void;
   onRecommendClick: (item: ContentItem, type: string) => void;
 }
@@ -26,11 +17,9 @@ interface GlobalModalsProps {
 const GlobalModals: React.FC<GlobalModalsProps> = ({
   selectedArticle,
   selectedPaper,
-  selectedBlog,
   selectedInternship,
   onCloseArticle,
   onClosePaper,
-  onCloseBlog,
   onCloseInternship,
   onRecommendClick,
 }) => {
@@ -115,45 +104,6 @@ const GlobalModals: React.FC<GlobalModalsProps> = ({
               <SmartRecommendations
                 currentItem={selectedPaper}
                 currentType="publication"
-                onItemClick={onRecommendClick}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 博客详情弹窗 */}
-      {selectedBlog && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between z-10 rounded-t-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 text-center flex-1">
-                {selectedBlog.title}
-              </h2>
-              <button
-                onClick={onCloseBlog}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors ml-4 flex-shrink-0"
-              >
-                <Icon name="times" className="text-gray-600" />
-              </button>
-            </div>
-            <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
-              <div className="flex items-center space-x-4 mb-6 text-sm text-gray-500">
-                <span>
-                  <Icon name="calendar-alt" className="mr-2" />
-                  {selectedBlog.date}
-                </span>
-                <span>
-                  <Icon name="tag" className="mr-2" />
-                  {selectedBlog.category}
-                </span>
-              </div>
-              <Markdown className="prose-blue">
-                {selectedBlog.content}
-              </Markdown>
-              <SmartRecommendations
-                currentItem={selectedBlog}
-                currentType="blog"
                 onItemClick={onRecommendClick}
               />
             </div>

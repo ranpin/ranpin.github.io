@@ -13,7 +13,6 @@ interface HeaderProps {
 const navItems = [
   { id: 'home', label: '首页', shortLabel: '首页', icon: 'home' },
   { id: 'resume', label: '个人简历', shortLabel: '简历', icon: 'user' },
-  { id: 'learning', label: '学习记录', shortLabel: '学习', icon: 'book' },
   { id: 'docs', label: '技术文档', shortLabel: '文档', icon: 'file-alt' },
   { id: 'stargate', label: '星际之门', shortLabel: '星际之门', icon: 'star' },
 ];
@@ -136,14 +135,12 @@ const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="p-6">
                 <SearchBox
-                  placeholder="搜索项目、论文、博客、工作经历..."
+                  placeholder="搜索项目、论文、工作经历..."
                   className="w-full"
                   onSearch={(results, action) => {
                     if (action === 'select' && results.length > 0) {
-                      const result = results[0];
                       setShowSearch(false);
-                      if (result.type.includes('blog')) go('learning');
-                      else go('resume');
+                      go('resume');
                     }
                   }}
                 />

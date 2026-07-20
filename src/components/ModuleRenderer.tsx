@@ -350,31 +350,6 @@ const ModuleRenderer = ({ type, data, isDetail = false }) => {
         </div>
       );
 
-    case 'blog-academic':
-    case 'blog-engineering':
-      return (
-        <div className={`${cardClass} p-5`}>
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-lg font-bold text-gray-800">{data.title}</h3>
-            <span className="text-xs text-gray-500 font-mono">{data.date}</span>
-          </div>
-          {data.summary && (
-            <p className="text-sm text-gray-600 mb-3">{data.summary}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            {data.tags &&
-              data.tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-          </div>
-        </div>
-      );
-
     case 'personal-info':
       return (
         <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
