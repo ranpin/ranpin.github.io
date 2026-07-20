@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Icon from '../Icon';
 import ResumeDocument from './ResumeDocument';
 import RichTextField from './RichTextField';
-import { cloneResume, downloadResumeYaml } from './resumeIo';
+import { cloneResume, downloadResumeYaml, isSameResume } from './resumeIo';
 import { THEME_OPTIONS, TEMPLATE_OPTIONS } from './resumeTheme';
 import { useResumeStore } from '../../store/useResumeStore';
 import type {
@@ -181,6 +181,8 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
   const resetDraft = useResumeStore((s) => s.resetDraft);
 
   const data: ResumeData = draft ?? published;
+  // 是否与已发布版本有实质差异（决定是否显示「未发布」标记）
+  const dirty = !!draft && !isSameResume(data, published);
 
   // 不可变更新：克隆当前数据 → 修改 → 写回草稿（首次编辑即自动生成草稿）
   const update = (fn: (d: ResumeData) => void) => {
@@ -194,12 +196,14 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
   const commas = (arr?: string[]) => (arr || []).join(', ');
   const toCommas = (v: string) => v.split(',').map((s) => s.trim());
 
-  // 显式「保存」：改动本就实时自动存本地草稿，这里给一个明确的确认反馈
+  // 显式「保存」：改动本就实时自动存本地草稿，这里给明确反馈；
+  // 若内容与已发布版本一致，则清掉草稿（不再显示「未发布」）。
   const [saved, setSaved] = useState(false);
   const handleSave = () => {
-    setDraft(resumeId, cloneResume(data));
+    if (isSameResume(data, published)) resetDraft(resumeId);
+    else setDraft(resumeId, cloneResume(data));
     setSaved(true);
-    window.setTimeout(() => setSaved(false), 1800);
+    window.setTimeout(() => setSaved(false), 2200);
   };
 
   // 拖拽排序：拖动过程中实时把被拖项移动到目标位置
@@ -230,9 +234,9 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
           <span className="font-semibold text-gray-900 truncate">
             编辑简历 · {data.label}
           </span>
-          {draft && (
+          {dirty && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">
-              未发布草稿
+              未发布
             </span>
           )}
         </div>
@@ -260,7 +264,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
             <Icon name="download" />
             <span className="hidden sm:inline">导出数据</span>
           </button>
-          {draft && (
+          {dirty && (
             <button
               onClick={() => resetDraft(resumeId)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-red-600"
@@ -739,21 +743,27 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({
           </section>
 
           <p className="text-xs text-gray-400 pt-2 leading-relaxed">
-            要点/简介支持内联富文本：<code>**粗体**</code>、<code>*斜体*</code>、
-            <code>`代码`</code>、<code>[链接](url)</code>；拖动条目左侧
+            要点/简介支持富文本工具栏：加粗/斜体/下划线/删除线/代码、序列号/箭头列表/引用/链接、
+            <strong>字号</strong>、<strong>颜色</strong>、<strong>对齐(左/中/右)</strong>；拖动条目左侧
             <Icon name="arrows-alt" className="mx-0.5" />
-            可排序。改动实时保存在本浏览器（localStorage），刷新不丢；要正式发布到线上，请「导出数据」并把 YAML
-            提交到 content/resumes/。
+            可排序。改动<strong>实时自动保存</strong>在本浏览器（刷新不丢）；点「保存」可确认。要正式发布到线上，请「导出数据」并把
+            YAML 提交到 content/resumes/。
           </p>
         </div>
 
-        {/* 右：实时预览 */}
-        <div className="overflow-y-auto bg-gray-100 p-4 sm:p-8">
-          <div className="shadow-lg rounded-md overflow-hidden">
-            <ResumeDocument data={data} />
-          </div>
+        {/* 右：实时预览（真·多页）*/}
+        <div className="overflow-auto bg-gray-100 p-4 sm:p-8">
+          <ResumeDocument data={data} />
         </div>
       </div>
+
+      {/* 保存反馈 toast */}
+      {saved && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gray-900 text-white text-sm shadow-lg">
+          <Icon name="check" className="text-green-400" />
+          已保存到本地浏览器
+        </div>
+      )}
     </div>
   );
 };
