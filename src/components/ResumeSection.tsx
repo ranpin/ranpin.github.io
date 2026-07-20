@@ -2,7 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import Icon from './Icon';
 import ResumeCatalog from './ResumeCatalog';
 import ResumeDocument from './resume/ResumeDocument';
-import { downloadResumeYaml } from './resume/resumeIo';
+import { downloadResumeYaml, isSameResume } from './resume/resumeIo';
 import { resumes } from '../data/content';
 import { useResumeStore } from '../store/useResumeStore';
 import type { Project, Publication, Internship } from '../types';
@@ -70,7 +70,15 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
   // 有草稿则展示草稿（水合后），否则展示已发布版本
   const current: ResumeData | undefined =
     (selectedId && drafts[selectedId]) || published;
-  const hasDraft = !!(selectedId && drafts[selectedId]);
+
+  // 「有未发布改动」= 存在草稿且内容与已发布版本确有差异
+  const isDirty = (rid: string): boolean => {
+    const dr = drafts[rid];
+    if (!dr) return false;
+    const pub = resumes.find((r) => r.id === rid);
+    return pub ? !isSameResume(dr, pub) : true;
+  };
+  const hasDraft = !!(selectedId && hydrated && isDirty(selectedId));
 
   const handleExportData = () => {
     if (current) downloadResumeYaml(current);
@@ -121,7 +129,7 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
           <div className="mb-5 flex flex-wrap gap-3">
             {resumes.map((r) => {
               const active = r.id === selectedId;
-              const edited = hydrated && !!drafts[r.id];
+              const edited = hydrated && isDirty(r.id);
               return (
                 <button
                   key={r.id}
@@ -142,7 +150,7 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
                           : 'bg-amber-100 text-amber-700'
                       }`}
                     >
-                      草稿
+                      未发布
                     </span>
                   )}
                 </button>
@@ -184,12 +192,20 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
             )}
           </div>
 
-          {/* A4 预览（打印时单独输出为 PDF） */}
+          {hasDraft && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-100 px-4 py-2.5 text-sm text-amber-800">
+              <Icon name="exclamation-triangle" className="mt-0.5 shrink-0" />
+              <span>
+                当前简历有<strong>本地修改</strong>（已自动保存在本浏览器）。要正式发布到线上，请「导出数据」并把 YAML
+                提交到 <code>content/resumes/</code>；或「重置为已发布版本」放弃本地修改。
+              </span>
+            </div>
+          )}
+
+          {/* A4 预览（真·多页；打印时单独输出为 PDF） */}
           {current && (
-            <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-gray-100 p-4 sm:p-8">
-              <div className="shadow-lg rounded-md overflow-hidden">
-                <ResumeDocument id="resume-print" data={current} />
-              </div>
+            <div className="rounded-2xl border border-gray-200 shadow-sm overflow-auto bg-gray-100 p-4 sm:p-8">
+              <ResumeDocument id="resume-print" data={current} />
             </div>
           )}
         </div>

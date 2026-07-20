@@ -1,6 +1,9 @@
 import React from 'react';
 import {
   AlertTriangle,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   ArrowDown,
   ArrowUp,
   BarChart3,
@@ -77,6 +80,9 @@ import {
 
 // 原 Font Awesome 名称（去掉 fa- 前缀）到 lucide 组件的映射
 const ICON_MAP: Record<string, LucideIcon> = {
+  'align-center': AlignCenter,
+  'align-left': AlignLeft,
+  'align-right': AlignRight,
   'arrow-down': ArrowDown,
   'arrow-up': ArrowUp,
   'arrows-alt': Move,

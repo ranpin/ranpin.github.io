@@ -23,6 +23,16 @@ export const sanitizeResume = (d: ResumeData): ResumeData => {
   return c;
 };
 
+// 两份简历内容是否等价（用于判断草稿是否真的有改动，忽略 id 与空白项差异）
+export const isSameResume = (a: ResumeData, b: ResumeData): boolean => {
+  const norm = (d: ResumeData) => {
+    const { id, ...rest } = sanitizeResume(d);
+    void id;
+    return JSON.stringify(rest);
+  };
+  return norm(a) === norm(b);
+};
+
 // 导出与 content/resumes/*.yaml 同构的 YAML（id 由文件名派生，故省略）
 export const resumeToYaml = (d: ResumeData): string => {
   const { id, ...rest } = sanitizeResume(d);
