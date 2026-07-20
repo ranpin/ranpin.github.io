@@ -34,4 +34,11 @@ describe('App', () => {
       await screen.findByText(/一次端侧显存泄漏的复盘/),
     ).toBeInTheDocument();
   });
+
+  it('switches to 技术文档 and shows the docs entry', async () => {
+    render(<App />);
+    fireEvent.click(screen.getAllByText('技术文档')[0]);
+    // DocsSection 懒加载；标题与「打开完整知识库」入口不依赖网络请求
+    expect(await screen.findByText('打开完整知识库')).toBeInTheDocument();
+  });
 });
