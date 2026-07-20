@@ -52,12 +52,18 @@ export interface ResumeAward {
   date?: string;
 }
 
+// 模板（版式）与配色主题
+export type ResumeTemplate = 'classic' | 'sidebar' | 'compact';
+export type ResumeTheme = 'blue' | 'emerald' | 'violet' | 'rose' | 'slate';
+
 export interface ResumeData {
   id: string; // 文件名 slug，稳定唯一
   label: string; // 横排 tab 名，如「算法岗·2026」
   target?: string; // 目标岗位 / 说明
   updated?: string; // 更新日期
   pdfUrl?: string; // 预留：混合模式挂现成 PDF（MVP 不用）
+  template?: ResumeTemplate; // 版式，默认 classic
+  theme?: ResumeTheme; // 配色，默认 blue
   basics: ResumeBasics;
   education?: ResumeEducation[];
   work?: ResumeWork[];
