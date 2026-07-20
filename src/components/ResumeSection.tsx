@@ -206,10 +206,14 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
         </Suspense>
       )}
 
-      {/* AI 生成入口（占位）*/}
-      {aiOpen && (
+      {/* AI 生成入口 */}
+      {aiOpen && current && selectedId && (
         <Suspense fallback={null}>
-          <AiGeneratePanel onClose={() => setAiOpen(false)} />
+          <AiGeneratePanel
+            resumeId={selectedId}
+            baseData={current}
+            onClose={() => setAiOpen(false)}
+          />
         </Suspense>
       )}
     </div>

@@ -11,6 +11,8 @@
 label: 端侧大模型工程师        # 必填，横排 tab 名
 target: 大模型 / AI Agent 方向  # 可选，目标岗位说明
 updated: '2026-07'             # 可选，更新日期
+template: classic             # 可选，版式：classic | sidebar | compact（默认 classic）
+theme: blue                   # 可选，配色：blue | emerald | violet | rose | slate（默认 blue）
 basics:                        # 必填
   name: Ranpin                 # 必填
   title: 求职意向 / 头衔
@@ -49,6 +51,8 @@ awards:                        # 可选，数组
     issuer: 颁发方
     date: '2026'
 ```
+
+> **内联富文本**：`summary` 与各 `highlights` 支持 `**粗体**`、`*斜体*`、`` `代码` ``、`[文本](链接)`。
 
 ## 编辑与发布
 
