@@ -11,9 +11,14 @@ describe('App', () => {
     expect(screen.getByText('最新动态')).toBeInTheDocument();
   });
 
-  it('switches to the resume section and shows category tabs', () => {
+  it('switches to the resume section (my-resume view) and to the catalog', () => {
     render(<App />);
     fireEvent.click(screen.getByText('个人简历'));
+    // 默认「我的简历」视图：展示工具条
+    expect(screen.getByText('导出 PDF')).toBeInTheDocument();
+    expect(screen.getByText('AI 生成')).toBeInTheDocument();
+    // 切到「详细经历」显示分类 tab
+    fireEvent.click(screen.getByText('详细经历'));
     expect(screen.getByText('项目经历')).toBeInTheDocument();
     expect(screen.getByText('荣誉奖项')).toBeInTheDocument();
   });

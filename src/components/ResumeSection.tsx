@@ -1,7 +1,16 @@
-import React from 'react';
-import { usePortfolioStore } from '../store/usePortfolioStore';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import Icon from './Icon';
+import ResumeCatalog from './ResumeCatalog';
+import ResumeDocument from './resume/ResumeDocument';
+import { downloadResumeYaml } from './resume/resumeIo';
+import { resumes } from '../data/content';
+import { useResumeStore } from '../store/useResumeStore';
 import type { Project, Publication, Internship } from '../types';
+import type { ResumeData } from '../types/resume';
+
+// 编辑器与 AI 面板仅在打开时才需要，按需加载（并避免进入 SSG 预渲染树）
+const ResumeEditor = lazy(() => import('./resume/ResumeEditor'));
+const AiGeneratePanel = lazy(() => import('./resume/AiGeneratePanel'));
 
 interface ResumeSectionProps {
   resumeCategory: string;
@@ -10,21 +19,25 @@ interface ResumeSectionProps {
   onInternshipClick: (internship: Internship) => void;
 }
 
-const TABS = [
-  { key: 'projects', label: '项目经历', icon: 'code' },
-  { key: 'publications', label: '论文发表', icon: 'file-alt' },
-  { key: 'internships', label: '实习经历', icon: 'briefcase' },
-  { key: 'honors', label: '荣誉奖项', icon: 'trophy' },
-];
+type View = 'resume' | 'catalog';
 
-const EmptyState: React.FC<{ icon: string; text: string }> = ({
-  icon,
-  text,
-}) => (
-  <div className="text-center py-12 text-gray-500">
-    <Icon name={icon} className="text-4xl mb-4" />
-    <p>{text}</p>
-  </div>
+const ToolbarButton: React.FC<{
+  icon: string;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+}> = ({ icon, label, onClick, primary }) => (
+  <button
+    onClick={onClick}
+    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+      primary
+        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+    }`}
+  >
+    <Icon name={icon} />
+    {label}
+  </button>
 );
 
 const ResumeSection: React.FC<ResumeSectionProps> = ({
@@ -33,208 +46,171 @@ const ResumeSection: React.FC<ResumeSectionProps> = ({
   onPaperClick,
   onInternshipClick,
 }) => {
-  const { projects, publications, internships, honors } = usePortfolioStore();
-  const setResumeCategory = usePortfolioStore((s) => s.setResumeCategory);
+  const [view, setView] = useState<View>('resume');
+  const [editing, setEditing] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+
+  const drafts = useResumeStore((s) => s.drafts);
+  const hydrated = useResumeStore((s) => s.hydrated);
+  const activeId = useResumeStore((s) => s.activeId);
+  const setActiveId = useResumeStore((s) => s.setActiveId);
+  const setHydrated = useResumeStore((s) => s.setHydrated);
+  const resetDraft = useResumeStore((s) => s.resetDraft);
+
+  // 水合后再从 localStorage 载入草稿，避免预渲染 / 水合不一致
+  useEffect(() => {
+    useResumeStore.persist.rehydrate();
+    setHydrated(true);
+  }, [setHydrated]);
+
+  const selectedId = activeId && resumes.some((r) => r.id === activeId)
+    ? activeId
+    : resumes[0]?.id;
+  const published = resumes.find((r) => r.id === selectedId);
+  // 有草稿则展示草稿（水合后），否则展示已发布版本
+  const current: ResumeData | undefined =
+    (selectedId && drafts[selectedId]) || published;
+  const hasDraft = !!(selectedId && drafts[selectedId]);
+
+  const handleExportData = () => {
+    if (current) downloadResumeYaml(current);
+  };
+
+  const handleExportPdf = () => window.print();
 
   return (
     <div>
-      {/* 分类切换 Tab */}
-      <div className="mb-8 flex flex-wrap gap-3">
-        {TABS.map((tab) => (
+      {/* 一级切换：我的简历 / 详细经历 */}
+      <div className="mb-8 inline-flex rounded-xl bg-gray-100 p-1">
+        {(
+          [
+            { key: 'resume', label: '我的简历', icon: 'file-alt' },
+            { key: 'catalog', label: '详细经历', icon: 'folder-open' },
+          ] as const
+        ).map((t) => (
           <button
-            key={tab.key}
-            onClick={() => setResumeCategory(tab.key)}
-            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base flex items-center ${
-              resumeCategory === tab.key
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm'
+            key={t.key}
+            onClick={() => setView(t.key)}
+            className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
+              view === t.key
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <Icon name={tab.icon} className="mr-2" />
-            {tab.label}
+            <Icon name={t.icon} />
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* 项目经历 */}
-      {resumeCategory === 'projects' && (
-        <div className="space-y-4">
-          {projects.map((project, index) => (
-            <div
-              key={project.id || index}
-              onClick={() => onArticleClick(project)}
-              className="border-l-4 border-blue-500 pl-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-1">
-                    <h3 className="text-lg font-medium text-gray-800 hover:text-blue-600 transition-colors">
-                      {project.title}
-                    </h3>
-                    {project.status && (
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                        {project.status}
-                      </span>
-                    )}
-                  </div>
-                  {project.period && (
-                    <div className="text-sm text-gray-500 mb-2 font-mono">
-                      {project.period}
-                    </div>
-                  )}
-                </div>
-                <Icon
-                  name="chevron-right"
-                  className="text-gray-300 text-sm mt-1"
-                />
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                {project.description}
-              </p>
-              {project.results && project.results.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {project.results.slice(0, 2).map((r, i) => (
+      {view === 'catalog' ? (
+        <ResumeCatalog
+          resumeCategory={resumeCategory}
+          onArticleClick={onArticleClick}
+          onPaperClick={onPaperClick}
+          onInternshipClick={onInternshipClick}
+        />
+      ) : resumes.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <Icon name="file-alt" className="text-4xl mb-4" />
+          <p>暂无简历，请在 content/resumes/ 添加一份 YAML。</p>
+        </div>
+      ) : (
+        <div>
+          {/* 简历横排：多份简历切换 */}
+          <div className="mb-5 flex flex-wrap gap-3">
+            {resumes.map((r) => {
+              const active = r.id === selectedId;
+              const edited = hydrated && !!drafts[r.id];
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => setActiveId(r.id)}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base flex items-center ${
+                    active
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm'
+                  }`}
+                >
+                  <Icon name="file-alt" className="mr-2" />
+                  {r.label}
+                  {edited && (
                     <span
-                      key={i}
-                      className="inline-flex items-baseline gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-md text-xs"
+                      className={`ml-2 text-xs px-1.5 py-0.5 rounded ${
+                        active
+                          ? 'bg-white/25 text-white'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}
                     >
-                      <span className="font-bold">{r.value}</span>
-                      <span className="text-green-600/80">{r.metric}</span>
+                      草稿
                     </span>
-                  ))}
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {(project.tags || []).map((tag, i) => (
-                  <span
-                    key={`${tag}-${i}`}
-                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 工具条 */}
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <ToolbarButton
+              icon="edit"
+              label="编辑"
+              primary
+              onClick={() => setEditing(true)}
+            />
+            <ToolbarButton
+              icon="print"
+              label="导出 PDF"
+              onClick={handleExportPdf}
+            />
+            <ToolbarButton
+              icon="download"
+              label="导出数据"
+              onClick={handleExportData}
+            />
+            <ToolbarButton
+              icon="sparkles"
+              label="AI 生成"
+              onClick={() => setAiOpen(true)}
+            />
+            {hydrated && hasDraft && selectedId && (
+              <button
+                onClick={() => resetDraft(selectedId)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
+              >
+                <Icon name="redo" />
+                重置为已发布版本
+              </button>
+            )}
+          </div>
+
+          {/* A4 预览（打印时单独输出为 PDF） */}
+          {current && (
+            <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-gray-100 p-4 sm:p-8">
+              <div className="shadow-lg rounded-md overflow-hidden">
+                <ResumeDocument id="resume-print" data={current} />
               </div>
             </div>
-          ))}
-          {projects.length === 0 && (
-            <EmptyState icon="code" text="暂无项目数据" />
           )}
         </div>
       )}
 
-      {/* 论文发表 */}
-      {resumeCategory === 'publications' && (
-        <div className="space-y-4">
-          {publications.map((paper, index) => (
-            <div
-              key={paper.id || index}
-              onClick={() => onPaperClick(paper)}
-              className="border-l-4 border-green-500 pl-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
-            >
-              <h3 className="text-lg font-medium text-gray-800 mb-1">
-                {paper.title}
-              </h3>
-              <div className="text-sm text-gray-600 mb-2">
-                {paper.authors && <span>{paper.authors}</span>}
-                {paper.venue && <span> • {paper.venue}</span>}
-                {paper.year && <span> • {paper.year}</span>}
-              </div>
-              {paper.abstract && (
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {paper.abstract}
-                </p>
-              )}
-            </div>
-          ))}
-          {publications.length === 0 && (
-            <EmptyState icon="file-alt" text="暂无学术论文" />
-          )}
-        </div>
+      {/* 编辑器（超级简历式双栏）*/}
+      {editing && published && selectedId && (
+        <Suspense fallback={null}>
+          <ResumeEditor
+            resumeId={selectedId}
+            published={published}
+            onClose={() => setEditing(false)}
+          />
+        </Suspense>
       )}
 
-      {/* 实习经历 */}
-      {resumeCategory === 'internships' && (
-        <div className="space-y-4">
-          {internships.map((internship, index) => (
-            <div
-              key={internship.id || index}
-              onClick={() => onInternshipClick(internship)}
-              className="border-l-4 border-purple-500 pl-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer rounded-r-lg"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-1">
-                    <h3 className="text-lg font-medium text-gray-800 hover:text-purple-600 transition-colors">
-                      {internship.position || internship.role} @{' '}
-                      {internship.company}
-                    </h3>
-                    {internship.type && (
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                        {internship.type}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-500 mb-2 font-mono">
-                    {internship.period || internship.duration}
-                    {internship.location && (
-                      <span> • {internship.location}</span>
-                    )}
-                  </div>
-                </div>
-                <Icon
-                  name="chevron-right"
-                  className="text-gray-300 text-sm mt-1"
-                />
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                {internship.description}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(internship.skills || []).map((skill, i) => (
-                  <span
-                    key={`${skill}-${i}`}
-                    className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-          {internships.length === 0 && (
-            <EmptyState icon="briefcase" text="暂无工作经历" />
-          )}
-        </div>
-      )}
-
-      {/* 荣誉奖项 */}
-      {resumeCategory === 'honors' && (
-        <div className="space-y-4">
-          {honors.map((honor, index) => (
-            <div
-              key={honor.id || index}
-              className="border-l-4 border-yellow-500 pl-6 py-4 hover:bg-gray-50 transition-colors rounded-r-lg"
-            >
-              <div className="flex items-center space-x-3 mb-1">
-                <h3 className="text-lg font-medium text-gray-800">
-                  {honor.award || honor.title}
-                </h3>
-              </div>
-              <div className="text-sm text-gray-600">
-                {honor.organization || honor.issuer}
-                {honor.year && <span> • {honor.year}</span>}
-              </div>
-              {honor.description && (
-                <p className="text-gray-600 text-sm leading-relaxed mt-2">
-                  {honor.description}
-                </p>
-              )}
-            </div>
-          ))}
-          {honors.length === 0 && (
-            <EmptyState icon="trophy" text="暂无荣誉奖项" />
-          )}
-        </div>
+      {/* AI 生成入口（占位）*/}
+      {aiOpen && (
+        <Suspense fallback={null}>
+          <AiGeneratePanel onClose={() => setAiOpen(false)} />
+        </Suspense>
       )}
     </div>
   );

@@ -14,6 +14,7 @@ import type {
   Honor,
   Note,
 } from '../types';
+import type { ResumeData } from '../types/resume';
 
 // 注意：import.meta.glob 的第二个参数必须是内联对象字面量（Vite 静态分析要求）。
 
@@ -91,6 +92,15 @@ export const projects: Project[] = loadMany<Project>(
 ).map(([path, v]) => ({ ...v, id: slugOf(path) }));
 
 export const publications: Publication[] = [];
+
+// 简历文档：每个 YAML 一份简历，文件名（去扩展名）作为稳定 id，按文件名升序
+export const resumes: ResumeData[] = loadMany<ResumeData>(
+  import.meta.glob('/content/resumes/*.yaml', {
+    eager: true,
+    query: '?raw',
+    import: 'default',
+  }) as RawGlob,
+).map(([path, v]) => ({ ...v, id: slugOf(path) }));
 
 // 「星际之门」探索笔记：跳过 _ 开头的模板；生产环境隐藏 draft；按日期倒序
 const toNotes = (glob: RawGlob): Note[] =>

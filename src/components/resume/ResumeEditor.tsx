@@ -1,0 +1,640 @@
+import React from 'react';
+import Icon from '../Icon';
+import ResumeDocument from './ResumeDocument';
+import { cloneResume, downloadResumeYaml } from './resumeIo';
+import { useResumeStore } from '../../store/useResumeStore';
+import type { ResumeData } from '../../types/resume';
+
+/**
+ * 超级简历式简历编辑器：左侧分区表单，右侧实时预览。
+ * 所有改动写入 useResumeStore 的本地草稿（localStorage，刷新不丢）。
+ * 以 lazy + Suspense 加载，且只在客户端打开，SSG 预渲染不涉及。
+ */
+
+interface ResumeEditorProps {
+  resumeId: string;
+  published: ResumeData; // 已发布版本，用于「重置」
+  onClose: () => void;
+}
+
+const moveInArray = <T,>(arr: T[], i: number, dir: number): void => {
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  const tmp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = tmp;
+};
+
+const Field: React.FC<{
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}> = ({ label, value, onChange, placeholder }) => (
+  <label className="block">
+    <span className="block text-xs font-medium text-gray-500 mb-1">{label}</span>
+    <input
+      type="text"
+      value={value ?? ''}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    />
+  </label>
+);
+
+const Area: React.FC<{
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  rows?: number;
+  hint?: string;
+}> = ({ label, value, onChange, rows = 3, hint }) => (
+  <label className="block">
+    <span className="flex items-baseline justify-between text-xs font-medium text-gray-500 mb-1">
+      {label}
+      {hint && <span className="text-gray-400 font-normal">{hint}</span>}
+    </span>
+    <textarea
+      value={value ?? ''}
+      rows={rows}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y"
+    />
+  </label>
+);
+
+const IconBtn: React.FC<{
+  icon: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  title?: string;
+}> = ({ icon, onClick, disabled, danger, title }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    title={title}
+    className={`w-7 h-7 flex items-center justify-center rounded-md text-sm transition-colors ${
+      disabled
+        ? 'text-gray-300 cursor-not-allowed'
+        : danger
+          ? 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+          : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
+    }`}
+  >
+    <Icon name={icon} />
+  </button>
+);
+
+const SectionHeader: React.FC<{
+  icon: string;
+  title: string;
+  onAdd?: () => void;
+}> = ({ icon, title, onAdd }) => (
+  <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-gray-800">
+      <Icon name={icon} className="text-blue-600" />
+      {title}
+    </h3>
+    {onAdd && (
+      <button
+        type="button"
+        onClick={onAdd}
+        className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+      >
+        <Icon name="plus" />
+        添加
+      </button>
+    )}
+  </div>
+);
+
+const EntryCard: React.FC<{
+  label: string;
+  index: number;
+  total: number;
+  onUp: () => void;
+  onDown: () => void;
+  onDelete: () => void;
+  children: React.ReactNode;
+}> = ({ label, index, total, onUp, onDown, onDelete, children }) => (
+  <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-4 space-y-3">
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-semibold text-gray-400">
+        {label} #{index + 1}
+      </span>
+      <div className="flex items-center gap-0.5">
+        <IconBtn
+          icon="arrow-up"
+          onClick={onUp}
+          disabled={index === 0}
+          title="上移"
+        />
+        <IconBtn
+          icon="arrow-down"
+          onClick={onDown}
+          disabled={index === total - 1}
+          title="下移"
+        />
+        <IconBtn icon="trash" onClick={onDelete} danger title="删除" />
+      </div>
+    </div>
+    {children}
+  </div>
+);
+
+const ResumeEditor: React.FC<ResumeEditorProps> = ({
+  resumeId,
+  published,
+  onClose,
+}) => {
+  const draft = useResumeStore((s) => s.drafts[resumeId]);
+  const setDraft = useResumeStore((s) => s.setDraft);
+  const resetDraft = useResumeStore((s) => s.resetDraft);
+
+  const data: ResumeData = draft ?? published;
+
+  // 不可变更新：克隆当前数据 → 修改 → 写回草稿（首次编辑即自动生成草稿）
+  const update = (fn: (d: ResumeData) => void) => {
+    const next = cloneResume(data);
+    fn(next);
+    setDraft(resumeId, next);
+  };
+
+  const lines = (arr?: string[]) => (arr || []).join('\n');
+  const toLines = (v: string) => v.split('\n');
+  const commas = (arr?: string[]) => (arr || []).join(', ');
+  const toCommas = (v: string) => v.split(',').map((s) => s.trim());
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex flex-col">
+      {/* 顶栏 */}
+      <div className="bg-white border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon name="edit" className="text-blue-600" />
+          <span className="font-semibold text-gray-900 truncate">
+            编辑简历 · {data.label}
+          </span>
+          {draft && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">
+              未发布草稿
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-700 border border-gray-200 hover:bg-gray-50"
+          >
+            <Icon name="print" />
+            <span className="hidden sm:inline">导出 PDF</span>
+          </button>
+          <button
+            onClick={() => downloadResumeYaml(data)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-700 border border-gray-200 hover:bg-gray-50"
+          >
+            <Icon name="download" />
+            <span className="hidden sm:inline">导出数据</span>
+          </button>
+          {draft && (
+            <button
+              onClick={() => resetDraft(resumeId)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-red-600"
+            >
+              <Icon name="redo" />
+              <span className="hidden sm:inline">重置</span>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+            title="关闭"
+          >
+            <Icon name="times" />
+          </button>
+        </div>
+      </div>
+
+      {/* 双栏主体 */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2">
+        {/* 左：表单 */}
+        <div className="overflow-y-auto bg-white p-4 sm:p-6 space-y-8 border-r">
+          {/* 简历元信息 */}
+          <section>
+            <SectionHeader icon="file-alt" title="简历信息" />
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field
+                label="简历名称（横排显示）"
+                value={data.label}
+                onChange={(v) => update((d) => (d.label = v))}
+              />
+              <Field
+                label="目标岗位"
+                value={data.target}
+                onChange={(v) => update((d) => (d.target = v))}
+              />
+            </div>
+          </section>
+
+          {/* 基本信息 */}
+          <section>
+            <SectionHeader icon="user" title="基本信息" />
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field
+                label="姓名"
+                value={data.basics.name}
+                onChange={(v) => update((d) => (d.basics.name = v))}
+              />
+              <Field
+                label="头衔 / 求职意向"
+                value={data.basics.title}
+                onChange={(v) => update((d) => (d.basics.title = v))}
+              />
+              <Field
+                label="邮箱"
+                value={data.basics.email}
+                onChange={(v) => update((d) => (d.basics.email = v))}
+              />
+              <Field
+                label="电话"
+                value={data.basics.phone}
+                onChange={(v) => update((d) => (d.basics.phone = v))}
+              />
+              <Field
+                label="所在地"
+                value={data.basics.location}
+                onChange={(v) => update((d) => (d.basics.location = v))}
+              />
+              <Field
+                label="GitHub"
+                value={data.basics.github}
+                onChange={(v) => update((d) => (d.basics.github = v))}
+              />
+              <Field
+                label="个人网站"
+                value={data.basics.website}
+                onChange={(v) => update((d) => (d.basics.website = v))}
+              />
+            </div>
+            <div className="mt-3">
+              <Area
+                label="个人简介"
+                value={data.basics.summary}
+                rows={4}
+                onChange={(v) => update((d) => (d.basics.summary = v))}
+              />
+            </div>
+          </section>
+
+          {/* 教育经历 */}
+          <section>
+            <SectionHeader
+              icon="graduation-cap"
+              title="教育经历"
+              onAdd={() =>
+                update((d) => {
+                  d.education ||= [];
+                  d.education.push({ school: '' });
+                })
+              }
+            />
+            <div className="space-y-3">
+              {(data.education || []).map((e, i) => (
+                <EntryCard
+                  key={i}
+                  label="教育"
+                  index={i}
+                  total={(data.education || []).length}
+                  onUp={() =>
+                    update((d) => d.education && moveInArray(d.education, i, -1))
+                  }
+                  onDown={() =>
+                    update((d) => d.education && moveInArray(d.education, i, 1))
+                  }
+                  onDelete={() =>
+                    update((d) => d.education?.splice(i, 1))
+                  }
+                >
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field
+                      label="学校"
+                      value={e.school}
+                      onChange={(v) =>
+                        update((d) => d.education && (d.education[i].school = v))
+                      }
+                    />
+                    <Field
+                      label="时间"
+                      value={e.period}
+                      onChange={(v) =>
+                        update((d) => d.education && (d.education[i].period = v))
+                      }
+                    />
+                    <Field
+                      label="学历"
+                      value={e.degree}
+                      onChange={(v) =>
+                        update((d) => d.education && (d.education[i].degree = v))
+                      }
+                    />
+                    <Field
+                      label="专业"
+                      value={e.major}
+                      onChange={(v) =>
+                        update((d) => d.education && (d.education[i].major = v))
+                      }
+                    />
+                    <Field
+                      label="GPA"
+                      value={e.gpa}
+                      onChange={(v) =>
+                        update((d) => d.education && (d.education[i].gpa = v))
+                      }
+                    />
+                  </div>
+                  <Area
+                    label="补充说明"
+                    value={e.detail}
+                    rows={2}
+                    onChange={(v) =>
+                      update((d) => d.education && (d.education[i].detail = v))
+                    }
+                  />
+                </EntryCard>
+              ))}
+            </div>
+          </section>
+
+          {/* 工作经历 */}
+          <section>
+            <SectionHeader
+              icon="briefcase"
+              title="工作经历"
+              onAdd={() =>
+                update((d) => {
+                  d.work ||= [];
+                  d.work.push({ company: '' });
+                })
+              }
+            />
+            <div className="space-y-3">
+              {(data.work || []).map((w, i) => (
+                <EntryCard
+                  key={i}
+                  label="工作"
+                  index={i}
+                  total={(data.work || []).length}
+                  onUp={() => update((d) => d.work && moveInArray(d.work, i, -1))}
+                  onDown={() => update((d) => d.work && moveInArray(d.work, i, 1))}
+                  onDelete={() => update((d) => d.work?.splice(i, 1))}
+                >
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field
+                      label="公司"
+                      value={w.company}
+                      onChange={(v) =>
+                        update((d) => d.work && (d.work[i].company = v))
+                      }
+                    />
+                    <Field
+                      label="职位"
+                      value={w.position}
+                      onChange={(v) =>
+                        update((d) => d.work && (d.work[i].position = v))
+                      }
+                    />
+                    <Field
+                      label="时间"
+                      value={w.period}
+                      onChange={(v) =>
+                        update((d) => d.work && (d.work[i].period = v))
+                      }
+                    />
+                    <Field
+                      label="地点"
+                      value={w.location}
+                      onChange={(v) =>
+                        update((d) => d.work && (d.work[i].location = v))
+                      }
+                    />
+                  </div>
+                  <Area
+                    label="工作要点"
+                    hint="每行一条"
+                    value={lines(w.highlights)}
+                    rows={4}
+                    onChange={(v) =>
+                      update(
+                        (d) => d.work && (d.work[i].highlights = toLines(v)),
+                      )
+                    }
+                  />
+                </EntryCard>
+              ))}
+            </div>
+          </section>
+
+          {/* 项目经历 */}
+          <section>
+            <SectionHeader
+              icon="code"
+              title="项目经历"
+              onAdd={() =>
+                update((d) => {
+                  d.projects ||= [];
+                  d.projects.push({ name: '' });
+                })
+              }
+            />
+            <div className="space-y-3">
+              {(data.projects || []).map((p, i) => (
+                <EntryCard
+                  key={i}
+                  label="项目"
+                  index={i}
+                  total={(data.projects || []).length}
+                  onUp={() =>
+                    update((d) => d.projects && moveInArray(d.projects, i, -1))
+                  }
+                  onDown={() =>
+                    update((d) => d.projects && moveInArray(d.projects, i, 1))
+                  }
+                  onDelete={() => update((d) => d.projects?.splice(i, 1))}
+                >
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field
+                      label="项目名"
+                      value={p.name}
+                      onChange={(v) =>
+                        update((d) => d.projects && (d.projects[i].name = v))
+                      }
+                    />
+                    <Field
+                      label="角色"
+                      value={p.role}
+                      onChange={(v) =>
+                        update((d) => d.projects && (d.projects[i].role = v))
+                      }
+                    />
+                    <Field
+                      label="时间"
+                      value={p.period}
+                      onChange={(v) =>
+                        update((d) => d.projects && (d.projects[i].period = v))
+                      }
+                    />
+                    <Field
+                      label="链接"
+                      value={p.link}
+                      onChange={(v) =>
+                        update((d) => d.projects && (d.projects[i].link = v))
+                      }
+                    />
+                  </div>
+                  <Field
+                    label="技术栈"
+                    placeholder="逗号分隔，如 C++, Python"
+                    value={commas(p.tech)}
+                    onChange={(v) =>
+                      update((d) => d.projects && (d.projects[i].tech = toCommas(v)))
+                    }
+                  />
+                  <Area
+                    label="项目要点"
+                    hint="每行一条"
+                    value={lines(p.highlights)}
+                    rows={4}
+                    onChange={(v) =>
+                      update(
+                        (d) =>
+                          d.projects && (d.projects[i].highlights = toLines(v)),
+                      )
+                    }
+                  />
+                </EntryCard>
+              ))}
+            </div>
+          </section>
+
+          {/* 专业技能 */}
+          <section>
+            <SectionHeader
+              icon="cogs"
+              title="专业技能"
+              onAdd={() =>
+                update((d) => {
+                  d.skills ||= [];
+                  d.skills.push({ category: '', items: [] });
+                })
+              }
+            />
+            <div className="space-y-3">
+              {(data.skills || []).map((s, i) => (
+                <EntryCard
+                  key={i}
+                  label="技能"
+                  index={i}
+                  total={(data.skills || []).length}
+                  onUp={() =>
+                    update((d) => d.skills && moveInArray(d.skills, i, -1))
+                  }
+                  onDown={() =>
+                    update((d) => d.skills && moveInArray(d.skills, i, 1))
+                  }
+                  onDelete={() => update((d) => d.skills?.splice(i, 1))}
+                >
+                  <Field
+                    label="类别"
+                    value={s.category}
+                    onChange={(v) =>
+                      update((d) => d.skills && (d.skills[i].category = v))
+                    }
+                  />
+                  <Field
+                    label="技能项"
+                    placeholder="逗号分隔，如 C++, Python"
+                    value={commas(s.items)}
+                    onChange={(v) =>
+                      update((d) => d.skills && (d.skills[i].items = toCommas(v)))
+                    }
+                  />
+                </EntryCard>
+              ))}
+            </div>
+          </section>
+
+          {/* 荣誉奖项 */}
+          <section>
+            <SectionHeader
+              icon="trophy"
+              title="荣誉奖项"
+              onAdd={() =>
+                update((d) => {
+                  d.awards ||= [];
+                  d.awards.push({ title: '' });
+                })
+              }
+            />
+            <div className="space-y-3">
+              {(data.awards || []).map((a, i) => (
+                <EntryCard
+                  key={i}
+                  label="荣誉"
+                  index={i}
+                  total={(data.awards || []).length}
+                  onUp={() =>
+                    update((d) => d.awards && moveInArray(d.awards, i, -1))
+                  }
+                  onDown={() =>
+                    update((d) => d.awards && moveInArray(d.awards, i, 1))
+                  }
+                  onDelete={() => update((d) => d.awards?.splice(i, 1))}
+                >
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <Field
+                      label="名称"
+                      value={a.title}
+                      onChange={(v) =>
+                        update((d) => d.awards && (d.awards[i].title = v))
+                      }
+                    />
+                    <Field
+                      label="颁发方"
+                      value={a.issuer}
+                      onChange={(v) =>
+                        update((d) => d.awards && (d.awards[i].issuer = v))
+                      }
+                    />
+                    <Field
+                      label="日期"
+                      value={a.date}
+                      onChange={(v) =>
+                        update((d) => d.awards && (d.awards[i].date = v))
+                      }
+                    />
+                  </div>
+                </EntryCard>
+              ))}
+            </div>
+          </section>
+
+          <p className="text-xs text-gray-400 pt-2">
+            改动实时保存在本浏览器（localStorage），刷新不丢。要正式发布到线上，请「导出数据」并把 YAML 提交到
+            content/resumes/。
+          </p>
+        </div>
+
+        {/* 右：实时预览 */}
+        <div className="overflow-y-auto bg-gray-100 p-4 sm:p-8">
+          <div className="shadow-lg rounded-md overflow-hidden">
+            <ResumeDocument data={data} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ResumeEditor;
