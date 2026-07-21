@@ -206,9 +206,25 @@
 .stargate-starcore {
   animation: sg-twinkle 3.6s ease-in-out infinite;
 }
-/* 悬停锁定时的瞄准环 */
-.stargate-reticle {
-  animation: sg-reticle-spin 8s linear infinite;
+/* 悬停锁定时的 3D 轨道瞄准环：双环倾斜环绕，陀螺仪观感。
+   注意倾斜角必须写进关键帧——animation 的 transform 会覆盖静态 transform。 */
+.stargate-orbit {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.stargate-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid;
+  animation: sg-orbit-a 6s linear infinite;
+}
+.stargate-ring--b {
+  animation: sg-orbit-b 9s linear infinite;
 }
 
 /* 星座连线入场：逐条画出（依赖 SVG pathLength=1） */
@@ -248,9 +264,20 @@
     transform: scale(1.12);
   }
 }
-@keyframes sg-reticle-spin {
+@keyframes sg-orbit-a {
+  from {
+    transform: rotateX(70deg) rotate(0deg);
+  }
   to {
-    transform: rotate(360deg);
+    transform: rotateX(70deg) rotate(360deg);
+  }
+}
+@keyframes sg-orbit-b {
+  from {
+    transform: rotateX(70deg) rotateY(58deg) rotate(360deg);
+  }
+  to {
+    transform: rotateX(70deg) rotateY(58deg) rotate(0deg);
   }
 }
 @keyframes sg-draw {
@@ -296,9 +323,16 @@
   .stargate-glitch::before,
   .stargate-glitch::after,
   .stargate-starcore,
-  .stargate-reticle,
+  .stargate-ring,
   .stargate-edge {
     animation: none;
+  }
+  /* 轨道环静止于倾斜姿态 */
+  .stargate-ring {
+    transform: rotateX(70deg);
+  }
+  .stargate-ring--b {
+    transform: rotateX(70deg) rotateY(58deg);
   }
   .stargate-edge {
     stroke-dashoffset: 0;
