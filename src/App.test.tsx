@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 import { personalInfo } from './data/content';
@@ -28,10 +28,21 @@ describe('App', () => {
     expect(await screen.findByText(/简历之外的实验空间/)).toBeInTheDocument();
   });
 
-  it('switches to 技术文档 and shows the docs entry', async () => {
+  it('switches to 技术文档 and renders the docs catalog', async () => {
+    // mock docs.json 清单，避免依赖网络；DocsSection 读取后渲染领域标签
+    const manifest = {
+      categories: [{ name: '智能座舱', id: 'cockpit', general: [], projects: [] }],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({ ok: true, json: () => Promise.resolve(manifest) }),
+      ),
+    );
     render(<App />);
     fireEvent.click(screen.getAllByText('技术文档')[0]);
-    // DocsSection 懒加载；「打开完整知识库」入口不依赖网络请求
-    expect(await screen.findByText('打开完整知识库')).toBeInTheDocument();
+    // DocsSection 懒加载；清单加载成功后渲染对应领域标签
+    expect(await screen.findByText('智能座舱')).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

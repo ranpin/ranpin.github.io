@@ -186,7 +186,7 @@ const DocsSection: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* 顶部导航：三个领域 + 完整知识库入口 */}
+      {/* 顶部导航：三个领域 */}
       <nav className="flex flex-wrap items-center justify-center gap-2 mb-10">
         {cats.map((cat, i) => (
           <button
@@ -202,15 +202,6 @@ const DocsSection: React.FC = () => {
             {cat.name}
           </button>
         ))}
-        <a
-          href={DOCS_BASE}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-gray-900 text-white hover:bg-gray-700 transition-colors"
-        >
-          打开完整知识库
-          <Icon name="external-link-alt" className="ml-2 text-xs" />
-        </a>
       </nav>
 
       {state === 'loading' && (
