@@ -14,6 +14,19 @@ interface DocItem {
   badge?: string;
   status?: 'done' | 'wip' | 'todo';
 }
+interface Project {
+  name: string;
+  period?: string;
+  desc?: string;
+  docs: DocItem[];
+}
+interface Category {
+  name: string;
+  note?: string;
+  general?: DocItem[];
+  projects?: Project[];
+}
+// 旧结构（扁平分组），保留以兼容部署窗口内尚未更新的 docs.json
 interface DocGroup {
   name: string;
   note?: string;
@@ -22,7 +35,8 @@ interface DocGroup {
 interface Manifest {
   title?: string;
   subtitle?: string;
-  groups: DocGroup[];
+  categories?: Category[];
+  groups?: DocGroup[];
 }
 
 const badgeClass = (status?: string) =>
@@ -31,6 +45,61 @@ const badgeClass = (status?: string) =>
     : status === 'todo'
       ? 'bg-gray-100 text-gray-500'
       : 'bg-green-100 text-green-700';
+
+// 新结构 categories；老结构 groups 回退成「仅通用文档」的大类
+const normalize = (data: Manifest): Category[] => {
+  if (data.categories) return data.categories;
+  return (data.groups || []).map((g) => ({
+    name: g.name,
+    note: g.note,
+    general: g.docs,
+    projects: [],
+  }));
+};
+
+const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
+  <a
+    href={`${DOCS_BASE}${doc.file}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="relative block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+  >
+    {doc.badge && (
+      <span
+        className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass(
+          doc.status,
+        )}`}
+      >
+        {doc.badge}
+      </span>
+    )}
+    <h4 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors pr-14">
+      {doc.title}
+    </h4>
+    {doc.desc && (
+      <p className="text-sm text-gray-500 mt-1 line-clamp-3">{doc.desc}</p>
+    )}
+    {doc.tags && doc.tags.length > 0 && (
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {doc.tags.map((t) => (
+          <span
+            key={t}
+            className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+    )}
+  </a>
+);
+
+const SubHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h4 className="flex items-center gap-3 text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">
+    <span className="whitespace-nowrap">{children}</span>
+    <span className="flex-1 h-px bg-gray-200" />
+  </h4>
+);
 
 const DocsSection: React.FC = () => {
   const [data, setData] = useState<Manifest | null>(null);
@@ -101,58 +170,62 @@ const DocsSection: React.FC = () => {
       )}
 
       {state === 'ready' &&
-        data?.groups?.map((group) => (
-          <div key={group.name} className="mb-10">
-            <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">
-              {group.name}
-              {group.note && (
-                <span className="text-gray-400 ml-2 normal-case tracking-normal">
-                  ({group.note})
-                </span>
+        normalize(data!).map((cat) => (
+          <section key={cat.name} className="mb-14">
+            {/* 大类标题 */}
+            <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-gray-200">
+              <h3 className="text-2xl font-extrabold text-gray-900">
+                {cat.name}
+              </h3>
+              {cat.note && (
+                <span className="text-sm text-gray-400">{cat.note}</span>
               )}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.docs.map((doc) => (
-                <a
-                  key={doc.file}
-                  href={`${DOCS_BASE}${doc.file}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group"
-                >
-                  {doc.badge && (
-                    <span
-                      className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass(
-                        doc.status,
-                      )}`}
-                    >
-                      {doc.badge}
-                    </span>
-                  )}
-                  <h4 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors pr-14">
-                    {doc.title}
-                  </h4>
-                  {doc.desc && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-3">
-                      {doc.desc}
-                    </p>
-                  )}
-                  {doc.tags && doc.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {doc.tags.map((t) => (
-                        <span
-                          key={t}
-                          className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </a>
-              ))}
             </div>
-          </div>
+
+            {/* 上半部分：通用文档（网格） */}
+            {cat.general && cat.general.length > 0 && (
+              <div className="mb-8">
+                <SubHead>通用文档 · 基础与面试</SubHead>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {cat.general.map((doc) => (
+                    <DocCard key={doc.file} doc={doc} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 下半部分：项目（竖向时间轴） */}
+            {cat.projects && cat.projects.length > 0 && (
+              <div>
+                <SubHead>项目 · 时间轴</SubHead>
+                <div className="relative pl-8">
+                  {/* 时间轴竖线 */}
+                  <span className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-500 to-gray-200" />
+                  {cat.projects.map((p) => (
+                    <div key={p.name} className="relative mb-10 last:mb-0">
+                      {/* 节点圆点 */}
+                      <span className="absolute -left-[26px] top-1 w-3.5 h-3.5 rounded-full bg-white border-[3px] border-blue-500 ring-4 ring-white" />
+                      <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
+                        <span className="text-lg font-bold text-gray-800">
+                          {p.name}
+                        </span>
+                        {p.period && (
+                          <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                            {p.period}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {p.docs.map((doc) => (
+                          <DocCard key={doc.file} doc={doc} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
         ))}
     </div>
   );
