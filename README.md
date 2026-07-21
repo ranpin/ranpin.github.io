@@ -20,7 +20,7 @@
 | ---------------------------------------- | --------------------------------------------------------------- |
 | 个人信息 / 简介 / 社交链接               | `content/profile.yaml`                                          |
 | 首页「最新动态」                         | `content/news.yaml`                                             |
-| 探索笔记（星际之门：TIL / 踩坑复盘）     | `content/notes/*.md`                                            |
+| 探索笔记（星际之门：TIL / 踩坑复盘）     | `content/garden/*.md`                                           |
 | **个人简历 / 项目 / 论文 / 实习 / 荣誉** | 已独立到 [ranpin/resume](https://github.com/ranpin/resume) 仓库 |
 | **技术文档 / 面试指南**                  | 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) |
 

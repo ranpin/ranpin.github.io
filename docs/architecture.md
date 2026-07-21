@@ -2,7 +2,16 @@
 
 ## 概览
 
-纯静态个人站点，无后端、无数据库。内容以仓库中的 **Markdown / YAML 文件**为唯一数据源，构建时由加载器读入并**预渲染（SSG）**为静态 HTML，部署到 GitHub Pages，运行时再 hydrate。
+纯静态个人站点（聚合入口），无后端、无数据库。内容以仓库中的 **Markdown / YAML 文件**为唯一数据源，构建时由加载器读入并**预渲染（SSG）**为静态 HTML，部署到 GitHub Pages，运行时再 hydrate。
+
+站点由四个板块组成：
+
+| 板块 | 实现方式 |
+|------|----------|
+| 首页 | 个人信息（`profile.yaml`）+ 最新动态（`news.yaml`） |
+| 简历中心 | iframe 嵌入同源子路径 `/resume/`（独立仓库 [ranpin/resume](https://github.com/ranpin/resume)） |
+| 技术文档 | 运行时 fetch 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) 的 `docs.json` 清单并渲染目录 |
+| 星际之门 | 全屏沉浸式深空体验：Warp 穿越动画 → 数字花园星图（`content/garden/*.md`） |
 
 ## 技术栈
 
@@ -28,37 +37,44 @@ content/*.{yaml,md}
 src/data/content.ts            # 加载器：解析并导出类型化数据
       │
       ├──▶ usePortfolioStore   # 只读数据 + 导航 UI 状态
-      └──▶ 组件直接 import      # 如 SearchBox / SmartRecommendations
+      └──▶ 组件直接 import      # 如 DigitalGarden 直接导入 gardenNotes
       ▼
 组件渲染（文章正文经 <Markdown> 渲染）
 ```
 
-- **加载器** `src/data/content.ts`：用 `import.meta.glob('/content/**', { query: '?raw' })` 在构建期收集文件原文，`js-yaml` 解析 YAML 与 Markdown frontmatter，导出 `personalInfo / recentNews / projects / internships / honors / academicBlogs / engineeringBlogs / notes / stats`。修改内容只需改 `content/` 下的文件，无需改代码。
-- **store** `src/store/usePortfolioStore.ts`：不再持久化、不含编辑逻辑，只提供只读数据与 `activeSection / resumeCategory / learningCategory` 等导航状态。
-- **草稿**：`content/notes/*.md` 的 frontmatter 可写 `draft: true`，生产构建自动隐藏，仅 `npm run dev` 可见。
+- **加载器** `src/data/content.ts`：用 `import.meta.glob('/content/**', { query: '?raw' })` 在构建期收集文件原文，`js-yaml` 解析 YAML 与 Markdown frontmatter，导出 `personalInfo`（个人信息）、`recentNews`（最新动态）、`gardenNotes`（数字花园节点，跳过 `_` 开头模板与无标题辅助文件，生产构建隐藏 `draft: true`，按 `updated` 倒序）。修改内容只需改 `content/` 下的文件，无需改代码。
+- **store** `src/store/usePortfolioStore.ts`：不持久化、不含编辑逻辑，只提供只读数据（`personalInfo`、`recentNews`）与导航状态（`activeSection` / `setActiveSection`）。
+- **草稿**：`content/garden/*.md` 的 frontmatter 可写 `draft: true`，生产构建自动隐藏，仅 `npm run dev` 可见。
 
 ## 目录结构
 
 ```text
 content/                # 唯一数据源（见 content/README.md）
-├── profile.yaml        # 个人信息 + 首屏亮点（可选）
+├── profile.yaml        # 个人信息 + 社交链接
 ├── news.yaml           # 最新动态
-├── honors.yaml         # 荣誉
-├── internships/*.yaml  # 工作/实习
-├── projects/*.yaml     # 项目（文件名前缀 NN 控制顺序）
-├── blog/{academic,engineering}/*.md   # 文章
-└── notes/*.md          # 星际之门：TIL / 踩坑复盘
+└── garden/*.md         # 星际之门 · 数字花园：想法节点（星图，非线性、可互链）
 
 public/                 # images/、robots.txt、sitemap.xml、404.html
 src/
-├── components/         # Header, HomeSection, Profile, ResumeSection,
-│                       # LearningSectionFull, StargateSection, GlobalModals,
-│                       # ModuleRenderer, SmartRecommendations, SearchBox,
-│                       # Footer, Icon, Markdown
+├── components/
+│   ├── Header.tsx          # 顶部导航（四个板块切换 + 移动端个人信息弹窗）
+│   ├── HomeSection.tsx     # 首页（个人信息 + 最新动态）
+│   ├── Profile.tsx         # 个人信息卡片
+│   ├── DocsSection.tsx     # 技术文档（fetch edge-ai-docs 清单渲染目录）
+│   ├── StargateSection.tsx # 星际之门（Warp 穿越 + HUD + 数字花园入口）
+│   ├── stargate/
+│   │   ├── Warp.tsx        # 穿越动画
+│   │   ├── Starfield.tsx   # 星空背景
+│   │   └── DigitalGarden.tsx # 数字花园星图（节点布局 + 连线 + Markdown 详情）
+│   ├── Footer.tsx          # 页脚
+│   ├── Icon.tsx            # lucide-react 图标封装
+│   └── Markdown.tsx        # react-markdown 渲染（prose 排版 + 代码高亮）
 ├── store/usePortfolioStore.ts
 ├── data/content.ts     # 内容加载器
 ├── types/index.ts      # 类型定义
-├── styles/index.css
+├── styles/
+│   ├── index.css       # 全局样式（Tailwind）
+│   └── stargate.css    # 星际之门专属样式（扫描线、暗角、霓虹等）
 ├── App.tsx             # 入口，按 activeSection 渲染
 └── index.tsx           # ViteReactSSG 入口（导出 createRoot）
 ```
@@ -66,22 +82,7 @@ src/
 ## 渲染与性能
 
 - **SSG 预渲染**：`src/index.tsx` 以 `ViteReactSSG(<App/>)` 单页模式导出，`npm run build` 输出含真实内容的 `dist/index.html`（利于 SEO 与分享抓取），客户端再 hydrate。
-- **代码分割**：详情弹窗 `GlobalModals` 与「星际之门」`StargateSection`（含较重的 highlight.js）用 `React.lazy` 按需加载，保持首屏主包精简。
+- **代码分割**：`StargateSection`（含 highlight.js 等较重依赖）与 `DocsSection` 用 `React.lazy` 按需加载；`StargateSection` 内部的 `DigitalGarden` 再做二级懒加载，保持首屏主包精简。
 - **图片**：原生 `loading="lazy"`。
 - **字体**：自托管 Inter，去除 render-blocking 的外链字体/图标 CDN。
 - **SEO**：`index.html` 含 Open Graph / Twitter Card / canonical / `Person` JSON-LD；`public/` 提供 `robots.txt` 与 `sitemap.xml`。
-
-## 内容数据模型（项目详情字段规范）
-
-项目（`content/projects/*.yaml`）除基础字段（`title / period / status / tags / description`）外，支持以下"面试友好"字段，便于展示深度：
-
-- **businessContext**：业务背景，说明项目价值与要解决的问题
-- **yourRole**：你的角色与具体职责，体现个人贡献
-- **architectureDetail**：技术架构详解（Markdown，支持列表/代码）
-- **technicalChallenges**：核心难点，数组，每项 `{ challenge, solution, impact }`
-- **results**：关键指标，数组，每项 `{ metric, value, baseline?, improvement? }`（列表页卡片会直出前 2 项）
-- **achievements / interviewHighlights / discussionTopics**：成果 / 面试亮点 / 可延伸话题（字符串数组）
-- **abstract / methodology**：摘要 / 方法（可选）
-- **demoImage / architectureImage**：配图（放 `public/images/`，值为 `/images/...`）
-
-详情弹窗由统一的 `ModuleRenderer` 渲染，保证列表、详情展示一致。长文本字段经 `<Markdown>`（`prose` 排版 + 代码高亮）渲染。
