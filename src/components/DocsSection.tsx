@@ -181,28 +181,37 @@ const DocsSection: React.FC = () => {
     };
   }, []);
 
+  const cats = state === 'ready' ? normalize(data!) : [];
+  const idx = Math.min(active, Math.max(cats.length - 1, 0));
+
   return (
     <div className="max-w-5xl mx-auto">
-      {/* 标题与说明 */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 flex items-center justify-center">
-          <Icon name="book" className="text-blue-500 mr-3" />
-          技术文档
-        </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          {data?.subtitle ||
-            '端侧 AI 学习文档与面试指南 —— 智能座舱、通用机器人、自动驾驶。'}
-        </p>
+      {/* 顶部导航：三个领域 + 完整知识库入口 */}
+      <nav className="flex flex-wrap items-center justify-center gap-2 mb-10">
+        {cats.map((cat, i) => (
+          <button
+            key={cat.id || cat.name}
+            type="button"
+            onClick={() => setActive(i)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
+              i === idx
+                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/25'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-gray-800'
+            }`}
+          >
+            {cat.name}
+          </button>
+        ))}
         <a
           href={DOCS_BASE}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-gray-900 text-white hover:bg-gray-700 transition-colors"
         >
           打开完整知识库
-          <Icon name="external-link-alt" className="ml-2" />
+          <Icon name="external-link-alt" className="ml-2 text-xs" />
         </a>
-      </div>
+      </nav>
 
       {state === 'loading' && (
         <div className="text-center py-16 text-gray-400">
@@ -226,34 +235,7 @@ const DocsSection: React.FC = () => {
         </div>
       )}
 
-      {state === 'ready' &&
-        (() => {
-          const cats = normalize(data!);
-          if (cats.length === 0) return null;
-          const idx = Math.min(active, cats.length - 1);
-          return (
-            <>
-              {/* 分类切换标签：三个大类各自成页 */}
-              <nav className="flex flex-wrap justify-center gap-2 mb-10">
-                {cats.map((cat, i) => (
-                  <button
-                    key={cat.id || cat.name}
-                    type="button"
-                    onClick={() => setActive(i)}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
-                      i === idx
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/25'
-                        : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-gray-800'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </nav>
-              <CategoryView cat={cats[idx]} />
-            </>
-          );
-        })()}
+      {state === 'ready' && cats.length > 0 && <CategoryView cat={cats[idx]} />}
     </div>
   );
 };
