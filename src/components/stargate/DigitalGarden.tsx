@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { Components } from 'react-markdown';
 import Icon from '../Icon';
 import Markdown from '../Markdown';
 import Starfield from './Starfield';
@@ -121,9 +122,14 @@ const computeLayout = (
 const clamp = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, v));
 
-// 把正文里的 [[id]] 记法替换为目标节点标题，避免 Markdown 里出现生硬的方括号
-const prettify = (md: string, byId: Map<string, GardenNote>): string =>
-  md.replace(/\[\[([^\]]+)\]\]/g, (_, id: string) => byId.get(id)?.title ?? id);
+// 把正文里的 [[id]] 记法转成可点击的内部链接（href 为 #gnode-<id>）；
+// 目标不存在时退化为纯文本，避免出现生硬的方括号。
+const WIKI_HREF = '#gnode-';
+const linkifyWikiLinks = (md: string, byId: Map<string, GardenNote>): string =>
+  md.replace(/\[\[([^\]]+)\]\]/g, (_, id: string) => {
+    const t = byId.get(id);
+    return t ? `[${t.title}](${WIKI_HREF}${id})` : id;
+  });
 
 const DigitalGarden: React.FC = () => {
   const notes = gardenNotes;
@@ -172,6 +178,37 @@ const DigitalGarden: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<GardenNote | null>(null);
   const active = hovered; // 悬停时高亮/锁定
+
+  // 详情正文里的 [[双链]]：内部链接点击直接切换到目标节点；其余链接照常外开
+  const mdComponents = useMemo<Components>(
+    () => ({
+      a({ href, children, ...props }) {
+        if (href && href.startsWith(WIKI_HREF)) {
+          const target = byId.get(href.slice(WIKI_HREF.length));
+          if (target) {
+            return (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelected(target);
+                }}
+                className="text-cyan-300 underline decoration-dotted underline-offset-2 hover:text-cyan-100 transition-colors"
+              >
+                {children}
+              </button>
+            );
+          }
+        }
+        return (
+          <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+            {children}
+          </a>
+        );
+      },
+    }),
+    [byId],
+  );
 
   // 入场编排：挂载后放行标签淡入（连线的画出由 CSS 动画驱动）
   const [entered, setEntered] = useState(false);
@@ -309,7 +346,9 @@ const DigitalGarden: React.FC = () => {
               onMouseLeave={() => setHovered(null)}
               onFocus={() => setHovered(n.id)}
               onBlur={() => setHovered(null)}
-              onClick={() => setSelected(n)}
+              onClick={() =>
+                setSelected((prev) => (prev?.id === n.id ? null : n))
+              }
               aria-label={`${n.title}（${st.label}）`}
               className="group absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 focus:outline-none"
               style={{
@@ -467,8 +506,11 @@ const DigitalGarden: React.FC = () => {
           </div>
 
           <div className="p-5 overflow-y-auto flex-1">
-            <Markdown className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300">
-              {prettify(selected.content || '', byId)}
+            <Markdown
+              className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300"
+              components={mdComponents}
+            >
+              {linkifyWikiLinks(selected.content || '', byId)}
             </Markdown>
 
             {(selected.links || []).filter((id) => byId.has(id)).length > 0 && (
