@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 // 内容加载器 —— 主站(聚合入口)的数据源在仓库根部的 `content/` 目录：
-//   个人信息 profile.yaml、最新动态 news.yaml、探索笔记 notes/*.md。
+//   个人信息 profile.yaml、最新动态 news.yaml、数字花园 garden/*.md。
 // 项目/论文/实习/荣誉与简历已迁移到独立仓库 ranpin/resume（简历中心）。
 import { load as parseYaml } from 'js-yaml';
-import type { PersonalInfo, NewsItem, Note } from '../types';
+import type { PersonalInfo, NewsItem, GardenNote } from '../types';
 
 // 注意：import.meta.glob 的第二个参数必须是内联对象字面量（Vite 静态分析要求）。
 
@@ -49,19 +49,23 @@ export const recentNews = loadOne<NewsItem[]>(
   }) as RawGlob,
 );
 
-// 「星际之门」探索笔记：跳过 _ 开头的模板；生产环境隐藏 draft；按日期倒序
-const toNotes = (glob: RawGlob): Note[] =>
+// 「星际之门 · 数字花园」想法节点：跳过 _ 开头模板；生产隐藏 draft；按更新时间倒序
+const toGarden = (glob: RawGlob): GardenNote[] =>
   Object.entries(glob)
     .filter(([path]) => !slugOf(path).startsWith('_'))
     .map(([path, raw]) => {
       const { data, body } = parseMarkdown(raw);
-      return { ...(data as object), id: slugOf(path), content: body } as Note;
+      return {
+        ...(data as object),
+        id: slugOf(path),
+        content: body,
+      } as GardenNote;
     })
     .filter((n) => import.meta.env.DEV || !n.draft)
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    .sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
 
-export const notes = toNotes(
-  import.meta.glob('/content/notes/*.md', {
+export const gardenNotes = toGarden(
+  import.meta.glob('/content/garden/*.md', {
     eager: true,
     query: '?raw',
     import: 'default',

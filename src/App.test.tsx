@@ -20,14 +20,12 @@ describe('App', () => {
     expect(frame.getAttribute('src')).toBe('/resume/');
   });
 
-  it('switches to 星际之门 and shows exploration notes', async () => {
+  it('switches to 星际之门 and shows the cyberpunk stage', async () => {
     render(<App />);
     fireEvent.click(screen.getAllByText('星际之门')[0]);
-    // StargateSection 为懒加载，需等待其加载完成
-    expect(await screen.findByText(/简历之外的探索空间/)).toBeInTheDocument();
-    expect(
-      await screen.findByText(/一次端侧显存泄漏的复盘/),
-    ).toBeInTheDocument();
+    // StargateSection 为懒加载，需等待其加载完成；内景标题与说明始终在 DOM 中
+    expect(await screen.findByText('STARGATE')).toBeInTheDocument();
+    expect(await screen.findByText(/简历之外的实验空间/)).toBeInTheDocument();
   });
 
   it('switches to 技术文档 and shows the docs entry', async () => {
