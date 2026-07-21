@@ -1,0 +1,231 @@
+/* 「星际之门」赛博朋克专属样式 —— 仅本板块使用，随懒加载代码分包。 */
+
+/* ---------- 时空穿梭覆盖层 ---------- */
+.stargate-warp {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #030614;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.45s ease-out;
+}
+.stargate-warp--out {
+  opacity: 0;
+  pointer-events: none;
+}
+.stargate-warp__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  pointer-events: none;
+}
+.stargate-warp__title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  font-size: clamp(1rem, 4vw, 2rem);
+  color: #d8f6ff;
+  text-shadow:
+    0 0 12px rgba(120, 220, 255, 0.9),
+    0 0 32px rgba(150, 90, 255, 0.6);
+  animation: sg-flicker 2.4s infinite;
+}
+.stargate-warp__sub {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.35em;
+  color: rgba(180, 200, 255, 0.7);
+}
+
+/* ---------- 内景容器 ---------- */
+.stargate-stage {
+  position: relative;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  color: #cfe6ff;
+  background:
+    radial-gradient(
+      ellipse at 50% -10%,
+      rgba(90, 60, 180, 0.35),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 50% 120%,
+      rgba(0, 190, 220, 0.22),
+      transparent 55%
+    ),
+    #05081c;
+  border: 1px solid rgba(120, 180, 255, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(120, 180, 255, 0.06) inset,
+    0 20px 60px -20px rgba(80, 40, 200, 0.5);
+}
+
+/* 透视网格地平线 */
+.stargate-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(120, 200, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 200, 255, 0.16) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 78%);
+  -webkit-mask-image: radial-gradient(
+    ellipse at 50% 40%,
+    #000 20%,
+    transparent 78%
+  );
+  animation: sg-grid-pan 8s linear infinite;
+}
+
+/* 扫描线 */
+.stargate-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* ---------- 故障(glitch)标题 ---------- */
+.stargate-glitch {
+  position: relative;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #eafaff;
+  text-shadow: 0 0 18px rgba(120, 220, 255, 0.55);
+}
+.stargate-glitch::before,
+.stargate-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  clip-path: inset(0 0 0 0);
+}
+.stargate-glitch::before {
+  color: #ff2e97;
+  transform: translate(-2px, 0);
+  animation: sg-glitch-a 2.6s infinite steps(2, end);
+}
+.stargate-glitch::after {
+  color: #17e7ff;
+  transform: translate(2px, 0);
+  animation: sg-glitch-b 3.1s infinite steps(2, end);
+}
+
+/* 霓虹描边按钮/标签 */
+.stargate-neon {
+  border: 1px solid rgba(120, 220, 255, 0.4);
+  color: #bfeeff;
+  background: rgba(20, 40, 80, 0.35);
+  box-shadow:
+    0 0 12px rgba(80, 200, 255, 0.25),
+    0 0 12px rgba(80, 200, 255, 0.15) inset;
+  transition:
+    box-shadow 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.stargate-neon:hover {
+  color: #fff;
+  border-color: rgba(180, 240, 255, 0.9);
+  box-shadow:
+    0 0 22px rgba(120, 220, 255, 0.55),
+    0 0 22px rgba(180, 90, 255, 0.35) inset;
+}
+
+/* 终端启动日志的光标 */
+.stargate-caret::after {
+  content: '▋';
+  color: #17e7ff;
+  animation: sg-blink 1s steps(1) infinite;
+}
+
+@keyframes sg-flicker {
+  0%,
+  19%,
+  21%,
+  55%,
+  57%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  56% {
+    opacity: 0.4;
+  }
+}
+@keyframes sg-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes sg-grid-pan {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      0 44px,
+      44px 0;
+  }
+}
+@keyframes sg-glitch-a {
+  0%,
+  92%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(-2px, 0);
+  }
+  93% {
+    clip-path: inset(20% 0 55% 0);
+    transform: translate(-4px, -1px);
+  }
+  96% {
+    clip-path: inset(65% 0 8% 0);
+    transform: translate(3px, 1px);
+  }
+}
+@keyframes sg-glitch-b {
+  0%,
+  90%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(2px, 0);
+  }
+  91% {
+    clip-path: inset(70% 0 12% 0);
+    transform: translate(4px, 1px);
+  }
+  95% {
+    clip-path: inset(12% 0 60% 0);
+    transform: translate(-3px, -1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stargate-grid,
+  .stargate-warp__title,
+  .stargate-glitch::before,
+  .stargate-glitch::after {
+    animation: none;
+  }
+}

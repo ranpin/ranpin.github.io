@@ -108,13 +108,16 @@ export interface Honor {
   description?: string;
 }
 
-// 探索空间「星际之门」的笔记：学习笔记(TIL) / 踩坑复盘
-export interface Note {
-  id: number | string;
+// 「星际之门 · 数字花园」的想法节点：非线性、可互链、按成长阶段生长
+export interface GardenNote {
+  id: string;
   title: string;
-  date?: string;
-  type?: 'til' | 'postmortem';
+  // 成长阶段：seedling 萌芽 / budding 生长 / evergreen 常青
+  stage?: 'seedling' | 'budding' | 'evergreen';
   tags?: string[];
+  // 关联到的其它节点 id（用于连线）
+  links?: string[];
+  updated?: string;
   content?: string;
   draft?: boolean;
 }
