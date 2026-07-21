@@ -4,12 +4,15 @@ import Icon from './Icon';
 // 「个人简历」已独立为单独项目(ranpin/resume)，部署在同源子路径 /resume/。
 // 主站以入口卡片引用，点击进入完整的简历中心。
 const RESUME_BASE = '/resume/';
+const REPO_URL = 'https://github.com/ranpin/resume';
+
+const TECHS = ['React 18', 'TypeScript', 'Vite', 'Tailwind', 'Zustand'];
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
   {
     icon: 'edit',
     title: '在线简历编辑器',
-    desc: '超级简历式双栏编辑：富文本(字号/颜色/对齐/列表)、多模板、多配色、真·多页 A4、一键导出 PDF。',
+    desc: '超级简历式双栏编辑：富文本（字号 / 颜色 / 对齐 / 列表）、多模板、多配色、真·多页 A4，一键导出 PDF。',
   },
   {
     icon: 'folder-open',
@@ -25,24 +28,64 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
 
 const ResumeLaunch: React.FC = () => (
   <div className="max-w-5xl mx-auto">
-    <div className="text-center mb-8">
-      <Icon name="user" className="text-3xl text-blue-600" />
-      <h2 className="text-2xl font-bold text-gray-900 mt-2">个人简历</h2>
-      <p className="text-gray-500 mt-1">
-        一个独立的简历中心：在线编辑器 · 经历库 · 大模型生成
-      </p>
-      <a
-        href={RESUME_BASE}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-      >
-        打开简历中心
-        <Icon name="external-link-alt" className="ml-2" />
-      </a>
+    {/* 概览卡 */}
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 sm:p-10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Icon name="user" className="text-blue-600 text-lg" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                个人简历
+              </h2>
+              <p className="text-sm text-gray-500">
+                一个独立的简历中心 —— 在线编辑 · 经历库 · AI 生成
+              </p>
+            </div>
+          </div>
+          <p className="text-gray-600 text-sm leading-relaxed mt-4 max-w-xl">
+            简历部分已独立成单独项目，可像投递工具一样在线编辑、导出
+            PDF，并用大模型按岗位生成。改动实时存本地，满意后一键发布上线。
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {TECHS.map((t) => (
+              <span
+                key={t}
+                className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex sm:flex-col gap-3 flex-shrink-0">
+          <a
+            href={RESUME_BASE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
+            打开简历中心
+            <Icon name="external-link-alt" />
+          </a>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            <Icon name="github" />
+            查看源码
+          </a>
+        </div>
+      </div>
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {/* 三大能力 */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
       {FEATURES.map((f) => (
         <a
           key={f.title}
@@ -61,18 +104,6 @@ const ResumeLaunch: React.FC = () => (
         </a>
       ))}
     </div>
-
-    <p className="text-center text-xs text-gray-400 mt-8">
-      简历中心是独立项目，源码见{' '}
-      <a
-        href="https://github.com/ranpin/resume"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-500 hover:underline"
-      >
-        github.com/ranpin/resume
-      </a>
-    </p>
   </div>
 );
 
