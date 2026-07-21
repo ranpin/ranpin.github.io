@@ -4,8 +4,6 @@ import HomeSection from './components/HomeSection';
 import Footer from './components/Footer';
 import { usePortfolioStore } from './store/usePortfolioStore';
 
-// 「个人简历」已独立为 ranpin/resume 项目，主站用入口卡片引用
-const ResumeLaunch = lazy(() => import('./components/ResumeLaunch'));
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
 // 文档目录运行时读取 edge-ai-docs 清单，按需加载
@@ -30,13 +28,13 @@ const App = () => {
         )}
 
         {activeSection === 'resume' && (
-          <Suspense
-            fallback={
-              <div className="py-16 text-center text-gray-400">加载中…</div>
-            }
-          >
-            <ResumeLaunch />
-          </Suspense>
+          // 简历中心是独立项目(ranpin/resume)，同源子路径 /resume/，内嵌直接呈现
+          <iframe
+            src="/resume/"
+            title="简历中心"
+            className="w-full rounded-2xl border border-gray-200 shadow-sm bg-white"
+            style={{ height: 'calc(100vh - 9rem)' }}
+          />
         )}
 
         {activeSection === 'docs' && (
