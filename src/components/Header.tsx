@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import SearchBox from './SearchBox';
 import Icon from './Icon';
 import type { PersonalInfo } from '../types';
 
@@ -42,7 +41,6 @@ const Header: React.FC<HeaderProps> = ({
   personalInfo,
 }) => {
   const [showMobileProfile, setShowMobileProfile] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
 
   const go = (id: string) => {
     if (onSectionChange) onSectionChange(id);
@@ -96,59 +94,11 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* 搜索按钮 */}
-            <div className="py-3 lg:py-4 flex items-center flex-shrink-0">
-              <button
-                onClick={() => setShowSearch(true)}
-                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200"
-                title="搜索"
-              >
-                <Icon name="search" className="text-sm" />
-              </button>
-            </div>
+            {/* 右侧占位，保持导航居中 */}
+            <div className="w-8 flex-shrink-0" aria-hidden />
           </div>
         </nav>
       </header>
-
-      {/* 搜索弹窗 */}
-      {showSearch && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50"
-          onClick={() => setShowSearch(false)}
-        >
-          <div className="fixed inset-0 flex items-start justify-center p-4 pt-20">
-            <div
-              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between p-6 border-b">
-                <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                  <Icon name="search" className="text-blue-500 mr-3" />
-                  全局搜索
-                </h3>
-                <button
-                  onClick={() => setShowSearch(false)}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                >
-                  <Icon name="times" className="text-gray-600" />
-                </button>
-              </div>
-              <div className="p-6">
-                <SearchBox
-                  placeholder="搜索项目、论文、工作经历..."
-                  className="w-full"
-                  onSearch={(results, action) => {
-                    if (action === 'select' && results.length > 0) {
-                      setShowSearch(false);
-                      go('resume');
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 移动端个人信息弹窗 */}
       {showMobileProfile && (

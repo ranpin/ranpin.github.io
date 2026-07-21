@@ -1,43 +1,19 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import Header from './components/Header';
 import HomeSection from './components/HomeSection';
 import Footer from './components/Footer';
 import { usePortfolioStore } from './store/usePortfolioStore';
-import type { Project, Publication, Internship, ContentItem } from './types';
 
-// 简历中心用到 Markdown 富文本渲染（react-markdown 较重），按需加载
-const ResumeSection = lazy(() => import('./components/ResumeSection'));
-// 详情弹窗仅在打开时才需要，按需加载以减小首屏体积
-const GlobalModals = lazy(() => import('./components/GlobalModals'));
+// 「个人简历」已独立为 ranpin/resume 项目，主站用入口卡片引用
+const ResumeLaunch = lazy(() => import('./components/ResumeLaunch'));
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
 // 文档目录运行时读取 edge-ai-docs 清单，按需加载
 const DocsSection = lazy(() => import('./components/DocsSection'));
 
 const App = () => {
-  const {
-    personalInfo,
-    recentNews,
-    activeSection,
-    resumeCategory,
-    setActiveSection,
-  } = usePortfolioStore();
-
-  // 详情弹窗的选中项
-  const [selectedArticle, setSelectedArticle] = useState<Project | null>(null);
-  const [selectedPaper, setSelectedPaper] = useState<Publication | null>(null);
-  const [selectedInternship, setSelectedInternship] =
-    useState<Internship | null>(null);
-
-  const handleRecommendClick = (item: ContentItem, type: string) => {
-    const t = type.toLowerCase();
-    if (t === 'project') setSelectedArticle(item as Project);
-    else if (t === 'publication') setSelectedPaper(item as Publication);
-    else if (t === 'internship') setSelectedInternship(item as Internship);
-  };
-
-  const anyModalOpen =
-    selectedArticle || selectedPaper || selectedInternship;
+  const { personalInfo, recentNews, activeSection, setActiveSection } =
+    usePortfolioStore();
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -59,12 +35,7 @@ const App = () => {
               <div className="py-16 text-center text-gray-400">加载中…</div>
             }
           >
-            <ResumeSection
-              resumeCategory={resumeCategory}
-              onArticleClick={(p) => setSelectedArticle(p)}
-              onPaperClick={(p) => setSelectedPaper(p)}
-              onInternshipClick={(i) => setSelectedInternship(i)}
-            />
+            <ResumeLaunch />
           </Suspense>
         )}
 
@@ -90,20 +61,6 @@ const App = () => {
       </main>
 
       <Footer personalInfo={personalInfo} />
-
-      {anyModalOpen && (
-        <Suspense fallback={null}>
-          <GlobalModals
-            selectedArticle={selectedArticle}
-            selectedPaper={selectedPaper}
-            selectedInternship={selectedInternship}
-            onCloseArticle={() => setSelectedArticle(null)}
-            onClosePaper={() => setSelectedPaper(null)}
-            onCloseInternship={() => setSelectedInternship(null)}
-            onRecommendClick={handleRecommendClick}
-          />
-        </Suspense>
-      )}
     </div>
   );
 };
