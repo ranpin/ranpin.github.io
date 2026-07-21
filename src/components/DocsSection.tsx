@@ -60,7 +60,7 @@ const normalize = (data: Manifest): Category[] => {
 
 const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
   <a
-    href={`${DOCS_BASE}${doc.file}`}
+    href={/^(https?:)?\/\//.test(doc.file) ? doc.file : `${DOCS_BASE}${doc.file}`}
     target="_blank"
     rel="noopener noreferrer"
     className="relative block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group"
