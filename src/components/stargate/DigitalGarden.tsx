@@ -315,8 +315,13 @@ const DigitalGarden: React.FC = () => {
     el.addEventListener('wheel', onWheel, { passive: false });
 
     const worlds = notes.map((nd) => layout[nd.id]);
-    const scr: { sx: number; sy: number; z: number; d01: number }[] =
-      worlds.map(() => ({ sx: 0, sy: 0, z: 0, d01: 1 }));
+    const scr: {
+      sx: number;
+      sy: number;
+      z: number;
+      d01: number;
+      persp: number; // 该节点的透视系数，节点缩放直接取它
+    }[] = worlds.map(() => ({ sx: 0, sy: 0, z: 0, d01: 1, persp: 1 }));
     const entryDelay = (i: number) => 300 + i * 55;
 
     let auto = 0;
@@ -370,6 +375,7 @@ const DigitalGarden: React.FC = () => {
         scr[i].sy = size.cy + y1 * persp * size.R;
         scr[i].z = z2;
         scr[i].d01 = clamp01(1 - (z2 + 1) / 2); // 1 = 近，0 = 远
+        scr[i].persp = persp;
       }
 
       // 星座连线（端点取投影后的屏幕坐标，粗细/明暗随深度）
