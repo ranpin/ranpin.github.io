@@ -1,11 +1,13 @@
-/* 「星际之门」赛博朋克专属样式 —— 仅本板块使用，随懒加载代码分包。 */
+/* 「星际之门」赛博朋克专属样式 —— 仅本板块使用，随懒加载代码分包。
+   设计取向（参考 anthropics/skills · frontend-design）：暗色深空，但把"大胆"
+   集中到唯一签名——可穿行的想法星座——其余克制，避免"近黑底+满屏霓虹"的套路。 */
 
 /* ---------- 时空穿梭覆盖层 ---------- */
 .stargate-warp {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: #030614;
+  background: #04050c;
   overflow: hidden;
   opacity: 1;
   transition: opacity 0.45s ease-out;
@@ -43,70 +45,108 @@
   color: rgba(180, 200, 255, 0.7);
 }
 
-/* ---------- 内景容器 ---------- */
+/* ---------- 全视口深空舞台 ---------- */
 .stargate-stage {
   position: relative;
-  border-radius: 1.25rem;
   overflow: hidden;
   color: #cfe6ff;
+  /* 极深的 void，中心一抹极淡星云辉光；主色块由 canvas 星海补足 */
   background:
     radial-gradient(
-      ellipse at 50% -10%,
-      rgba(90, 60, 180, 0.35),
-      transparent 60%
+      ellipse 80% 60% at 50% 42%,
+      rgba(60, 40, 130, 0.18),
+      transparent 70%
     ),
     radial-gradient(
-      ellipse at 50% 120%,
-      rgba(0, 190, 220, 0.22),
+      circle at 50% 120%,
+      rgba(0, 150, 190, 0.12),
       transparent 55%
     ),
-    #05081c;
-  border: 1px solid rgba(120, 180, 255, 0.18);
-  box-shadow:
-    0 0 0 1px rgba(120, 180, 255, 0.06) inset,
-    0 20px 60px -20px rgba(80, 40, 200, 0.5);
+    #04050c;
 }
 
-/* 透视网格地平线 */
-.stargate-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(120, 200, 255, 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 200, 255, 0.16) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 78%);
-  -webkit-mask-image: radial-gradient(
-    ellipse at 50% 40%,
-    #000 20%,
-    transparent 78%
-  );
-  animation: sg-grid-pan 8s linear infinite;
-}
-
-/* 扫描线 */
+/* 极淡的 CRT 扫描线氛围（比旧版弱很多，只作纹理，不喧宾夺主） */
 .stargate-scanlines {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 5;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.03) 0px,
-    rgba(255, 255, 255, 0.03) 1px,
+    rgba(255, 255, 255, 0.018) 0px,
+    rgba(255, 255, 255, 0.018) 1px,
     transparent 2px,
-    transparent 4px
+    transparent 5px
   );
   mix-blend-mode: overlay;
 }
 
-/* ---------- 故障(glitch)标题 ---------- */
+/* 边缘暗角，把视线聚拢到星海中心 */
+.stargate-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(
+    ellipse 90% 90% at 50% 50%,
+    transparent 55%,
+    rgba(2, 3, 10, 0.75) 100%
+  );
+}
+
+/* ---------- HUD（天文台/瞄准系统观感） ---------- */
+.stargate-hud {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
+}
+/* 角落控制台面板 */
+.stargate-panel {
+  border: 1px solid rgba(120, 220, 255, 0.22);
+  background: rgba(6, 12, 30, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 24px -8px rgba(80, 200, 255, 0.4),
+    0 0 0 1px rgba(120, 220, 255, 0.06) inset;
+}
+/* 星表编号小标签 */
+.stargate-catalog {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(150, 200, 255, 0.55);
+}
+/* HUD 分隔的细角标 */
+.stargate-bracket {
+  position: relative;
+}
+.stargate-bracket::before,
+.stargate-bracket::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: rgba(120, 220, 255, 0.5);
+  border-style: solid;
+}
+.stargate-bracket::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.stargate-bracket::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* ---------- 故障(glitch)标题（收敛：更低频、更小位移） ---------- */
 .stargate-glitch {
   position: relative;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: #eafaff;
-  text-shadow: 0 0 18px rgba(120, 220, 255, 0.55);
+  text-shadow: 0 0 16px rgba(120, 220, 255, 0.45);
 }
 .stargate-glitch::before,
 .stargate-glitch::after {
@@ -120,23 +160,27 @@
 }
 .stargate-glitch::before {
   color: #ff2e97;
-  transform: translate(-2px, 0);
-  animation: sg-glitch-a 2.6s infinite steps(2, end);
+  transform: translate(-1px, 0);
+  opacity: 0.6;
+  animation: sg-glitch-a 6.5s infinite steps(2, end);
 }
 .stargate-glitch::after {
   color: #17e7ff;
-  transform: translate(2px, 0);
-  animation: sg-glitch-b 3.1s infinite steps(2, end);
+  transform: translate(1px, 0);
+  opacity: 0.6;
+  animation: sg-glitch-b 7.3s infinite steps(2, end);
 }
 
 /* 霓虹描边按钮/标签 */
 .stargate-neon {
-  border: 1px solid rgba(120, 220, 255, 0.4);
+  border: 1px solid rgba(120, 220, 255, 0.35);
   color: #bfeeff;
-  background: rgba(20, 40, 80, 0.35);
+  background: rgba(12, 26, 52, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   box-shadow:
-    0 0 12px rgba(80, 200, 255, 0.25),
-    0 0 12px rgba(80, 200, 255, 0.15) inset;
+    0 0 12px rgba(80, 200, 255, 0.18),
+    0 0 12px rgba(80, 200, 255, 0.1) inset;
   transition:
     box-shadow 0.25s ease,
     color 0.25s ease,
@@ -146,8 +190,8 @@
   color: #fff;
   border-color: rgba(180, 240, 255, 0.9);
   box-shadow:
-    0 0 22px rgba(120, 220, 255, 0.55),
-    0 0 22px rgba(180, 90, 255, 0.35) inset;
+    0 0 20px rgba(120, 220, 255, 0.5),
+    0 0 20px rgba(180, 90, 255, 0.3) inset;
 }
 
 /* 终端启动日志的光标 */
@@ -155,6 +199,23 @@
   content: '▋';
   color: #17e7ff;
   animation: sg-blink 1s steps(1) infinite;
+}
+
+/* ---------- 想法恒星（命名节点） ---------- */
+/* 亮星本体的呼吸/微闪；用相位随机（inline animation-delay）避免整齐划一 */
+.stargate-starcore {
+  animation: sg-twinkle 3.6s ease-in-out infinite;
+}
+/* 悬停锁定时的瞄准环 */
+.stargate-reticle {
+  animation: sg-reticle-spin 8s linear infinite;
+}
+
+/* 星座连线入场：逐条画出（依赖 SVG pathLength=1） */
+.stargate-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: sg-draw 1.1s ease-out forwards;
 }
 
 @keyframes sg-flicker {
@@ -176,56 +237,70 @@
     opacity: 0;
   }
 }
-@keyframes sg-grid-pan {
-  0% {
-    background-position:
-      0 0,
-      0 0;
-  }
+@keyframes sg-twinkle {
+  0%,
   100% {
-    background-position:
-      0 44px,
-      44px 0;
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+@keyframes sg-reticle-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes sg-draw {
+  to {
+    stroke-dashoffset: 0;
   }
 }
 @keyframes sg-glitch-a {
   0%,
-  92%,
+  96%,
   100% {
     clip-path: inset(0 0 0 0);
-    transform: translate(-2px, 0);
+    transform: translate(-1px, 0);
   }
-  93% {
+  97% {
     clip-path: inset(20% 0 55% 0);
-    transform: translate(-4px, -1px);
+    transform: translate(-3px, -1px);
   }
-  96% {
+  99% {
     clip-path: inset(65% 0 8% 0);
-    transform: translate(3px, 1px);
+    transform: translate(2px, 1px);
   }
 }
 @keyframes sg-glitch-b {
   0%,
-  90%,
+  95%,
   100% {
     clip-path: inset(0 0 0 0);
-    transform: translate(2px, 0);
+    transform: translate(1px, 0);
   }
-  91% {
+  96% {
     clip-path: inset(70% 0 12% 0);
-    transform: translate(4px, 1px);
+    transform: translate(3px, 1px);
   }
-  95% {
+  98% {
     clip-path: inset(12% 0 60% 0);
-    transform: translate(-3px, -1px);
+    transform: translate(-2px, -1px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stargate-grid,
   .stargate-warp__title,
   .stargate-glitch::before,
-  .stargate-glitch::after {
+  .stargate-glitch::after,
+  .stargate-starcore,
+  .stargate-reticle,
+  .stargate-edge {
     animation: none;
+  }
+  .stargate-edge {
+    stroke-dashoffset: 0;
   }
 }
