@@ -11,12 +11,13 @@ describe('App', () => {
     expect(screen.getByText('最新动态')).toBeInTheDocument();
   });
 
-  it('switches to the resume section and shows the launch card', async () => {
+  it('switches to the resume section and embeds the resume center', () => {
     render(<App />);
-    fireEvent.click(screen.getByText('个人简历'));
-    // 简历中心已独立，主站展示入口卡（懒加载）
-    expect(await screen.findByText('打开简历中心')).toBeInTheDocument();
-    expect(screen.getByText('在线简历编辑器')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('简历中心'));
+    // 简历中心已独立，主站以 iframe 内嵌 /resume/ 直接呈现
+    const frame = screen.getByTitle('简历中心');
+    expect(frame).toBeInTheDocument();
+    expect(frame.getAttribute('src')).toBe('/resume/');
   });
 
   it('switches to 星际之门 and shows exploration notes', async () => {
