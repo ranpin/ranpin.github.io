@@ -22,6 +22,7 @@ interface Project {
 }
 interface Category {
   name: string;
+  id?: string;
   note?: string;
   general?: DocItem[];
   projects?: Project[];
@@ -101,9 +102,65 @@ const SubHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </h4>
 );
 
+// 单个大类的内容（通用文档网格 + 项目时间轴），一次只呈现一个
+const CategoryView: React.FC<{ cat: Category }> = ({ cat }) => (
+  <section>
+    {/* 大类标题 */}
+    <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-gray-200">
+      <h3 className="text-2xl font-extrabold text-gray-900">{cat.name}</h3>
+      {cat.note && <span className="text-sm text-gray-400">{cat.note}</span>}
+    </div>
+
+    {/* 上半部分：通用文档（网格） */}
+    {cat.general && cat.general.length > 0 && (
+      <div className="mb-8">
+        <SubHead>通用文档 · 基础与面试</SubHead>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {cat.general.map((doc) => (
+            <DocCard key={doc.file} doc={doc} />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* 下半部分：项目（竖向时间轴） */}
+    {cat.projects && cat.projects.length > 0 && (
+      <div>
+        <SubHead>项目 · 时间轴</SubHead>
+        <div className="relative pl-8">
+          {/* 时间轴竖线 */}
+          <span className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-500 to-gray-200" />
+          {cat.projects.map((p) => (
+            <div key={p.name} className="relative mb-10 last:mb-0">
+              {/* 节点圆点 */}
+              <span className="absolute -left-[26px] top-1 w-3.5 h-3.5 rounded-full bg-white border-[3px] border-blue-500 ring-4 ring-white" />
+              <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
+                <span className="text-lg font-bold text-gray-800">
+                  {p.name}
+                </span>
+                {p.period && (
+                  <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                    {p.period}
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {p.docs.map((doc) => (
+                  <DocCard key={doc.file} doc={doc} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </section>
+);
+
 const DocsSection: React.FC = () => {
   const [data, setData] = useState<Manifest | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -170,63 +227,33 @@ const DocsSection: React.FC = () => {
       )}
 
       {state === 'ready' &&
-        normalize(data!).map((cat) => (
-          <section key={cat.name} className="mb-14">
-            {/* 大类标题 */}
-            <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-gray-200">
-              <h3 className="text-2xl font-extrabold text-gray-900">
-                {cat.name}
-              </h3>
-              {cat.note && (
-                <span className="text-sm text-gray-400">{cat.note}</span>
-              )}
-            </div>
-
-            {/* 上半部分：通用文档（网格） */}
-            {cat.general && cat.general.length > 0 && (
-              <div className="mb-8">
-                <SubHead>通用文档 · 基础与面试</SubHead>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cat.general.map((doc) => (
-                    <DocCard key={doc.file} doc={doc} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 下半部分：项目（竖向时间轴） */}
-            {cat.projects && cat.projects.length > 0 && (
-              <div>
-                <SubHead>项目 · 时间轴</SubHead>
-                <div className="relative pl-8">
-                  {/* 时间轴竖线 */}
-                  <span className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-500 to-gray-200" />
-                  {cat.projects.map((p) => (
-                    <div key={p.name} className="relative mb-10 last:mb-0">
-                      {/* 节点圆点 */}
-                      <span className="absolute -left-[26px] top-1 w-3.5 h-3.5 rounded-full bg-white border-[3px] border-blue-500 ring-4 ring-white" />
-                      <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
-                        <span className="text-lg font-bold text-gray-800">
-                          {p.name}
-                        </span>
-                        {p.period && (
-                          <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
-                            {p.period}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {p.docs.map((doc) => (
-                          <DocCard key={doc.file} doc={doc} />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        ))}
+        (() => {
+          const cats = normalize(data!);
+          if (cats.length === 0) return null;
+          const idx = Math.min(active, cats.length - 1);
+          return (
+            <>
+              {/* 分类切换标签：三个大类各自成页 */}
+              <nav className="flex flex-wrap justify-center gap-2 mb-10">
+                {cats.map((cat, i) => (
+                  <button
+                    key={cat.id || cat.name}
+                    type="button"
+                    onClick={() => setActive(i)}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
+                      i === idx
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/25'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-gray-800'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </nav>
+              <CategoryView cat={cats[idx]} />
+            </>
+          );
+        })()}
     </div>
   );
 };
