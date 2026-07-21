@@ -1,6 +1,6 @@
 # Ranpin 的个人网站
 
-作为简历补充的个人站点（聚合入口）：首页个人信息与动态，并链接到两个独立项目——**简历中心**（[ranpin/resume](https://github.com/ranpin/resume)，在线简历编辑器 + 经历库 + AI 生成）与**技术文档**（[edge-ai-docs](https://github.com/ranpin/edge-ai-docs)），以及记录学习探索的「星际之门」。
+作为简历补充的个人站点（聚合入口）：首页个人信息与动态，并链接到两个独立项目——**简历中心**（[resume](https://github.com/ranpin/resume)，在线简历编辑器 + 经历库 + AI 生成）与**技术文档**（[edge-ai-docs](https://github.com/ranpin/edge-ai-docs)），以及记录学习探索的「星际之门」。
 
 **在线地址**：<https://ranpin.github.io>
 
@@ -21,7 +21,7 @@
 | 个人信息 / 简介 / 社交链接               | `content/profile.yaml`                                          |
 | 首页「最新动态」                         | `content/news.yaml`                                             |
 | 探索笔记（星际之门：TIL / 踩坑复盘）     | `content/garden/*.md`                                           |
-| **个人简历 / 项目 / 论文 / 实习 / 荣誉** | 已独立到 [ranpin/resume](https://github.com/ranpin/resume) 仓库 |
+| **个人简历 / 项目 / 论文 / 实习 / 荣誉** | 已独立到 [resume](https://github.com/ranpin/resume) 仓库 |
 | **技术文档 / 面试指南**                  | 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) |
 
 ---

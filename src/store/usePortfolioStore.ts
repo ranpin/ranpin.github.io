@@ -9,7 +9,7 @@ import type { PersonalInfo, NewsItem } from '../types';
 export type { PersonalInfo, NewsItem } from '../types';
 
 // 纯静态聚合站点：数据只读，来自 src/data/content.ts。
-// store 只保留导航相关的 UI 状态。项目/简历等已迁移到独立的简历中心(ranpin/resume)。
+// store 只保留导航相关的 UI 状态。项目/简历等已迁移到独立的简历中心(resume)。
 export interface PortfolioState {
   personalInfo: PersonalInfo;
   recentNews: NewsItem[];

@@ -43,7 +43,7 @@ const App = () => {
           )}
 
           {activeSection === 'resume' && (
-            // 简历中心是独立项目(ranpin/resume)，同源子路径 /resume/，内嵌直接呈现
+            // 简历中心是独立项目(resume)，同源子路径 /resume/，内嵌直接呈现
             <iframe
               src="/resume/"
               title="简历中心"

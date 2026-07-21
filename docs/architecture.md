@@ -9,7 +9,7 @@
 | 板块 | 实现方式 |
 |------|----------|
 | 首页 | 个人信息（`profile.yaml`）+ 最新动态（`news.yaml`） |
-| 简历中心 | iframe 嵌入同源子路径 `/resume/`（独立仓库 [ranpin/resume](https://github.com/ranpin/resume)） |
+| 简历中心 | iframe 嵌入同源子路径 `/resume/`（独立仓库 [resume](https://github.com/ranpin/resume)） |
 | 技术文档 | 运行时 fetch 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) 的 `docs.json` 清单并渲染目录 |
 | 星际之门 | 全屏沉浸式深空体验：Warp 穿越动画 → 数字花园星图（`content/garden/*.md`） |
 

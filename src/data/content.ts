@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // 内容加载器 —— 主站(聚合入口)的数据源在仓库根部的 `content/` 目录：
 //   个人信息 profile.yaml、最新动态 news.yaml、数字花园 garden/*.md。
-// 项目/论文/实习/荣誉与简历已迁移到独立仓库 ranpin/resume（简历中心）。
+// 项目/论文/实习/荣誉与简历已迁移到独立仓库 resume（简历中心）。
 import { load as parseYaml } from 'js-yaml';
 import type { PersonalInfo, NewsItem, GardenNote } from '../types';
 
