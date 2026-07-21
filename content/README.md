@@ -24,7 +24,7 @@
 
 > YAML（`.yaml`）用来存**结构化字段**；数字花园节点用 **Markdown（`.md`）**，正文支持标题、列表、代码块、图片、链接等格式。
 >
-> **个人简历 / 经历库（项目、论文、实习、荣誉）已迁移到独立仓库 [ranpin/resume](https://github.com/ranpin/resume)（简历中心，主站「个人简历」入口链接过去）。**在那里编辑 `content/` 下的内容。
+> **个人简历 / 经历库（项目、论文、实习、荣誉）已迁移到独立仓库 [resume](https://github.com/ranpin/resume)（简历中心，主站「个人简历」入口链接过去）。**在那里编辑 `content/` 下的内容。
 >
 > 成体系的学习文档 / 面试指南维护在独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs)，显示在主站「技术文档」板块。
 
@@ -62,4 +62,4 @@ draft: true # 可选：true 时只在本地 npm run dev 可见，不会上线
 
 ## 改项目 / 简历
 
-项目、论文、实习、荣誉与简历都在独立的**简历中心**仓库 [ranpin/resume](https://github.com/ranpin/resume) 里维护（主站「个人简历」点击进入）。可在该仓库的网页编辑器里改并一键发布，或直接改其 `content/` 下的 YAML。
+项目、论文、实习、荣誉与简历都在独立的**简历中心**仓库 [resume](https://github.com/ranpin/resume) 里维护（主站「个人简历」点击进入）。可在该仓库的网页编辑器里改并一键发布，或直接改其 `content/` 下的 YAML。
