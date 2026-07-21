@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../Icon';
 import Markdown from '../Markdown';
+import Starfield from './Starfield';
 import { gardenNotes } from '../../data/content';
 import type { GardenNote } from '../../types';
 
@@ -10,20 +11,24 @@ const H = 640;
 
 type Stage = 'seedling' | 'budding' | 'evergreen';
 
+// 成长阶段 → 恒星分类观感（暖金 / 青白 / 蓝紫）
 const STAGE: Record<Stage, { label: string; color: string }> = {
-  seedling: { label: '🌱 萌芽', color: '#34d399' },
-  budding: { label: '🌿 生长', color: '#22d3ee' },
+  seedling: { label: '🌱 萌芽', color: '#fbbf24' },
+  budding: { label: '🌿 生长', color: '#67e8f9' },
   evergreen: { label: '🌲 常青', color: '#a78bfa' },
 };
 
 const stageOf = (n: GardenNote): Stage => (n.stage as Stage) || 'seedling';
 
-// 稳定的字符串散列，用于确定性的初始布局（避免每次渲染跳动）
+// 稳定的字符串散列，用于确定性的初始布局与星表编号（避免每次渲染跳动）
 const hash = (s: string): number => {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return Math.abs(h);
 };
+
+// 天文台观感的"星表编号"，如 HD 4821
+const designation = (id: string): string => `HD ${1000 + (hash(id) % 8999)}`;
 
 interface Pt {
   x: number;
@@ -93,7 +98,7 @@ const computeLayout = (
   }
 
   // 归一化到留边的画布内
-  const pad = 70;
+  const pad = 90;
   const xs = pos.map((p) => p.x);
   const ys = pos.map((p) => p.y);
   const minX = Math.min(...xs);
@@ -166,10 +171,21 @@ const DigitalGarden: React.FC = () => {
 
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<GardenNote | null>(null);
-  const active = hovered; // 悬停时高亮
+  const active = hovered; // 悬停时高亮/锁定
+
+  // 入场编排：挂载后放行标签淡入（连线的画出由 CSS 动画驱动）
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setEntered(true), 60);
+    return () => window.clearTimeout(t);
+  }, []);
 
   // 视图变换（平移/缩放）
   const [view, setView] = useState({ tx: 0, ty: 0, scale: 1 });
+  // 镜像给星海 canvas 做视差（避免平移时重启动画循环）
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; tx: number; ty: number } | null>(
     null,
@@ -197,7 +213,8 @@ const DigitalGarden: React.FC = () => {
   }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('[data-node]')) return; // 点星点不平移
+    // 点在星点或任何 HUD/面板控件上都不触发平移（否则指针捕获会吞掉点击）
+    if ((e.target as HTMLElement).closest('[data-node], [data-ui]')) return;
     drag.current = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
@@ -221,214 +238,267 @@ const DigitalGarden: React.FC = () => {
 
   if (notes.length === 0) {
     return (
-      <div className="relative text-center py-20 text-slate-400/70 font-mono text-sm">
+      <div className="absolute inset-0 flex items-center justify-center text-slate-400/70 font-mono text-sm">
         花园尚未播种 —— 在 content/garden/ 添加节点即可生长。
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {/* 图例 + 提示 */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3 text-[11px] font-mono">
-        <div className="flex items-center gap-3">
+    <div
+      ref={viewportRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerLeave={endDrag}
+      className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
+    >
+      {/* 环境星海（铺底、视差） */}
+      <Starfield viewRef={viewRef} />
+
+      {/* 世界层：平移/缩放整体作用于此 */}
+      <div
+        className="absolute inset-0 origin-top-left"
+        style={{
+          transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
+        }}
+      >
+        {/* 星座连线 */}
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+        >
+          {edges.map((e, i) => {
+            const A = notes[e.a];
+            const B = notes[e.b];
+            const pa = layout[A.id];
+            const pb = layout[B.id];
+            const lit = active && (active === A.id || active === B.id);
+            return (
+              <line
+                key={i}
+                className="stargate-edge"
+                pathLength={1}
+                x1={pa.x}
+                y1={pa.y}
+                x2={pb.x}
+                y2={pb.y}
+                stroke={lit ? '#8fe5ff' : '#3f6aa0'}
+                strokeWidth={lit ? 1.4 : 0.7}
+                strokeOpacity={active ? (lit ? 0.95 : 0.1) : 0.32}
+                style={{ animationDelay: `${0.15 + i * 0.05}s` }}
+              />
+            );
+          })}
+        </svg>
+
+        {/* 想法恒星（命名节点） */}
+        {notes.map((n, i) => {
+          const p = layout[n.id];
+          const st = STAGE[stageOf(n)];
+          const size = 11 + Math.min(degree[n.id] || 0, 5) * 3.5;
+          const faded = dim(n.id);
+          const isActive = active === n.id;
+          const baseOpacity = entered ? (faded ? 0.28 : 1) : 0;
+          return (
+            <button
+              key={n.id}
+              data-node
+              onMouseEnter={() => setHovered(n.id)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(n.id)}
+              onBlur={() => setHovered(null)}
+              onClick={() => setSelected(n)}
+              aria-label={`${n.title}（${st.label}）`}
+              className="group absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 focus:outline-none"
+              style={{
+                left: `${(p.x / W) * 100}%`,
+                top: `${(p.y / H) * 100}%`,
+                opacity: baseOpacity,
+                transition: `opacity 0.6s ease ${entered ? '0s' : `${0.3 + i * 0.05}s`}`,
+              }}
+            >
+              {/* 恒星本体 + 光晕 + 锁定瞄准环 */}
+              <span
+                className="relative flex items-center justify-center"
+                style={{ width: size * 2.6, height: size * 2.6 }}
+              >
+                {/* 光晕 */}
+                <span
+                  className="absolute rounded-full"
+                  style={{
+                    width: size * 2.6,
+                    height: size * 2.6,
+                    background: `radial-gradient(circle, ${st.color}55 0%, transparent 70%)`,
+                    opacity: isActive ? 1 : 0.7,
+                  }}
+                />
+                {/* 锁定瞄准环（仅悬停/聚焦时） */}
+                {isActive && (
+                  <span
+                    className="stargate-reticle absolute rounded-full"
+                    style={{
+                      width: size * 2.1,
+                      height: size * 2.1,
+                      border: `1px solid ${st.color}`,
+                      borderTopColor: 'transparent',
+                      borderBottomColor: 'transparent',
+                      boxShadow: `0 0 10px ${st.color}88`,
+                    }}
+                  />
+                )}
+                {/* 星核 */}
+                <span
+                  className="stargate-starcore relative rounded-full"
+                  style={{
+                    width: size,
+                    height: size,
+                    background: `radial-gradient(circle at 35% 35%, #fff, ${st.color} 60%)`,
+                    boxShadow: `0 0 ${isActive ? 20 : 11}px ${st.color}`,
+                    transform: isActive ? 'scale(1.3)' : 'scale(1)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    animationDelay: `${(hash(n.id) % 40) / 10}s`,
+                  }}
+                />
+              </span>
+              {/* 标签：标题 + 星表编号 */}
+              <span className="flex flex-col items-center leading-none">
+                <span
+                  className="text-[11px] whitespace-nowrap px-1 font-medium"
+                  style={{
+                    color: isActive ? '#fff' : 'rgba(207,230,255,0.82)',
+                    textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                  }}
+                >
+                  {n.title}
+                </span>
+                <span
+                  className="stargate-catalog mt-0.5 transition-opacity duration-200"
+                  style={{ opacity: isActive ? 0.9 : 0.4 }}
+                >
+                  {designation(n.id)}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 图例（左下 HUD） */}
+      <div className="stargate-panel stargate-hud absolute bottom-3 left-3 rounded-md px-3 py-2 text-[11px] pointer-events-none">
+        <div className="stargate-catalog mb-1.5">GROWTH · 成长阶段</div>
+        <div className="flex flex-col gap-1">
           {(Object.keys(STAGE) as Stage[]).map((s) => (
             <span key={s} className="inline-flex items-center gap-1.5">
               <span
-                className="w-2.5 h-2.5 rounded-full"
+                className="w-2 h-2 rounded-full"
                 style={{
                   background: STAGE[s].color,
                   boxShadow: `0 0 8px ${STAGE[s].color}`,
                 }}
               />
-              <span className="text-slate-300/70">{STAGE[s].label}</span>
+              <span className="text-slate-300/80">{STAGE[s].label}</span>
             </span>
           ))}
         </div>
-        <span className="text-slate-400/50">
-          点击星点展开 · 拖拽平移 · 滚轮缩放
-        </span>
       </div>
 
-      {/* 星图视口 */}
-      <div
-        ref={viewportRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-        className="relative w-full h-[520px] sm:h-[600px] rounded-xl border border-cyan-400/20 overflow-hidden cursor-grab active:cursor-grabbing bg-[radial-gradient(ellipse_at_center,rgba(30,50,110,0.35),rgba(5,8,28,0.9))]"
-      >
-        {/* 世界层：平移/缩放整体作用于此 */}
-        <div
-          className="absolute inset-0 origin-top-left"
-          style={{
-            transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
-          }}
-        >
-          {/* 连线 */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox={`0 0 ${W} ${H}`}
-            preserveAspectRatio="none"
+      {/* 缩放控件（右下 HUD） */}
+      <div data-ui className="absolute bottom-3 right-3 flex flex-col gap-1.5">
+        {[
+          { t: '放大', ic: 'plus', fn: () => zoom(1.2) },
+          { t: '缩小', ic: 'arrow-down', fn: () => zoom(1 / 1.2) },
+          { t: '重置视图', ic: 'redo', fn: reset },
+        ].map((b) => (
+          <button
+            key={b.ic}
+            onClick={b.fn}
+            title={b.t}
+            aria-label={b.t}
+            className="stargate-neon w-8 h-8 rounded-md flex items-center justify-center text-sm"
           >
-            {edges.map((e, i) => {
-              const A = notes[e.a];
-              const B = notes[e.b];
-              const pa = layout[A.id];
-              const pb = layout[B.id];
-              const lit = active && (active === A.id || active === B.id);
-              return (
-                <line
-                  key={i}
-                  x1={pa.x}
-                  y1={pa.y}
-                  x2={pb.x}
-                  y2={pb.y}
-                  stroke={lit ? '#7dd3fc' : '#3b6ea5'}
-                  strokeWidth={lit ? 1.6 : 0.8}
-                  strokeOpacity={active ? (lit ? 0.9 : 0.12) : 0.35}
-                />
-              );
-            })}
-          </svg>
+            <Icon name={b.ic} />
+          </button>
+        ))}
+      </div>
 
-          {/* 星点 */}
-          {notes.map((n) => {
-            const p = layout[n.id];
-            const st = STAGE[stageOf(n)];
-            const size = 12 + Math.min(degree[n.id] || 0, 5) * 4;
-            const faded = dim(n.id);
-            const isActive = active === n.id;
-            return (
-              <button
-                key={n.id}
-                data-node
-                onMouseEnter={() => setHovered(n.id)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(n.id)}
-                onBlur={() => setHovered(null)}
-                onClick={() => setSelected(n)}
-                aria-label={`${n.title}（${st.label}）`}
-                className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 focus:outline-none transition-opacity"
+      {/* 操作提示（顶部居中，细小） */}
+      <div className="stargate-catalog absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap">
+        点击恒星展开 · 拖拽平移 · 滚轮缩放
+      </div>
+
+      {/* 详情面板（右侧滑入） */}
+      {selected && (
+        <div
+          data-ui
+          className="stargate-hud absolute inset-y-0 right-0 w-full sm:w-[400px] bg-[#050a1c]/95 backdrop-blur-md border-l border-cyan-400/25 shadow-[0_0_50px_-12px_rgba(80,200,255,0.55)] flex flex-col animate-fade-in"
+        >
+          <div className="flex items-start justify-between gap-3 p-5 border-b border-white/10">
+            <div>
+              <span className="stargate-catalog block mb-1">
+                {designation(selected.id)}
+              </span>
+              <span
+                className="inline-block text-[11px] font-mono px-2 py-0.5 rounded mb-2"
                 style={{
-                  left: `${(p.x / W) * 100}%`,
-                  top: `${(p.y / H) * 100}%`,
-                  opacity: faded ? 0.25 : 1,
+                  color: STAGE[stageOf(selected)].color,
+                  border: `1px solid ${STAGE[stageOf(selected)].color}66`,
                 }}
               >
-                <span
-                  className="rounded-full transition-transform"
-                  style={{
-                    width: size,
-                    height: size,
-                    background: st.color,
-                    boxShadow: `0 0 ${isActive ? 22 : 12}px ${st.color}, 0 0 4px #fff inset`,
-                    transform: isActive ? 'scale(1.35)' : 'scale(1)',
-                  }}
-                />
-                <span
-                  className="text-[11px] leading-none whitespace-nowrap px-1.5 py-0.5 rounded font-medium"
-                  style={{
-                    color: isActive ? '#fff' : 'rgba(207,230,255,0.8)',
-                    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  {n.title}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 缩放控件 */}
-        <div className="absolute bottom-3 right-3 flex flex-col gap-1.5">
-          {[
-            { t: '放大', ic: 'plus', fn: () => zoom(1.2) },
-            { t: '缩小', ic: 'arrow-down', fn: () => zoom(1 / 1.2) },
-            { t: '重置视图', ic: 'redo', fn: reset },
-          ].map((b) => (
-            <button
-              key={b.ic}
-              onClick={b.fn}
-              title={b.t}
-              aria-label={b.t}
-              className="stargate-neon w-8 h-8 rounded-md flex items-center justify-center text-sm"
-            >
-              <Icon name={b.ic} />
-            </button>
-          ))}
-        </div>
-
-        {/* 详情面板 */}
-        {selected && (
-          <div className="absolute inset-y-0 right-0 w-full sm:w-[380px] bg-[#070c22]/95 backdrop-blur-md border-l border-cyan-400/25 shadow-[0_0_40px_-10px_rgba(80,200,255,0.5)] flex flex-col animate-fade-in">
-            <div className="flex items-start justify-between gap-3 p-5 border-b border-white/10">
-              <div>
-                <span
-                  className="inline-block text-[11px] font-mono px-2 py-0.5 rounded mb-2"
-                  style={{
-                    color: STAGE[stageOf(selected)].color,
-                    border: `1px solid ${STAGE[stageOf(selected)].color}66`,
-                  }}
-                >
-                  {STAGE[stageOf(selected)].label}
-                </span>
-                <h3 className="text-lg font-bold text-cyan-50 leading-snug">
-                  {selected.title}
-                </h3>
-                {selected.updated && (
-                  <p className="text-[11px] font-mono text-slate-400/60 mt-1">
-                    更新于 {selected.updated}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setSelected(null)}
-                aria-label="关闭"
-                className="stargate-neon w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              >
-                <Icon name="times" />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto flex-1">
-              <Markdown className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300">
-                {prettify(selected.content || '', byId)}
-              </Markdown>
-
-              {(selected.links || []).filter((id) => byId.has(id)).length >
-                0 && (
-                <div className="mt-6">
-                  <p className="text-[11px] font-mono tracking-widest text-cyan-400/60 mb-2">
-                    关联节点
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {(selected.links || [])
-                      .filter((id) => byId.has(id))
-                      .map((id) => {
-                        const t = byId.get(id)!;
-                        return (
-                          <button
-                            key={id}
-                            onClick={() => setSelected(t)}
-                            className="stargate-neon rounded-full px-3 py-1 text-xs inline-flex items-center gap-1.5"
-                          >
-                            <span
-                              className="w-2 h-2 rounded-full"
-                              style={{ background: STAGE[stageOf(t)].color }}
-                            />
-                            {t.title}
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
+                {STAGE[stageOf(selected)].label}
+              </span>
+              <h3 className="text-lg font-bold text-cyan-50 leading-snug">
+                {selected.title}
+              </h3>
+              {selected.updated && (
+                <p className="text-[11px] font-mono text-slate-400/60 mt-1">
+                  更新于 {selected.updated}
+                </p>
               )}
             </div>
+            <button
+              onClick={() => setSelected(null)}
+              aria-label="关闭"
+              className="stargate-neon w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            >
+              <Icon name="times" />
+            </button>
           </div>
-        )}
-      </div>
+
+          <div className="p-5 overflow-y-auto flex-1">
+            <Markdown className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300">
+              {prettify(selected.content || '', byId)}
+            </Markdown>
+
+            {(selected.links || []).filter((id) => byId.has(id)).length > 0 && (
+              <div className="mt-6">
+                <p className="stargate-catalog mb-2">LINKED · 关联节点</p>
+                <div className="flex flex-wrap gap-2">
+                  {(selected.links || [])
+                    .filter((id) => byId.has(id))
+                    .map((id) => {
+                      const t = byId.get(id)!;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => setSelected(t)}
+                          className="stargate-neon rounded-full px-3 py-1 text-xs inline-flex items-center gap-1.5"
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: STAGE[stageOf(t)].color }}
+                          />
+                          {t.title}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

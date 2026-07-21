@@ -61,6 +61,8 @@ const toGarden = (glob: RawGlob): GardenNote[] =>
         content: body,
       } as GardenNote;
     })
+    // 只有带标题的才是真正的节点（跳过 README 等无 frontmatter 的辅助文件）
+    .filter((n) => !!n.title)
     .filter((n) => import.meta.env.DEV || !n.draft)
     .sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
 
