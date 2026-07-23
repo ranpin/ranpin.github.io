@@ -44,7 +44,7 @@ const badgeClass = (status?: string) =>
   status === 'wip'
     ? 'bg-amber-100 text-amber-700'
     : status === 'todo'
-      ? 'bg-gray-100 text-gray-500'
+      ? 'bg-warm-gray-100 text-warm-gray-500'
       : 'bg-green-100 text-green-700';
 
 // 新结构 categories；老结构 groups 回退成「仅通用文档」的大类
@@ -63,7 +63,7 @@ const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
     href={/^(https?:)?\/\//.test(doc.file) ? doc.file : `${DOCS_BASE}${doc.file}`}
     target="_blank"
     rel="noopener noreferrer"
-    className="relative block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+    className="relative block bg-white rounded-xl border border-warm-gray-200 p-5 hover:shadow-md hover:border-sage-300 transition-[border-color,box-shadow] group"
   >
     {doc.badge && (
       <span
@@ -74,18 +74,18 @@ const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
         {doc.badge}
       </span>
     )}
-    <h4 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors pr-14">
+    <h4 className="text-base font-semibold text-warm-gray-800 group-hover:text-sage-600 transition-colors pr-14">
       {doc.title}
     </h4>
     {doc.desc && (
-      <p className="text-sm text-gray-500 mt-1 line-clamp-3">{doc.desc}</p>
+      <p className="text-sm text-warm-gray-500 mt-1 line-clamp-3">{doc.desc}</p>
     )}
     {doc.tags && doc.tags.length > 0 && (
       <div className="flex flex-wrap gap-1.5 mt-3">
         {doc.tags.map((t) => (
           <span
             key={t}
-            className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
+            className="px-2 py-0.5 bg-sage-50 text-sage-600 rounded text-xs"
           >
             {t}
           </span>
@@ -96,9 +96,9 @@ const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
 );
 
 const SubHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <h4 className="flex items-center gap-3 text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">
+  <h4 className="flex items-center gap-3 text-xs font-bold text-sage-600 uppercase tracking-widest mb-4">
     <span className="whitespace-nowrap">{children}</span>
-    <span className="flex-1 h-px bg-gray-200" />
+    <span className="flex-1 h-px bg-warm-gray-200" />
   </h4>
 );
 
@@ -106,9 +106,9 @@ const SubHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const CategoryView: React.FC<{ cat: Category }> = ({ cat }) => (
   <section>
     {/* 大类标题 */}
-    <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-gray-200">
-      <h3 className="text-2xl font-extrabold text-gray-900">{cat.name}</h3>
-      {cat.note && <span className="text-sm text-gray-400">{cat.note}</span>}
+    <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-warm-gray-200">
+      <h3 className="text-2xl font-extrabold text-warm-gray-900">{cat.name}</h3>
+      {cat.note && <span className="text-sm text-warm-gray-400">{cat.note}</span>}
     </div>
 
     {/* 上半部分：通用文档（网格） */}
@@ -129,17 +129,17 @@ const CategoryView: React.FC<{ cat: Category }> = ({ cat }) => (
         <SubHead>项目 · 时间轴</SubHead>
         <div className="relative pl-8">
           {/* 时间轴竖线 */}
-          <span className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-500 to-gray-200" />
+          <span className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-sage-500 to-warm-gray-200" />
           {cat.projects.map((p) => (
             <div key={p.name} className="relative mb-10 last:mb-0">
               {/* 节点圆点 */}
-              <span className="absolute -left-[26px] top-1 w-3.5 h-3.5 rounded-full bg-white border-[3px] border-blue-500 ring-4 ring-white" />
+              <span className="absolute -left-[26px] top-1 w-3.5 h-3.5 rounded-full bg-white border-[3px] border-sage-500 ring-4 ring-white" />
               <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
-                <span className="text-lg font-bold text-gray-800">
+                <span className="text-lg font-bold text-warm-gray-800">
                   {p.name}
                 </span>
                 {p.period && (
-                  <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                  <span className="text-[11px] font-semibold text-sage-600 bg-sage-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {p.period}
                   </span>
                 )}
@@ -193,10 +193,11 @@ const DocsSection: React.FC = () => {
             key={cat.id || cat.name}
             type="button"
             onClick={() => setActive(i)}
-            className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
+            aria-current={i === idx ? 'true' : undefined}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition-[background-color,border-color,color,box-shadow] ${
               i === idx
-                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/25'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-gray-800'
+                ? 'bg-sage-600 text-white border-sage-600 shadow-md shadow-sage-600/25'
+                : 'bg-white text-warm-gray-500 border-warm-gray-200 hover:border-sage-300 hover:text-warm-gray-800'
             }`}
           >
             {cat.name}
@@ -205,21 +206,21 @@ const DocsSection: React.FC = () => {
       </nav>
 
       {state === 'loading' && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-warm-gray-400">
           <Icon name="spinner" spin className="text-3xl" />
           <p className="mt-3">正在加载文档目录…</p>
         </div>
       )}
 
       {state === 'error' && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-warm-gray-500">
           <Icon name="exclamation-triangle" className="text-3xl mb-3" />
           <p>目录加载失败（本地开发环境下需线上访问）。</p>
           <a
             href={DOCS_BASE}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline mt-2 inline-block"
+            className="text-sage-600 hover:underline mt-2 py-2 inline-flex items-center"
           >
             直接前往知识库 →
           </a>

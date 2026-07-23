@@ -2,7 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 自托管 Inter（latin 子集，font-display: swap）。中文按字体栈逐字回退到
+   PingFang SC / Microsoft YaHei，无需加载中文字体文件。 */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  /* 消除移动端双击缩放延迟 */
+  a,
+  button {
+    touch-action: manipulation;
+  }
+
   body {
     font-family:
       'Inter',
@@ -27,79 +80,7 @@
   }
 }
 
-@layer components {
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .text-gradient {
-    background: linear-gradient(135deg, #5f7a5f, #7d947d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hover-lift {
-    transition: all 0.3s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  .tag-cloud-item {
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .tag-cloud-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(95, 122, 95, 0.1),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-
-  .tag-cloud-item:hover::before {
-    left: 100%;
-  }
-}
-
-.scroll-smooth {
-  scroll-behavior: smooth;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c7d2c7;
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a3b5a3;
-}
-
-/* 隐藏滚动条但保持滚动功能 */
+/* 隐藏滚动条但保持滚动功能（Header 导航横向滚动用） */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -109,21 +90,8 @@
   display: none;
 }
 
-/* 移动端优化 */
-@media (max-width: 640px) {
-  .text-responsive {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-  }
-}
-
 /* 触摸设备优化 */
 @media (hover: none) and (pointer: coarse) {
-  .hover-lift:hover {
-    transform: none;
-    box-shadow: none;
-  }
-
   button:hover {
     background-color: inherit;
   }
@@ -133,27 +101,24 @@
   }
 }
 
-/* 确保移动端点击区域足够大 */
+/* 移动端点击区域足够大（仅限按钮；行内链接由各组件自行保证） */
 @media (max-width: 768px) {
-  button,
-  a {
+  button {
     min-height: 44px;
     min-width: 44px;
   }
 }
 
-/* Toast 动画 */
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 20px);
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
