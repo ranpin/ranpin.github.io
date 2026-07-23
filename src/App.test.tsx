@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 import { personalInfo } from './data/content';
 
 describe('App', () => {
+  beforeEach(() => {
+    // 板块状态会同步到 URL hash；避免上一个用例的 hash 影响下一个用例
+    window.history.replaceState(null, '', '/');
+  });
+
   it('renders the home section with personal info', () => {
     render(<App />);
     // 姓名在导航/资料区出现
@@ -41,8 +46,18 @@ describe('App', () => {
     );
     render(<App />);
     fireEvent.click(screen.getAllByText('技术文档')[0]);
-    // DocsSection 懒加载；清单加载成功后渲染对应领域标签
-    expect(await screen.findByText('智能座舱')).toBeInTheDocument();
+    // DocsSection 懒加载；清单加载成功后渲染对应领域标题
+    // （领域名同时出现在标签按钮与标题中，用 role 精确断言标题）
+    expect(
+      await screen.findByRole('heading', { name: '智能座舱' }),
+    ).toBeInTheDocument();
     vi.unstubAllGlobals();
+  });
+
+  it('supports deep links via URL hash', async () => {
+    window.history.replaceState(null, '', '/#stargate');
+    render(<App />);
+    // 未经点击，直达 hash 对应的板块
+    expect(await screen.findByText('STARGATE')).toBeInTheDocument();
   });
 });

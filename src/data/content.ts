@@ -41,13 +41,15 @@ export const personalInfo = loadOne<PersonalInfo>(
   }) as RawGlob,
 );
 
-export const recentNews = loadOne<NewsItem[]>(
-  import.meta.glob('/content/news.yaml', {
-    eager: true,
-    query: '?raw',
-    import: 'default',
-  }) as RawGlob,
-);
+export const recentNews = (
+  loadOne<NewsItem[]>(
+    import.meta.glob('/content/news.yaml', {
+      eager: true,
+      query: '?raw',
+      import: 'default',
+    }) as RawGlob,
+  ) || []
+).map((n) => ({ ...n, date: String(n.date) })); // YAML 可能把日期解析成数字，统一转字符串
 
 // 「星际之门 · 数字花园」想法节点：跳过 _ 开头模板；生产隐藏 draft；按更新时间倒序
 const toGarden = (glob: RawGlob): GardenNote[] =>
