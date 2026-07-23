@@ -15,7 +15,7 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
     <div className="w-full lg:w-80 bg-white shadow-lg rounded-2xl p-6 lg:p-8">
       {/* 头像与基本信息 */}
       <div className="text-center mb-6">
-        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg overflow-hidden">
+        <div className="w-24 h-24 bg-gradient-to-br from-sage-500 to-sage-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg overflow-hidden">
           {showImage ? (
             <img
               src={avatar}
@@ -27,28 +27,30 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
             avatar || 'A'
           )}
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">
+        <h1 className="text-2xl font-bold text-warm-gray-800 mb-3">
           {personalInfo.name}
         </h1>
-        <p className="text-base text-gray-600 mb-6">{personalInfo.title}</p>
+        <p className="text-base text-warm-gray-600 mb-6">
+          {personalInfo.title}
+        </p>
 
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm text-warm-gray-600">
           <div className="flex items-center justify-center space-x-2">
-            <Icon name="map-marker-alt" className="text-blue-500 w-4" />
+            <Icon name="map-marker-alt" className="text-sage-500 w-4" />
             <span>{personalInfo.location}</span>
           </div>
           <div className="flex items-center justify-center space-x-2">
-            <Icon name="envelope" className="text-blue-500 w-4" />
+            <Icon name="envelope" className="text-sage-500 w-4" />
             <span>{personalInfo.email}</span>
           </div>
           {socialLinks?.scholar && (
             <div className="flex items-center justify-center space-x-2">
-              <Icon name="graduation-cap" className="text-blue-500 w-4" />
+              <Icon name="graduation-cap" className="text-sage-500 w-4" />
               <a
                 href={socialLinks.scholar}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 transition-colors"
+                className="inline-flex items-center min-h-[44px] text-sage-600 hover:text-sage-800 transition-colors"
               >
                 Google Scholar
               </a>
@@ -59,15 +61,15 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
 
       {/* 研究兴趣 */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <h2 className="text-lg font-semibold text-warm-gray-800 mb-4 flex items-center">
           <Icon name="lightbulb" className="text-yellow-500 mr-2" />
           研究兴趣
-        </h3>
+        </h2>
         <div className="flex flex-wrap gap-3">
           {(personalInfo.researchInterests || []).map((tag) => (
             <span
               key={tag}
-              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+              className="px-4 py-2 bg-sage-100 text-sage-700 rounded-full text-sm font-medium"
             >
               {tag}
             </span>
@@ -77,20 +79,22 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
 
       {/* 社交链接 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <Icon name="share-alt" className="text-blue-500 mr-2" />
+        <h2 className="text-lg font-semibold text-warm-gray-800 mb-4 flex items-center">
+          <Icon name="share-alt" className="text-sage-500 mr-2" />
           社交链接
-        </h3>
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           {socialLinks?.github && (
             <a
               href={socialLinks.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              className="flex items-center justify-center p-4 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-xl transition-colors"
             >
-              <Icon name="github" className="text-gray-700 mr-2" />
-              <span className="text-sm font-medium text-gray-700">GitHub</span>
+              <Icon name="github" className="text-warm-gray-700 mr-2" />
+              <span className="text-sm font-medium text-warm-gray-700">
+                GitHub
+              </span>
             </a>
           )}
           {socialLinks?.linkedin && (
@@ -98,10 +102,10 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
               href={socialLinks.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors"
+              className="flex items-center justify-center p-4 bg-sage-100 hover:bg-sage-200 rounded-xl transition-colors"
             >
-              <Icon name="linkedin" className="text-blue-700 mr-2" />
-              <span className="text-sm font-medium text-blue-700">
+              <Icon name="linkedin" className="text-sage-700 mr-2" />
+              <span className="text-sm font-medium text-sage-700">
                 LinkedIn
               </span>
             </a>
