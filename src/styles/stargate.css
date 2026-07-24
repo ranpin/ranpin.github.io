@@ -66,6 +66,14 @@
   letter-spacing: 0.35em;
   color: rgba(180, 200, 255, 0.7);
 }
+/* 尾声闪白（three.js 循环逐帧写 opacity） */
+.stargate-warp__flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
 
 /* ---------- 全视口深空舞台 ---------- */
 .stargate-stage {
@@ -223,37 +231,69 @@
   animation: sg-blink 1s steps(1) infinite;
 }
 
-/* ---------- 想法恒星（命名节点） ---------- */
-/* 亮星本体的呼吸/微闪；用相位随机（inline animation-delay）避免整齐划一 */
-.stargate-starcore {
-  animation: sg-twinkle 3.6s ease-in-out infinite;
+/* ---------- three.js 星图层（WebGL 画布 + CSS2D 标签） ---------- */
+.sg3-viewport {
+  /* 容器本身不拦截指针，事件交给内部 canvas / 标签 */
+  touch-action: none;
 }
-/* 悬停锁定时的 3D 轨道瞄准环：双环倾斜环绕，陀螺仪观感。
-   注意倾斜角必须写进关键帧——animation 的 transform 会覆盖静态 transform。 */
-.stargate-orbit {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-style: preserve-3d;
-  pointer-events: none;
-}
-.stargate-ring {
+.sg3-canvas {
   position: absolute;
   inset: 0;
-  border-radius: 9999px;
-  border: 1px solid;
-  animation: sg-orbit-a 6s linear infinite;
+  display: block;
 }
-.stargate-ring--b {
-  animation: sg-orbit-b 9s linear infinite;
+/* CSS2D 标签层：整体不拦指针，单个标签可点 */
+.sg3-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
-
-/* 星座连线入场：逐条画出（依赖 SVG pathLength=1） */
-.stargate-edge {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: sg-draw 1.1s ease-out forwards;
+.sg3-label {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.15;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.sg3-label__title {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(207, 230, 255, 0.85);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+.sg3-label__cat {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(150, 200, 255, 0.45);
+}
+.sg3-label:hover .sg3-label__title,
+.sg3-label:focus-visible .sg3-label__title,
+.sg3-label.is-active .sg3-label__title {
+  color: #fff;
+  text-shadow:
+    0 0 8px rgba(120, 220, 255, 0.9),
+    0 1px 4px rgba(0, 0, 0, 0.9);
+}
+.sg3-label.is-active .sg3-label__cat {
+  color: rgba(180, 230, 255, 0.9);
+}
+.sg3-label.is-dim {
+  opacity: 0.25;
+}
+.sg3-label:focus-visible {
+  outline: 1px solid rgba(120, 220, 255, 0.7);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @keyframes sg-flicker {
@@ -273,38 +313,6 @@
 @keyframes sg-blink {
   50% {
     opacity: 0;
-  }
-}
-@keyframes sg-twinkle {
-  0%,
-  100% {
-    opacity: 0.85;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-}
-@keyframes sg-orbit-a {
-  from {
-    transform: rotateX(70deg) rotate(0deg);
-  }
-  to {
-    transform: rotateX(70deg) rotate(360deg);
-  }
-}
-@keyframes sg-orbit-b {
-  from {
-    transform: rotateX(70deg) rotateY(58deg) rotate(360deg);
-  }
-  to {
-    transform: rotateX(70deg) rotateY(58deg) rotate(0deg);
-  }
-}
-@keyframes sg-draw {
-  to {
-    stroke-dashoffset: 0;
   }
 }
 @keyframes sg-glitch-a {
@@ -341,22 +349,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* three.js 场景的动效由 StargateScene 的 reduceMotion 参数接管；
+     这里只关掉纯 CSS 动画（闪烁标题 / 故障伪元素）。 */
   .stargate-warp__title,
   .stargate-glitch::before,
-  .stargate-glitch::after,
-  .stargate-starcore,
-  .stargate-ring,
-  .stargate-edge {
+  .stargate-glitch::after {
     animation: none;
-  }
-  /* 轨道环静止于倾斜姿态 */
-  .stargate-ring {
-    transform: rotateX(70deg);
-  }
-  .stargate-ring--b {
-    transform: rotateX(70deg) rotateY(58deg);
-  }
-  .stargate-edge {
-    stroke-dashoffset: 0;
   }
 }

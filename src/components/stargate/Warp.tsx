@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import { makeGlowTexture, supportsWebGL } from './three/shaders';
 
 interface WarpProps {
   /** 穿梭动画结束后回调（覆盖层已淡出） */
@@ -7,26 +9,18 @@ interface WarpProps {
   duration?: number;
 }
 
-interface Star {
-  x: number;
-  y: number;
-  z: number;
-  pz: number;
-  hue: number;
-}
-
 /**
- * 时空穿梭 —— 纯 Canvas 实现的超光速星场（hyperspace warp），零依赖。
+ * 时空穿梭 —— three.js 实现的超光速星场（hyperspace warp）。
  *
- * 星点从中心向外加速飞散并拉出拖尾，速度随时间指数式爬升，
- * 临近尾声时中心爆发一道光晕闪白，随后整层淡出、揭示星际之门内景。
+ * 星点化作流光从远处冲向镜头，速度随时间指数式爬升，中心辉光渐强，
+ * 临近尾声闪白，随后整层淡出、揭示星际之门内景。
  *
- * SSG 安全：所有绘制都在 useEffect 内（仅客户端）；getContext 失败（如测试环境）
- * 时静默跳过绘制，仅按时序淡出并回调，保证内容始终可揭示。
- * 尊重 prefers-reduced-motion：直接短暂淡出，不做剧烈运动。
+ * SSG / 测试安全：渲染在 useEffect（仅客户端）中创建；无 WebGL（如 jsdom）时
+ * 按时序淡出并回调，保证内容始终可揭示。尊重 prefers-reduced-motion：直接短淡出。
  */
 const Warp: React.FC<WarpProps> = ({ onDone, duration = 2200 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
@@ -45,119 +39,151 @@ const Warp: React.FC<WarpProps> = ({ onDone, duration = 2200 }) => {
       return () => window.clearTimeout(t);
     }
 
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    // 无 canvas 支持（如 jsdom）：按时序淡出即可，保证内容可揭示
-    if (!canvas || !ctx) {
+    const mount = mountRef.current;
+    if (!mount || !supportsWebGL()) {
       const t = window.setTimeout(finish, Math.min(duration, 800));
       return () => window.clearTimeout(t);
     }
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let w = 0;
-    let h = 0;
-    let cx = 0;
-    let cy = 0;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    } catch {
+      const t = window.setTimeout(finish, Math.min(duration, 800));
+      return () => window.clearTimeout(t);
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x030614, 1);
+    const canvas = renderer.domElement;
+    canvas.className = 'block w-full h-full';
+    mount.appendChild(canvas);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 200);
+    camera.position.set(0, 0, 0);
+    camera.lookAt(0, 0, -1);
 
     const resize = () => {
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
-      cx = w / 2;
-      cy = h / 2;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = mount.clientWidth || 800;
+      const h = mount.clientHeight || 600;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
     };
     resize();
     window.addEventListener('resize', resize);
 
-    // 生成星点：z 为深度，越小越近
-    const COUNT = Math.round(Math.min(900, Math.max(360, (w * h) / 1600)));
-    const spread = Math.max(w, h);
-    const stars: Star[] = Array.from({ length: COUNT }, () => {
-      const z = Math.random() * spread;
-      return {
-        x: (Math.random() - 0.5) * spread * 2,
-        y: (Math.random() - 0.5) * spread * 2,
-        z,
-        pz: z,
-        // 赛博朋克配色：青(190) / 品红(300) / 紫(265)
-        hue: [190, 300, 265, 210][Math.floor(Math.random() * 4)],
-      };
+    // 流光星线：每颗星是一条线段（尾→头），朝镜头（+Z）冲刺
+    const COUNT = 650;
+    const SPREAD = 60;
+    const palette: [number, number, number][] = [
+      [0.35, 0.9, 1.0], // 青
+      [1.0, 0.35, 0.75], // 品红
+      [0.65, 0.45, 1.0], // 紫
+      [0.45, 0.65, 1.0], // 蓝
+    ];
+    const positions = new Float32Array(COUNT * 6); // 2 顶点 × 3 分量
+    const colors = new Float32Array(COUNT * 6);
+    const stars: { x: number; y: number; z: number; pz: number }[] = [];
+    for (let i = 0; i < COUNT; i++) {
+      const x = (Math.random() - 0.5) * SPREAD * 1.6;
+      const y = (Math.random() - 0.5) * SPREAD * 1.6;
+      const z = -1 - Math.random() * SPREAD;
+      stars.push({ x, y, z, pz: z });
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      colors[i * 6] = c[0];
+      colors[i * 6 + 1] = c[1];
+      colors[i * 6 + 2] = c[2];
+      colors[i * 6 + 3] = c[0];
+      colors[i * 6 + 4] = c[1];
+      colors[i * 6 + 5] = c[2];
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const lineMat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
+    const lines = new THREE.LineSegments(geo, lineMat);
+    lines.frustumCulled = false;
+    scene.add(lines);
+
+    // 中心辉光
+    const glowTex = makeGlowTexture();
+    const glowMat = new THREE.SpriteMaterial({
+      map: glowTex,
+      color: new THREE.Color('#aee8ff'),
+      transparent: true,
+      opacity: 0.12,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const glow = new THREE.Sprite(glowMat);
+    glow.position.set(0, 0, -30);
+    glow.scale.set(34, 34, 1);
+    scene.add(glow);
 
     let raf = 0;
     let start = 0;
-    const easeIn = (t: number) => t * t * t; // 加速爬升
+    const easeIn = (t: number) => t * t * t;
+    const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
 
     const draw = (ts: number) => {
       if (!start) start = ts;
       const elapsed = ts - start;
       const p = Math.min(elapsed / duration, 1);
-      const warp = easeIn(p); // 0→1 速度系数
+      const warp = easeIn(p);
 
-      // 拖影：不完全清屏，形成流光轨迹
-      ctx.fillStyle = `rgba(3, 6, 20, ${0.28 - warp * 0.12})`;
-      ctx.fillRect(0, 0, w, h);
-
-      const speed = 6 + warp * 90;
-      ctx.lineCap = 'round';
-
-      for (const s of stars) {
+      const speed = (10 + warp * 150) * (duration / 2200);
+      for (let i = 0; i < COUNT; i++) {
+        const s = stars[i];
         s.pz = s.z;
-        s.z -= speed;
-        if (s.z < 1) {
-          // 回收到远处，从中心重新飞出
-          s.z = spread;
-          s.pz = spread;
-          s.x = (Math.random() - 0.5) * spread * 2;
-          s.y = (Math.random() - 0.5) * spread * 2;
+        s.z += speed * 0.016; // 约每帧位移
+        if (s.z > -0.5) {
+          s.z = -SPREAD - Math.random() * 6;
+          s.pz = s.z;
+          s.x = (Math.random() - 0.5) * SPREAD * 1.6;
+          s.y = (Math.random() - 0.5) * SPREAD * 1.6;
         }
-        const sx = cx + (s.x / s.z) * spread;
-        const sy = cy + (s.y / s.z) * spread;
-        const px = cx + (s.x / s.pz) * spread;
-        const py = cy + (s.y / s.pz) * spread;
-
-        if (sx < -50 || sx > w + 50 || sy < -50 || sy > h + 50) continue;
-
-        const size = Math.max(0.4, (1 - s.z / spread) * 2.6);
-        const light = 55 + warp * 25;
-        ctx.strokeStyle = `hsla(${s.hue}, 100%, ${light}%, ${0.5 + warp * 0.5})`;
-        ctx.lineWidth = size;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(sx, sy);
-        ctx.stroke();
+        // 尾（远）→ 头（近）
+        posAttr.setXYZ(i * 2, s.x, s.y, s.pz);
+        posAttr.setXYZ(i * 2 + 1, s.x, s.y, s.z);
       }
+      posAttr.needsUpdate = true;
 
-      // 中心辉光，随进度增强
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, spread * 0.5);
-      const a = 0.05 + warp * 0.35;
-      glow.addColorStop(0, `rgba(180, 240, 255, ${a})`);
-      glow.addColorStop(0.5, `rgba(150, 90, 255, ${a * 0.4})`);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, w, h);
+      lineMat.opacity = 0.5 + warp * 0.5;
+      glowMat.opacity = 0.08 + warp * 0.5;
+      const gs = 30 + warp * 16;
+      glow.scale.set(gs, gs, 1);
 
       // 尾声闪白
-      if (p > 0.82) {
-        const flash = (p - 0.82) / 0.18;
-        ctx.fillStyle = `rgba(255, 255, 255, ${flash * 0.9})`;
-        ctx.fillRect(0, 0, w, h);
+      if (flashRef.current) {
+        flashRef.current.style.opacity =
+          p > 0.82 ? String(((p - 0.82) / 0.18) * 0.95) : '0';
       }
 
+      renderer.render(scene, camera);
       if (p < 1) {
         raf = window.requestAnimationFrame(draw);
       } else {
         finish();
       }
     };
-
     raf = window.requestAnimationFrame(draw);
 
     return () => {
       window.cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
+      geo.dispose();
+      lineMat.dispose();
+      glowMat.dispose();
+      glowTex.dispose();
+      renderer.dispose();
+      canvas.remove();
     };
     // 穿梭动画仅在挂载时播放一次
   }, []);
@@ -167,7 +193,8 @@ const Warp: React.FC<WarpProps> = ({ onDone, duration = 2200 }) => {
       className={`stargate-warp ${fading ? 'stargate-warp--out' : ''}`}
       aria-hidden
     >
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <div ref={mountRef} className="block w-full h-full" />
+      <div ref={flashRef} className="stargate-warp__flash" />
       <div className="stargate-warp__label">
         <span className="stargate-warp__title">ENTERING&nbsp;STARGATE</span>
         <span className="stargate-warp__sub">正在建立时空跃迁…</span>
