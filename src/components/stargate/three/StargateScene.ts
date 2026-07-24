@@ -60,6 +60,11 @@ const TORUS_TUBE = 0.055;
 const HORIZON_RADIUS = 2.42;
 const CHEVRON_COUNT = 9;
 
+/* 详情面板布局（与 DigitalGarden 的 sm:w-[400px] / Tailwind sm 断点保持一致）：
+   面板打开时渲染视口需左移半个面板宽，让选中恒星落在"可见区"中心 */
+const DETAIL_PANEL_W = 400;
+const PANEL_BREAKPOINT = 640;
+
 interface NodeRT {
   id: string;
   group: THREE.Group;
@@ -119,6 +124,11 @@ export class StargateScene {
   private lastInteract = 0;
   private hovered: string | null = null;
   private selected: string | null = null;
+
+  /** 画布 CSS 尺寸（resize 时更新），供 setViewOffset 使用 */
+  private view = { w: 800, h: 600 };
+  /** 可见区修正偏移量（px）：面板打开时把渲染视口左移，cur 逐帧缓动到 tgt */
+  private shift = { cur: 0, tgt: 0 };
 
   private raycaster = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
@@ -579,6 +589,18 @@ export class StargateScene {
       c.cur.dist * cd * Math.cos(c.cur.ry),
     );
     this.camera.lookAt(0, 0, 0);
+
+    // 详情面板占据右侧时，把渲染视口左移半个面板宽，使选中恒星落在
+    // 可见区中心而非全屏中心。投影矩阵被 WebGL / CSS2D / 射线拾取共用，
+    // 三层保持同步。
+    this.shift.cur += (this.shift.tgt - this.shift.cur) * (1 - Math.pow(0.004, dt));
+    if (Math.abs(this.shift.tgt - this.shift.cur) < 0.3) this.shift.cur = this.shift.tgt;
+    if (this.shift.cur > 0.5) {
+      const { w, h } = this.view;
+      this.camera.setViewOffset(w, h, this.shift.cur, 0, w, h);
+    } else {
+      this.camera.clearViewOffset();
+    }
   }
 
   private updateRing(t: number, reduce: boolean) {
@@ -676,6 +698,7 @@ export class StargateScene {
   /** 选中并 fly-to：把相机转向节点方向并适度推近 */
   setSelected(id: string | null) {
     this.selected = id;
+    this.shift.tgt = this.panelShift();
     if (!id) return;
     const idx = this.idToIndex.get(id);
     if (idx === undefined) return;
@@ -717,10 +740,19 @@ export class StargateScene {
   private resize() {
     const w = this.container.clientWidth || 800;
     const h = this.container.clientHeight || 600;
+    this.view = { w, h };
+    this.shift.tgt = this.panelShift();
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
     this.labelRenderer.setSize(w, h);
+  }
+
+  /** 有选中且面板实际占据右侧（≥sm 断点、固定 400px）时，返回半个面板宽 */
+  private panelShift(): number {
+    return this.selected && this.view.w >= PANEL_BREAKPOINT
+      ? DETAIL_PANEL_W / 2
+      : 0;
   }
 
   dispose() {
