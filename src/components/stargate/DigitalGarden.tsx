@@ -4,7 +4,8 @@ import Icon from '../Icon';
 import Markdown from '../Markdown';
 import { gardenNotes } from '../../data/content';
 import type { GardenNote } from '../../types';
-import { StargateScene, type SceneNode } from './three/StargateScene';
+import { StargateScene, type SceneBodyMeta } from './three/StargateScene';
+import { buildSystems } from './three/systems';
 import { supportsWebGL } from './three/shaders';
 
 type Stage = 'seedling' | 'budding' | 'evergreen';
@@ -18,7 +19,7 @@ const STAGE: Record<Stage, { label: string; color: string }> = {
 
 const stageOf = (n: GardenNote): Stage => (n.stage as Stage) || 'seedling';
 
-// 稳定的字符串散列，用于确定性布局与星表编号
+// 稳定的字符串散列，用于确定性星表编号
 const hash = (s: string): number => {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
@@ -27,107 +28,6 @@ const hash = (s: string): number => {
 
 // 天文台观感的"星表编号"，如 HD 4821
 const designation = (id: string): string => `HD ${1000 + (hash(id) % 8999)}`;
-
-interface Pt3 {
-  x: number;
-  y: number;
-  z: number;
-}
-
-// 3D 力导向布局：斥力 + 边弹簧 + 向心引力，固定迭代，确定性输出。
-// 初始位置取斐波那契球面 + 哈希半径抖动，避免节点共面塌缩。
-const computeLayout3D = (
-  nodes: GardenNote[],
-  edges: { a: number; b: number }[],
-): Record<string, Pt3> => {
-  const n = nodes.length;
-  const GOLDEN = 2.399963229728653;
-  const pos: Pt3[] = nodes.map((nd, i) => {
-    const ga = i * GOLDEN;
-    const yy = 1 - (2 * (i + 0.5)) / Math.max(1, n);
-    const rr = Math.sqrt(Math.max(0, 1 - yy * yy));
-    const rad = 190 + (hash(nd.id) % 70);
-    return {
-      x: Math.cos(ga) * rr * rad,
-      y: yy * rad,
-      z: Math.sin(ga) * rr * rad,
-    };
-  });
-
-  const K = 190;
-  const REP = 42000;
-  const ITER = 420;
-
-  for (let it = 0; it < ITER; it++) {
-    const cool = 1 - it / ITER;
-    const disp: Pt3[] = pos.map(() => ({ x: 0, y: 0, z: 0 }));
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const dx = pos[i].x - pos[j].x;
-        const dy = pos[i].y - pos[j].y;
-        const dz = pos[i].z - pos[j].z;
-        const d2 = dx * dx + dy * dy + dz * dz || 0.01;
-        const d = Math.sqrt(d2);
-        const f = REP / d2;
-        const fx = (dx / d) * f;
-        const fy = (dy / d) * f;
-        const fz = (dz / d) * f;
-        disp[i].x += fx;
-        disp[i].y += fy;
-        disp[i].z += fz;
-        disp[j].x -= fx;
-        disp[j].y -= fy;
-        disp[j].z -= fz;
-      }
-    }
-    for (const e of edges) {
-      const dx = pos[e.a].x - pos[e.b].x;
-      const dy = pos[e.a].y - pos[e.b].y;
-      const dz = pos[e.a].z - pos[e.b].z;
-      const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.01;
-      const f = (d - K) * 0.06;
-      const fx = (dx / d) * f;
-      const fy = (dy / d) * f;
-      const fz = (dz / d) * f;
-      disp[e.a].x -= fx;
-      disp[e.a].y -= fy;
-      disp[e.a].z -= fz;
-      disp[e.b].x += fx;
-      disp[e.b].y += fy;
-      disp[e.b].z += fz;
-    }
-    for (let i = 0; i < n; i++) {
-      disp[i].x += -pos[i].x * 0.012;
-      disp[i].y += -pos[i].y * 0.012;
-      disp[i].z += -pos[i].z * 0.012;
-    }
-    const maxStep = 28 * cool + 2;
-    for (let i = 0; i < n; i++) {
-      const d =
-        Math.sqrt(disp[i].x ** 2 + disp[i].y ** 2 + disp[i].z ** 2) || 0.01;
-      const s = Math.min(d, maxStep) / d;
-      pos[i].x += disp[i].x * s;
-      pos[i].y += disp[i].y * s;
-      pos[i].z += disp[i].z * s;
-    }
-  }
-
-  // 归一化到单位球；y 略压扁以适配宽幅舞台
-  let maxR = 0;
-  pos.forEach((p) => {
-    maxR = Math.max(maxR, Math.hypot(p.x, p.y, p.z));
-  });
-  const s = 1 / (maxR || 1);
-  const out: Record<string, Pt3> = {};
-  nodes.forEach((nd, i) => {
-    out[nd.id] = {
-      x: pos[i].x * s,
-      y: pos[i].y * s * 0.82,
-      z: pos[i].z * s,
-    };
-  });
-  return out;
-};
 
 // 颜色混合：用于图例小圆点的球体观感渐变
 const mixColor = (hex: string, hex2: string, t: number): string => {
@@ -153,35 +53,22 @@ const DigitalGarden: React.FC = () => {
   const notes = gardenNotes;
   const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
 
-  // 无向边（去重，且两端都存在）
-  const edges = useMemo(() => {
-    const idx = new Map(notes.map((n, i) => [n.id, i]));
-    const seen = new Set<string>();
-    const list: { a: number; b: number }[] = [];
-    notes.forEach((n) => {
-      (n.links || []).forEach((t) => {
-        if (!idx.has(n.id) || !idx.has(t)) return;
-        const key = [n.id, t].sort().join('|');
-        if (seen.has(key)) return;
-        seen.add(key);
-        list.push({ a: idx.get(n.id)!, b: idx.get(t)! });
-      });
-    });
-    return list;
-  }, [notes]);
+  // 关联图 → 恒星系（连通分量 = 恒星系，度数最高者为双星/三星核心，
+  // 其余为行星/卫星，按开普勒轨道自行运动；纯确定性，SSG 可复现）
+  const systems = useMemo(() => buildSystems(notes), [notes]);
 
-  const layout = useMemo(() => computeLayout3D(notes, edges), [notes, edges]);
-
-  // 每个节点的度（连线数），用于决定恒星半径
-  const degree = useMemo(() => {
-    const d: Record<string, number> = {};
-    notes.forEach((n) => (d[n.id] = 0));
-    edges.forEach((e) => {
-      d[notes[e.a].id]++;
-      d[notes[e.b].id]++;
-    });
-    return d;
-  }, [notes, edges]);
+  // 每个节点的展示元数据（标题 / 星表编号 / 阶段色 / 关联）
+  const bodyMeta = useMemo<SceneBodyMeta[]>(
+    () =>
+      notes.map((n) => ({
+        id: n.id,
+        title: n.title,
+        designation: designation(n.id),
+        color: STAGE[stageOf(n)].color,
+        links: n.links,
+      })),
+    [notes],
+  );
 
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<GardenNote | null>(null);
@@ -232,21 +119,12 @@ const DigitalGarden: React.FC = () => {
     const reduce =
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
-    const sceneNodes: SceneNode[] = notes.map((n) => ({
-      id: n.id,
-      title: n.title,
-      designation: designation(n.id),
-      color: STAGE[stageOf(n)].color,
-      radius: 0.068 + Math.min(degree[n.id] || 0, 5) * 0.02,
-      position: [layout[n.id].x, layout[n.id].y, layout[n.id].z],
-    }));
-
     let scene: StargateScene | null = null;
     try {
       scene = new StargateScene({
         container: el,
-        nodes: sceneNodes,
-        edges,
+        systems,
+        meta: bodyMeta,
         reduceMotion: reduce,
         onNodeClick: (id) => {
           const nd = byId.get(id);
@@ -263,8 +141,8 @@ const DigitalGarden: React.FC = () => {
       scene?.dispose();
       sceneRef.current = null;
     };
-    // notes/edges/layout/degree/byId 均为稳定 memo，场景只构建一次
-  }, [notes, edges, layout, degree, byId]);
+    // notes/systems/bodyMeta/byId 均为稳定 memo，场景只构建一次
+  }, [notes, systems, bodyMeta, byId]);
 
   // React 状态 → 场景（高亮 / fly-to）
   useEffect(() => {
@@ -343,7 +221,7 @@ const DigitalGarden: React.FC = () => {
 
       {/* 操作提示（顶部居中，细小） */}
       <div className="stargate-catalog absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap z-10">
-        点击恒星展开 · 拖拽旋转星图 · 滚轮推拉镜头
+        点击星体展开 · 拖拽旋转星系 · 滚轮推拉镜头
       </div>
 
       {/* 详情面板（右侧滑入） */}

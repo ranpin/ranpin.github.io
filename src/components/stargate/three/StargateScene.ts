@@ -1,12 +1,14 @@
 /**
  * 星际之门 three.js 场景管理器（纯 three，无 React 依赖）。
  *
- * 负责：WebGL 渲染 + CSS2D 标签层、星门圆环（能量环 + 9 个 chevron + 事件视界）、
- * 想法恒星（发光球体 + 辉光 + 瞄准环 + 可点击标签）、星座连线、背景星海与星云、
- * 自定义轨道相机（拖拽旋转带惯性 / 滚轮推拉 / 空闲自转 / 选中 fly-to）、射线拾取。
+ * 负责：WebGL 渲染 + CSS2D 标签层、恒星系（单星/双星/三星核心 + 行星 + 卫星，
+ * 全部按开普勒轨道自行运动）、轨道线 / 运动尾迹 / 日冕脉冲、背景星海与星云、
+ * 自定义轨道相机（拖拽旋转带惯性 / 滚轮推拉 / 空闲自转 / 选中追踪）、射线拾取。
  *
- * React 侧（DigitalGarden）通过回调接收 hover/click，通过公开方法驱动相机与高亮。
- * 仅在客户端且确认支持 WebGL 后由 React 构造（见 DigitalGarden 的 supportsWebGL）。
+ * 星体结构由 systems.ts 的 buildSystems 从花园关联图确定性构建；本模块只负责
+ * 把 SystemSpec 渲染成一个"动态宇宙"。React 侧（DigitalGarden）通过回调接收
+ * hover/click，通过公开方法驱动相机与高亮。仅在客户端且确认支持 WebGL 后由
+ * React 构造（见 DigitalGarden 的 supportsWebGL）。
  */
 import * as THREE from 'three';
 import {
@@ -16,77 +18,89 @@ import {
 import {
   starVert,
   starFrag,
-  horizonVert,
-  horizonFrag,
-  ringVert,
-  ringFrag,
   starfieldVert,
   starfieldFrag,
   makeGlowTexture,
   makeNebulaTexture,
 } from './shaders';
+import {
+  orbitalPosition,
+  orbitEllipsePoints,
+  type SystemSpec,
+  type BodySpec,
+} from './systems';
 
-export interface SceneNode {
+/** 每个花园节点的展示元数据（由 React 侧传入） */
+export interface SceneBodyMeta {
   id: string;
   title: string;
   designation: string;
+  /** 成长阶段色（恒星边缘/辉光着色） */
   color: string;
-  /** 球体半径（世界单位），由连接度决定 */
-  radius: number;
-  position: [number, number, number];
+  /** 原始关联（用于悬停/选中时的邻居高亮） */
+  links?: string[];
 }
 
 export interface StargateSceneOptions {
   container: HTMLElement;
-  nodes: SceneNode[];
-  edges: { a: number; b: number }[];
+  systems: SystemSpec[];
+  meta: SceneBodyMeta[];
   reduceMotion: boolean;
   onNodeClick: (id: string) => void;
   onNodeHover: (id: string | null) => void;
 }
 
-/* ---------- 相机与布局常量 ---------- */
+/* ---------- 相机常量 ---------- */
 const FOV = 55;
-const DIST_MIN = 2.8;
-const DIST_MAX = 10.5;
-const HOME = { rx: 0.18, ry: 0.52, dist: 4.7 };
+const DIST_MIN = 2.2;
+const DIST_MAX = 16;
+const HOME = { rx: 0.32, ry: 0.52, dist: 7.6 };
 const RX_LIMIT = 1.15;
-const AUTO_SPEED = 0.00034; // 空闲自转 rad/帧
-const NODE_SCALE = 1.65; // 力导向单位球 → 世界单位：星图是主角，要撑满画面中心
+const AUTO_SPEED = 0.00026; // 空闲自转 rad/帧
+const CHASE_DIST = 2.6; // 选中追踪时的镜头距离
 
-/* 星门几何：圆环是"画框"，半径大于星图，事件视界退居为背景 */
-const RING_RADIUS = 2.55;
-const TORUS_TUBE = 0.055;
-const HORIZON_RADIUS = 2.42;
-const CHEVRON_COUNT = 9;
+/* ---------- 尾迹 / 轨道线 ---------- */
+const TRAIL_N = 40; // 尾迹顶点数
+const TRAIL_ARC = 0.09; // 尾迹覆盖的轨道弧长比例
 
 /* 详情面板布局（与 DigitalGarden 的 sm:w-[400px] / Tailwind sm 断点保持一致）：
    面板打开时渲染视口需左移半个面板宽，让选中恒星落在"可见区"中心 */
 const DETAIL_PANEL_W = 400;
 const PANEL_BREAKPOINT = 640;
 
-interface NodeRT {
-  id: string;
+interface BodyRT {
+  spec: BodySpec;
   group: THREE.Group;
   sphereMat: THREE.ShaderMaterial;
   glowMat: THREE.SpriteMaterial;
   glow: THREE.Sprite;
+  /** 核心恒星的日冕脉冲 sprite */
+  corona: THREE.Sprite | null;
+  coronaMat: THREE.SpriteMaterial | null;
   hit: THREE.Mesh;
   labelEl: HTMLButtonElement;
-  orbit: THREE.Group;
-  orbitMats: THREE.MeshBasicMaterial[];
-  radius: number;
+  /** CSS2D 锚点对象：y 偏移随镜头距离缩放，保持屏幕间距恒定 */
+  label: CSS2DObject;
+  labelBaseY: number;
+  reticle: THREE.Group;
+  reticleMats: THREE.MeshBasicMaterial[];
+  /** 运动尾迹（核心/行星；卫星与流浪恒星无） */
+  trail: THREE.Line | null;
+  trailPos: Float32Array | null;
   boost: number;
   boostT: number;
   baseColor: THREE.Color;
+  /** 脉冲相位偏移（散列自 id，避免齐步走） */
+  phase: number;
 }
 
-interface EdgeRT {
-  mat: THREE.LineBasicMaterial;
-  a: number;
-  b: number;
-  opacity: number;
-  opacityT: number;
+interface SystemRT {
+  spec: SystemSpec;
+  group: THREE.Group;
+  bodies: BodyRT[];
+  byId: Map<string, BodyRT>;
+  /** 多星核心的质心辉光 */
+  baryMat: THREE.SpriteMaterial | null;
 }
 
 export class StargateScene {
@@ -97,19 +111,13 @@ export class StargateScene {
   private container: HTMLElement;
   private opts: StargateSceneOptions;
 
-  private nodesRT: NodeRT[] = [];
-  private edgesRT: EdgeRT[] = [];
+  private systemsRT: SystemRT[] = [];
+  private bodyById = new Map<string, BodyRT>();
   private hitMeshes: THREE.Mesh[] = [];
-  private idToIndex = new Map<string, number>();
+  private hitIds: string[] = [];
+  private adj = new Map<string, Set<string>>();
 
-  private ringGroup = new THREE.Group();
-  private glyphBand: THREE.Mesh | null = null;
-  private chevrons: THREE.Mesh[] = [];
-  private chevronMats: THREE.MeshBasicMaterial[] = [];
-  private horizonMat: THREE.ShaderMaterial | null = null;
-  private ringMat: THREE.ShaderMaterial | null = null;
   private starfieldMat: THREE.ShaderMaterial | null = null;
-
   private glowTex: THREE.CanvasTexture;
   private nebulaTexs: THREE.CanvasTexture[] = [];
 
@@ -118,6 +126,10 @@ export class StargateScene {
     tgt: { ...HOME },
     vel: { rx: 0, ry: 0 },
   };
+  /** 相机注视点：选中时逐帧追踪星体，否则归于系统质心 */
+  private camTarget = new THREE.Vector3();
+  private camTargetTgt = new THREE.Vector3();
+
   private dragging = false;
   private lastPointer = { x: 0, y: 0 };
   private downAt = { x: 0, y: 0 };
@@ -132,6 +144,7 @@ export class StargateScene {
 
   private raycaster = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
+  private tmpV = new THREE.Vector3();
   private timer = new THREE.Timer();
   private raf = 0;
   private ro: ResizeObserver | null = null;
@@ -142,6 +155,16 @@ export class StargateScene {
     this.container = opts.container;
     const reduce = opts.reduceMotion;
     if (reduce) Object.assign(this.cam.cur, this.cam.tgt);
+
+    // 无向邻接表（邻居高亮用）
+    for (const m of opts.meta) {
+      for (const t of m.links || []) {
+        if (!this.adj.has(m.id)) this.adj.set(m.id, new Set());
+        if (!this.adj.has(t)) this.adj.set(t, new Set());
+        this.adj.get(m.id)!.add(t);
+        this.adj.get(t)!.add(m.id);
+      }
+    }
 
     /* ---------- 渲染器 ---------- */
     this.renderer = new THREE.WebGLRenderer({
@@ -165,9 +188,7 @@ export class StargateScene {
     this.glowTex = makeGlowTexture();
     this.buildStarfield();
     this.buildNebulae();
-    this.buildRing();
-    this.buildNodes();
-    this.buildEdges();
+    this.buildSystems(reduce);
 
     this.resize();
     this.bindEvents();
@@ -179,11 +200,10 @@ export class StargateScene {
       this.timer.update(ts);
       const dt = Math.min(this.timer.getDelta(), 0.05);
       const t = this.timer.getElapsed();
+      const tSim = reduce ? 0 : t;
+      this.updateBodies(tSim, dt, reduce);
       this.updateCamera(dt);
-      this.updateRing(t, reduce);
-      this.updateNodes(t, dt, reduce);
-      this.updateEdges(t);
-      if (this.starfieldMat) this.starfieldMat.uniforms.uTime.value = t;
+      if (this.starfieldMat) this.starfieldMat.uniforms.uTime.value = tSim;
       this.renderer.render(this.scene, this.camera);
       this.labelRenderer.render(this.scene, this.camera);
     };
@@ -270,208 +290,265 @@ export class StargateScene {
     }
   }
 
-  private buildRing() {
-    // 主能量环：流动辉光 shader
-    this.ringMat = new THREE.ShaderMaterial({
-      vertexShader: ringVert,
-      fragmentShader: ringFrag,
-      uniforms: {
-        uTime: { value: 0 },
-        uColor: { value: new THREE.Color('#3ec7e8') },
-      },
-    });
-    const torus = new THREE.Mesh(
-      new THREE.TorusGeometry(RING_RADIUS, TORUS_TUBE, 24, 140),
-      this.ringMat,
-    );
-    this.ringGroup.add(torus);
+  private buildSystems(reduce: boolean) {
+    const metaById = new Map(this.opts.meta.map((m) => [m.id, m]));
+    for (const spec of this.opts.systems) {
+      const sysGroup = new THREE.Group();
+      sysGroup.position.set(...spec.center);
+      this.scene.add(sysGroup);
 
-    // 内圈符号带：缓慢自转的细环（代表可旋转的内环）
-    const bandMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#1b5e7a'),
-      transparent: true,
-      opacity: 0.85,
-    });
-    this.glyphBand = new THREE.Mesh(
-      new THREE.TorusGeometry(RING_RADIUS - 0.16, 0.028, 12, 120),
-      bandMat,
-    );
-    this.ringGroup.add(this.glyphBand);
+      const sysRT: SystemRT = {
+        spec,
+        group: sysGroup,
+        bodies: [],
+        byId: new Map(),
+        baryMat: null,
+      };
 
-    // 9 个 chevron：环形分布，逐个"锁定"脉冲
-    const chevGeo = new THREE.BoxGeometry(0.09, 0.22, 0.13);
-    for (let i = 0; i < CHEVRON_COUNT; i++) {
-      const a = (i / CHEVRON_COUNT) * Math.PI * 2 + Math.PI / 2;
-      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#8a5a1f') });
-      const m = new THREE.Mesh(chevGeo, mat);
-      const rr = RING_RADIUS + TORUS_TUBE + 0.07;
-      m.position.set(Math.cos(a) * rr, Math.sin(a) * rr, 0);
-      m.rotation.z = a - Math.PI / 2;
-      this.chevrons.push(m);
-      this.chevronMats.push(mat);
-      this.ringGroup.add(m);
+      // 成员顺序由 buildSystems 保证：核心 → 行星 → 卫星（母体必先于卫星）
+      for (const body of spec.bodies) {
+        const parentRT = body.parentId ? sysRT.byId.get(body.parentId) : undefined;
+        const host = parentRT ? parentRT.group : sysGroup;
+        const b = this.buildBody(body, metaById.get(body.id), host, reduce);
+        sysRT.bodies.push(b);
+        sysRT.byId.set(body.id, b);
+        this.bodyById.set(body.id, b);
+
+        // 轨道线：核心/行星画在系统空间，卫星画在母体空间（随母体运动）
+        if (body.orbit && body.role !== 'lone') {
+          host.add(
+            this.buildOrbitLine(
+              body,
+              body.role === 'moon' ? 0.09 : body.role === 'core' ? 0.1 : 0.13,
+            ),
+          );
+        }
+        // 运动尾迹：核心与行星（reduceMotion 时跳过）
+        if (!reduce && body.orbit && (body.role === 'core' || body.role === 'planet')) {
+          this.buildTrail(b, sysGroup);
+        }
+      }
+
+      // 多星核心：质心辉光
+      const cores = spec.bodies.filter((b) => b.role === 'core');
+      if (cores.length >= 2) {
+        const rSum = cores.reduce((s, c) => s + c.radius, 0);
+        const mat = new THREE.SpriteMaterial({
+          map: this.glowTex,
+          color: new THREE.Color('#bcd6ff'),
+          transparent: true,
+          opacity: 0.16,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const spr = new THREE.Sprite(mat);
+        const s = rSum * 7;
+        spr.scale.set(s, s, 1);
+        spr.renderOrder = 2;
+        sysGroup.add(spr);
+        sysRT.baryMat = mat;
+      }
+
+      this.systemsRT.push(sysRT);
     }
-
-    // 事件视界（蓝色漩涡水洼）
-    this.horizonMat = new THREE.ShaderMaterial({
-      vertexShader: horizonVert,
-      fragmentShader: horizonFrag,
-      uniforms: { uTime: { value: 0 } },
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const horizon = new THREE.Mesh(
-      new THREE.CircleGeometry(HORIZON_RADIUS, 72),
-      this.horizonMat,
-    );
-    horizon.renderOrder = 1;
-    this.ringGroup.add(horizon);
-
-    // 轻微倾斜，避免完全正对相机，增强立体感
-    this.ringGroup.rotation.x = 0.14;
-    this.ringGroup.rotation.y = -0.06;
-    this.scene.add(this.ringGroup);
   }
 
-  private buildNodes() {
-    const { nodes, onNodeClick, onNodeHover } = this.opts;
-    nodes.forEach((n, i) => {
-      const group = new THREE.Group();
-      group.position.set(
-        n.position[0] * NODE_SCALE,
-        n.position[1] * NODE_SCALE,
-        n.position[2] * NODE_SCALE,
-      );
+  private buildBody(
+    body: BodySpec,
+    meta: SceneBodyMeta | undefined,
+    host: THREE.Object3D,
+    reduce: boolean,
+  ): BodyRT {
+    const group = new THREE.Group();
+    const baseColor = new THREE.Color(meta?.color ?? '#9fd8ff');
+    const phase = (body.id.length * 2.399963) % (Math.PI * 2);
 
-      const baseColor = new THREE.Color(n.color);
+    // 发光球体（白热核心 + 阶段色边缘）
+    const sphereMat = new THREE.ShaderMaterial({
+      vertexShader: starVert,
+      fragmentShader: starFrag,
+      uniforms: {
+        uColor: { value: baseColor.clone() },
+        uBoost: { value: 1 },
+        uTime: { value: 0 },
+      },
+    });
+    group.add(new THREE.Mesh(new THREE.SphereGeometry(body.radius, 24, 24), sphereMat));
 
-      // 发光球体（白热核心 + 阶段色边缘）
-      const sphereMat = new THREE.ShaderMaterial({
-        vertexShader: starVert,
-        fragmentShader: starFrag,
-        uniforms: {
-          uColor: { value: baseColor.clone() },
-          uBoost: { value: 1 },
-          uTime: { value: 0 },
-        },
-      });
-      const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(n.radius, 24, 24),
-        sphereMat,
-      );
-      group.add(sphere);
+    // 大气辉光 sprite
+    const glowMat = new THREE.SpriteMaterial({
+      map: this.glowTex,
+      color: baseColor.clone(),
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const glow = new THREE.Sprite(glowMat);
+    const gs = body.radius * 5.5;
+    glow.scale.set(gs, gs, 1);
+    glow.renderOrder = 3;
+    group.add(glow);
 
-      // 大气辉光 sprite
-      const glowMat = new THREE.SpriteMaterial({
+    // 核心恒星：日冕脉冲（更大更淡的第二层辉光，缓慢呼吸）
+    let corona: THREE.Sprite | null = null;
+    let coronaMat: THREE.SpriteMaterial | null = null;
+    if (body.role === 'core' || body.role === 'lone') {
+      coronaMat = new THREE.SpriteMaterial({
         map: this.glowTex,
-        color: baseColor.clone(),
+        color: baseColor.clone().lerp(new THREE.Color('#ffffff'), 0.35),
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.22,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
-      const glow = new THREE.Sprite(glowMat);
-      const gs = n.radius * 5.5;
-      glow.scale.set(gs, gs, 1);
-      glow.renderOrder = 3;
-      group.add(glow);
+      corona = new THREE.Sprite(coronaMat);
+      const cs = body.radius * 9;
+      corona.scale.set(cs, cs, 1);
+      corona.renderOrder = 2;
+      group.add(corona);
+    }
 
-      // 瞄准环（双环陀螺仪，仅激活时可见）
-      const orbit = new THREE.Group();
-      const orbitMats: THREE.MeshBasicMaterial[] = [];
-      const or = n.radius * 2.4;
-      for (let k = 0; k < 2; k++) {
-        const om = new THREE.MeshBasicMaterial({
-          color: baseColor.clone(),
-          transparent: true,
-          opacity: 0,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        });
-        orbitMats.push(om);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(or, 0.008, 8, 48), om);
-        if (k === 0) ring.rotation.x = Math.PI / 2.4;
-        else {
-          ring.rotation.x = Math.PI / 2.4;
-          ring.rotation.y = Math.PI / 2.8;
-        }
-        orbit.add(ring);
+    // 瞄准环（双环陀螺仪，仅激活时可见）
+    const reticle = new THREE.Group();
+    const reticleMats: THREE.MeshBasicMaterial[] = [];
+    const or = body.radius * 2.4;
+    for (let k = 0; k < 2; k++) {
+      const om = new THREE.MeshBasicMaterial({
+        color: baseColor.clone(),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      reticleMats.push(om);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(or, 0.008, 8, 48), om);
+      if (k === 0) ring.rotation.x = Math.PI / 2.4;
+      else {
+        ring.rotation.x = Math.PI / 2.4;
+        ring.rotation.y = Math.PI / 2.8;
       }
-      orbit.visible = false;
-      group.add(orbit);
+      reticle.add(ring);
+    }
+    reticle.visible = false;
+    group.add(reticle);
 
-      // 射线拾取用的隐形命中球（更大，易点）
-      const hit = new THREE.Mesh(
-        new THREE.SphereGeometry(Math.max(n.radius * 2.4, 0.17), 10, 10),
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
-      );
-      hit.userData.nodeIndex = i;
-      group.add(hit);
-      this.hitMeshes.push(hit);
+    // 射线拾取用的隐形命中球（更大，易点）
+    const hit = new THREE.Mesh(
+      new THREE.SphereGeometry(Math.max(body.radius * 2.4, 0.17), 10, 10),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+    );
+    hit.userData.bodyId = body.id;
+    group.add(hit);
+    this.hitMeshes.push(hit);
+    this.hitIds.push(body.id);
 
-      // CSS2D 标签（真实 DOM button，可键盘访问）
-      const labelEl = document.createElement('button');
-      labelEl.type = 'button';
-      labelEl.className = 'sg3-label';
-      labelEl.dataset.id = n.id;
-      labelEl.setAttribute('aria-label', `${n.title}（${n.designation}）`);
-      labelEl.innerHTML = `<span class="sg3-label__title"></span><span class="sg3-label__cat"></span>`;
-      (labelEl.querySelector('.sg3-label__title') as HTMLElement).textContent = n.title;
-      (labelEl.querySelector('.sg3-label__cat') as HTMLElement).textContent =
-        n.designation;
-      labelEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        onNodeClick(n.id);
-      });
-      labelEl.addEventListener('mouseenter', () => onNodeHover(n.id));
-      labelEl.addEventListener('mouseleave', () => onNodeHover(null));
-      labelEl.addEventListener('focus', () => onNodeHover(n.id));
-      labelEl.addEventListener('blur', () => onNodeHover(null));
-      const label = new CSS2DObject(labelEl);
-      label.position.set(0, n.radius * 2.6 + 0.07, 0);
-      group.add(label);
-
-      this.scene.add(group);
-      this.nodesRT.push({
-        id: n.id,
-        group,
-        sphereMat,
-        glowMat,
-        glow,
-        hit,
-        labelEl,
-        orbit,
-        orbitMats,
-        radius: n.radius,
-        boost: 1,
-        boostT: 1,
-        baseColor,
-      });
-      this.idToIndex.set(n.id, i);
+    // CSS2D 标签（真实 DOM button，可键盘访问）
+    const { onNodeClick, onNodeHover } = this.opts;
+    const labelEl = document.createElement('button');
+    labelEl.type = 'button';
+    labelEl.className = 'sg3-label';
+    labelEl.dataset.id = body.id;
+    labelEl.setAttribute(
+      'aria-label',
+      `${meta?.title ?? body.id}（${meta?.designation ?? ''}）`,
+    );
+    labelEl.innerHTML = `<span class="sg3-label__title"></span><span class="sg3-label__cat"></span>`;
+    (labelEl.querySelector('.sg3-label__title') as HTMLElement).textContent =
+      meta?.title ?? body.id;
+    (labelEl.querySelector('.sg3-label__cat') as HTMLElement).textContent =
+      meta?.designation ?? '';
+    labelEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onNodeClick(body.id);
     });
+    labelEl.addEventListener('mouseenter', () => onNodeHover(body.id));
+    labelEl.addEventListener('mouseleave', () => onNodeHover(null));
+    labelEl.addEventListener('focus', () => onNodeHover(body.id));
+    labelEl.addEventListener('blur', () => onNodeHover(null));
+    const label = new CSS2DObject(labelEl);
+    const labelBaseY = body.radius * 2.6 + 0.07;
+    label.position.set(0, labelBaseY, 0);
+    group.add(label);
+
+    // 初始位置：t=0 的轨道位置（避免首帧闪在原点）
+    if (body.orbit) {
+      const p = new THREE.Vector3();
+      orbitalPosition(body.orbit, 0, p);
+      group.position.copy(p);
+    }
+
+    host.add(group);
+
+    return {
+      spec: body,
+      group,
+      sphereMat,
+      glowMat,
+      glow,
+      corona,
+      coronaMat,
+      hit,
+      labelEl,
+      label,
+      labelBaseY,
+      reticle,
+      reticleMats,
+      trail: null,
+      trailPos: null,
+      boost: 1,
+      boostT: 1,
+      baseColor,
+      phase: reduce ? 0 : phase,
+    };
   }
 
-  private buildEdges() {
-    const { nodes, edges } = this.opts;
-    for (const e of edges) {
-      const a = nodes[e.a].position;
-      const b = nodes[e.b].position;
-      const geo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(a[0] * NODE_SCALE, a[1] * NODE_SCALE, a[2] * NODE_SCALE),
-        new THREE.Vector3(b[0] * NODE_SCALE, b[1] * NODE_SCALE, b[2] * NODE_SCALE),
-      ]);
-      const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color('#4a7fb5'),
-        transparent: true,
-        opacity: 0.3,
-        depthWrite: false,
-      });
-      const line = new THREE.Line(geo, mat);
-      line.renderOrder = 2;
-      this.scene.add(line);
-      this.edgesRT.push({ mat, a: e.a, b: e.b, opacity: 0.3, opacityT: 0.3 });
+  /** 闭合轨道椭圆线（焦点在母体/质心） */
+  private buildOrbitLine(body: BodySpec, opacity: number): THREE.LineLoop {
+    const pts = orbitEllipsePoints(body.orbit!, body.role === 'moon' ? 64 : 128);
+    const geo = new THREE.BufferGeometry().setFromPoints(
+      pts.map(([x, y, z]) => new THREE.Vector3(x, y, z)),
+    );
+    const mat = new THREE.LineBasicMaterial({
+      color: new THREE.Color('#6fb3d9'),
+      transparent: true,
+      opacity,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const line = new THREE.LineLoop(geo, mat);
+    line.renderOrder = 1;
+    return line;
+  }
+
+  /** 运动尾迹：顶点色从头（亮）到尾（黑）渐隐，加色混合下黑即透明 */
+  private buildTrail(b: BodyRT, sysGroup: THREE.Group) {
+    const trailPos = new Float32Array(TRAIL_N * 3);
+    const colors = new Float32Array(TRAIL_N * 3);
+    for (let k = 0; k < TRAIL_N; k++) {
+      const f = Math.pow(1 - k / (TRAIL_N - 1), 1.6) * 0.85;
+      colors[k * 3] = b.baseColor.r * f;
+      colors[k * 3 + 1] = b.baseColor.g * f;
+      colors[k * 3 + 2] = b.baseColor.b * f;
     }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(trailPos, 3).setUsage(THREE.DynamicDrawUsage),
+    );
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const trail = new THREE.Line(geo, mat);
+    trail.frustumCulled = false;
+    trail.renderOrder = 1;
+    sysGroup.add(trail);
+    b.trail = trail;
+    b.trailPos = trailPos;
   }
 
   /* ================= 事件 ================= */
@@ -507,8 +584,8 @@ export class StargateScene {
     this.dragging = false;
     this.lastInteract = performance.now();
     if (!wasDrag && !(e.target as HTMLElement).closest('.sg3-label')) {
-      const hit = this.raycast(e);
-      if (hit !== null) this.opts.onNodeClick(this.opts.nodes[hit].id);
+      const id = this.raycast(e);
+      if (id !== null) this.opts.onNodeClick(id);
     }
   };
 
@@ -535,17 +612,16 @@ export class StargateScene {
     );
   }
 
-  private raycast(e: PointerEvent): number | null {
+  private raycast(e: PointerEvent): string | null {
     this.setNdc(e);
     this.raycaster.setFromCamera(this.ndc, this.camera);
     const hits = this.raycaster.intersectObjects(this.hitMeshes, false);
     if (hits.length === 0) return null;
-    return hits[0].object.userData.nodeIndex as number;
+    return hits[0].object.userData.bodyId as string;
   }
 
   private raycastHover(e: PointerEvent) {
-    const idx = this.raycast(e);
-    const id = idx === null ? null : this.opts.nodes[idx].id;
+    const id = this.raycast(e);
     if (id !== this.hovered) {
       this.hovered = id;
       this.opts.onNodeHover(id);
@@ -554,6 +630,91 @@ export class StargateScene {
   }
 
   /* ================= 每帧更新 ================= */
+
+  /** 开普勒运动 + 尾迹 + 日冕脉冲 + 高亮 + 追踪目标 */
+  private updateBodies(t: number, dt: number, reduce: boolean) {
+    const act = this.hovered ?? this.selected;
+    const activeNeighbors = this.neighborSet(act);
+    const k = 1 - Math.pow(0.002, dt);
+
+    for (const sys of this.systemsRT) {
+      for (const b of sys.bodies) {
+        const el = b.spec.orbit;
+        // 位置：卫星的 group 挂在母体下，轨道位置天然是母体相对坐标
+        if (el) orbitalPosition(el, t, b.group.position);
+        else if (b.spec.role === 'lone') {
+          // 流浪恒星：缓慢的利萨如漂移
+          const p = b.phase;
+          b.group.position.set(
+            0.35 * Math.sin(t * 0.11 + p),
+            0.28 * Math.sin(t * 0.07 + p * 1.7),
+            0.35 * Math.cos(t * 0.09 + p * 2.3),
+          );
+        }
+
+        // 尾迹：沿轨道回溯 TRAIL_ARC 段弧长
+        if (b.trail && b.trailPos && el) {
+          const step = (el.period * TRAIL_ARC) / (TRAIL_N - 1);
+          for (let j = 0; j < TRAIL_N; j++) {
+            orbitalPosition(el, t - j * step, this.tmpV);
+            b.trailPos[j * 3] = this.tmpV.x;
+            b.trailPos[j * 3 + 1] = this.tmpV.y;
+            b.trailPos[j * 3 + 2] = this.tmpV.z;
+          }
+          (b.trail.geometry.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+        }
+
+        // 标签悬浮高度按镜头距离缩放：屏幕空间偏移恒定，
+        // 追踪推近时标签不会脱离星体，拉远时也不会糊到球面上
+        b.label.position.y = b.labelBaseY * (this.cam.cur.dist / HOME.dist);
+
+        // 高亮：激活 1.45 / 邻居 1.1 / 有激活时的其余 0.42 / 无激活 1
+        const isActive = act === b.spec.id;
+        const isNeighbor = act ? activeNeighbors.has(b.spec.id) : false;
+        b.boostT = isActive ? 1.45 : act ? (isNeighbor ? 1.1 : 0.42) : 1;
+        b.boost += (b.boostT - b.boost) * k;
+
+        b.sphereMat.uniforms.uBoost.value = b.boost;
+        b.sphereMat.uniforms.uTime.value = t;
+        b.glowMat.opacity = 0.55 * b.boost * (isActive ? 1.25 : 1);
+        const gs = b.spec.radius * 5.5 * (isActive ? 1.35 : 1);
+        b.glow.scale.set(gs, gs, 1);
+
+        // 日冕脉冲
+        if (b.corona && b.coronaMat) {
+          const pulse = reduce ? 0.5 : Math.sin(t * 2.1 + b.phase) * 0.5 + 0.5;
+          const cs = b.spec.radius * 9 * (1 + 0.07 * pulse);
+          b.corona.scale.set(cs, cs, 1);
+          b.coronaMat.opacity = (0.18 + 0.12 * pulse) * b.boost;
+        }
+
+        // 瞄准环：激活时显现并旋转
+        b.reticle.visible = isActive || b.reticleMats[0].opacity > 0.01;
+        const reticleT = isActive ? 0.85 : 0;
+        b.reticleMats.forEach((om) => {
+          om.opacity += (reticleT - om.opacity) * k;
+        });
+        if (b.reticle.visible && !reduce) {
+          b.reticle.children[0].rotation.z = t * 1.4;
+          b.reticle.children[1].rotation.z = -t * 1.1;
+        }
+
+        // 标签状态类（CSS 控制明暗/描边）
+        b.labelEl.classList.toggle('is-active', isActive);
+        b.labelEl.classList.toggle('is-dim', !!act && !isActive && !isNeighbor);
+      }
+
+      // 质心辉光呼吸
+      if (sys.baryMat) {
+        sys.baryMat.opacity = reduce ? 0.16 : 0.14 + 0.05 * Math.sin(t * 1.3);
+      }
+    }
+
+    // 相机追踪目标：选中星体的实时世界位置 / 系统质心
+    const sel = this.selected ? this.bodyById.get(this.selected) : undefined;
+    if (sel) sel.group.getWorldPosition(this.camTargetTgt);
+    else this.camTargetTgt.set(0, 0, 0);
+  }
 
   private updateCamera(dt: number) {
     const c = this.cam;
@@ -581,14 +742,20 @@ export class StargateScene {
     c.cur.ry += (c.tgt.ry - c.cur.ry) * k;
     c.cur.dist += (c.tgt.dist - c.cur.dist) * (1 - Math.pow(0.004, dt));
 
-    // 球坐标 → 相机位置（rx 仰角 / ry 方位）
+    // 注视点逐帧缓动追踪（选中运动星体时相机随之平移）
+    this.camTarget.lerp(
+      this.camTargetTgt,
+      this.dragging ? 0.2 : 1 - Math.pow(0.002, dt),
+    );
+
+    // 球坐标 → 相机位置（rx 仰角 / ry 方位），围绕当前注视点
     const cd = Math.cos(c.cur.rx);
     this.camera.position.set(
-      c.cur.dist * cd * Math.sin(c.cur.ry),
-      c.cur.dist * Math.sin(c.cur.rx),
-      c.cur.dist * cd * Math.cos(c.cur.ry),
+      this.camTarget.x + c.cur.dist * cd * Math.sin(c.cur.ry),
+      this.camTarget.y + c.cur.dist * Math.sin(c.cur.rx),
+      this.camTarget.z + c.cur.dist * cd * Math.cos(c.cur.ry),
     );
-    this.camera.lookAt(0, 0, 0);
+    this.camera.lookAt(this.camTarget);
 
     // 详情面板占据右侧时，把渲染视口左移半个面板宽，使选中恒星落在
     // 可见区中心而非全屏中心。投影矩阵被 WebGL / CSS2D / 射线拾取共用，
@@ -603,90 +770,15 @@ export class StargateScene {
     }
   }
 
-  private updateRing(t: number, reduce: boolean) {
-    if (this.ringMat) this.ringMat.uniforms.uTime.value = t;
-    if (this.horizonMat) this.horizonMat.uniforms.uTime.value = reduce ? 0 : t;
-    // 内环缓慢自转
-    if (this.glyphBand && !reduce) this.glyphBand.rotation.z = t * 0.12;
-    // chevron 循环"锁定"脉冲
-    const active = reduce ? -1 : Math.floor(t / 0.9) % CHEVRON_COUNT;
-    const dim = new THREE.Color('#6b4a1c');
-    const lit = new THREE.Color('#ffc861');
-    this.chevronMats.forEach((m, i) => {
-      const pulse =
-        i === active ? 0.75 + 0.25 * Math.sin(t * 8) : i === (active + 8) % CHEVRON_COUNT ? 0.35 : 0;
-      m.color.copy(dim).lerp(lit, pulse);
-    });
-  }
-
-  private updateNodes(t: number, dt: number, reduce: boolean) {
-    const act = this.hovered ?? this.selected;
-    const activeIdx = act ? this.idToIndex.get(act) ?? -1 : -1;
-    const activeNeighbors = this.neighborSet(act);
-
-    const k = 1 - Math.pow(0.002, dt);
-    this.nodesRT.forEach((n, i) => {
-      const isActive = i === activeIdx;
-      const isNeighbor = act ? activeNeighbors.has(n.id) : false;
-      // 目标亮度：激活 1.45 / 邻居 1.1 / 有激活时的其余 0.42 / 无激活 1
-      n.boostT = isActive ? 1.45 : act ? (isNeighbor ? 1.1 : 0.42) : 1;
-      n.boost += (n.boostT - n.boost) * k;
-
-      n.sphereMat.uniforms.uBoost.value = n.boost;
-      n.sphereMat.uniforms.uTime.value = t;
-      n.glowMat.opacity = 0.55 * n.boost * (isActive ? 1.25 : 1);
-      const gs = n.radius * 5.5 * (isActive ? 1.35 : 1);
-      n.glow.scale.set(gs, gs, 1);
-
-      // 瞄准环：激活时显现并旋转
-      const showOrbit = isActive;
-      n.orbit.visible = showOrbit || n.orbitMats[0].opacity > 0.01;
-      const orbitT = showOrbit ? 0.85 : 0;
-      n.orbitMats.forEach((om) => {
-        om.opacity += (orbitT - om.opacity) * k;
-      });
-      if (n.orbit.visible && !reduce) {
-        n.orbit.children[0].rotation.z = t * 1.4;
-        n.orbit.children[1].rotation.z = -t * 1.1;
-      }
-
-      // 标签状态类（CSS 控制明暗/描边）
-      n.labelEl.classList.toggle('is-active', isActive);
-      n.labelEl.classList.toggle('is-dim', !!act && !isActive && !isNeighbor);
-    });
-  }
-
   private neighborCache: { for: string | null; set: Set<string> } = {
     for: null,
     set: new Set(),
   };
   private neighborSet(id: string | null): Set<string> {
     if (this.neighborCache.for === id) return this.neighborCache.set;
-    const set = new Set<string>();
-    if (id) {
-      const { nodes, edges } = this.opts;
-      const idx = this.idToIndex.get(id) ?? -1;
-      edges.forEach((e) => {
-        if (e.a === idx) set.add(nodes[e.b].id);
-        if (e.b === idx) set.add(nodes[e.a].id);
-      });
-    }
+    const set = id ? (this.adj.get(id) ?? new Set<string>()) : new Set<string>();
     this.neighborCache = { for: id, set };
     return set;
-  }
-
-  private updateEdges(t: number) {
-    const act = this.hovered ?? this.selected;
-    const actIdx = act ? this.idToIndex.get(act) ?? -1 : -1;
-    const k = 0.12;
-    this.edgesRT.forEach((e, i) => {
-      const lit = actIdx !== -1 && (e.a === actIdx || e.b === actIdx);
-      const breathe = 0.85 + 0.15 * Math.sin(t * 1.3 + i);
-      e.opacityT = act ? (lit ? 0.9 : 0.07) : 0.3 * breathe;
-      e.opacity += (e.opacityT - e.opacity) * k;
-      e.mat.opacity = e.opacity;
-      e.mat.color.set(lit ? '#8fe5ff' : '#4a7fb5');
-    });
   }
 
   /* ================= 公开 API ================= */
@@ -695,25 +787,13 @@ export class StargateScene {
     this.hovered = id;
   }
 
-  /** 选中并 fly-to：把相机转向节点方向并适度推近 */
+  /** 选中并追踪：镜头推近到 CHASE_DIST，注视点逐帧锁定该星体 */
   setSelected(id: string | null) {
     this.selected = id;
     this.shift.tgt = this.panelShift();
     if (!id) return;
-    const idx = this.idToIndex.get(id);
-    if (idx === undefined) return;
-    const p = this.nodesRT[idx].group.position;
-    const len = Math.hypot(p.x, p.y, p.z) || 1;
-    const targetRy = Math.atan2(p.x, p.z);
-    const targetRx = clamp(Math.asin(p.y / len) * 0.7, -RX_LIMIT, RX_LIMIT);
-    // 取与当前朝向最近的等价角，避免倒转多圈
-    const twoPi = Math.PI * 2;
-    const mod = (a: number) => ((a % twoPi) + twoPi) % twoPi;
-    let delta = mod(targetRy - mod(this.cam.cur.ry));
-    if (delta > Math.PI) delta -= twoPi;
-    this.cam.tgt.ry = this.cam.cur.ry + delta;
-    this.cam.tgt.rx = targetRx;
-    this.cam.tgt.dist = 3.4;
+    if (!this.bodyById.has(id)) return;
+    this.cam.tgt.dist = CHASE_DIST;
     this.cam.vel.rx = 0;
     this.cam.vel.ry = 0;
     this.lastInteract = performance.now();
