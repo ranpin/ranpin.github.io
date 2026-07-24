@@ -47,17 +47,17 @@ export interface StargateSceneOptions {
 
 /* ---------- 相机与布局常量 ---------- */
 const FOV = 55;
-const DIST_MIN = 2.35;
-const DIST_MAX = 8.5;
-const HOME = { rx: 0.24, ry: 0.52, dist: 3.7 };
+const DIST_MIN = 2.8;
+const DIST_MAX = 10.5;
+const HOME = { rx: 0.18, ry: 0.52, dist: 4.7 };
 const RX_LIMIT = 1.15;
 const AUTO_SPEED = 0.00034; // 空闲自转 rad/帧
-const NODE_SCALE = 1.02; // 力导向单位球 → 世界单位的放大
+const NODE_SCALE = 1.65; // 力导向单位球 → 世界单位：星图是主角，要撑满画面中心
 
-/* 星门几何 */
-const RING_RADIUS = 1.95;
-const TORUS_TUBE = 0.05;
-const HORIZON_RADIUS = 1.84;
+/* 星门几何：圆环是"画框"，半径大于星图，事件视界退居为背景 */
+const RING_RADIUS = 2.55;
+const TORUS_TUBE = 0.055;
+const HORIZON_RADIUS = 2.42;
 const CHEVRON_COUNT = 9;
 
 interface NodeRT {
@@ -109,7 +109,7 @@ export class StargateScene {
   private nebulaTexs: THREE.CanvasTexture[] = [];
 
   private cam = {
-    cur: { rx: HOME.rx + 0.5, ry: HOME.ry - 1.3, dist: 9.2 },
+    cur: { rx: HOME.rx + 0.5, ry: HOME.ry - 1.3, dist: 11.5 },
     tgt: { ...HOME },
     vel: { rx: 0, ry: 0 },
   };
@@ -122,7 +122,7 @@ export class StargateScene {
 
   private raycaster = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
-  private clock = new THREE.Clock();
+  private timer = new THREE.Timer();
   private raf = 0;
   private ro: ResizeObserver | null = null;
   private disposed = false;
@@ -163,11 +163,12 @@ export class StargateScene {
     this.bindEvents();
 
     /* ---------- 动画循环 ---------- */
-    const frame = () => {
+    const frame = (ts: number) => {
       if (this.disposed) return;
       this.raf = requestAnimationFrame(frame);
-      const dt = Math.min(this.clock.getDelta(), 0.05);
-      const t = this.clock.elapsedTime;
+      this.timer.update(ts);
+      const dt = Math.min(this.timer.getDelta(), 0.05);
+      const t = this.timer.getElapsed();
       this.updateCamera(dt);
       this.updateRing(t, reduce);
       this.updateNodes(t, dt, reduce);
@@ -361,7 +362,7 @@ export class StargateScene {
         blending: THREE.AdditiveBlending,
       });
       const glow = new THREE.Sprite(glowMat);
-      const gs = n.radius * 6.5;
+      const gs = n.radius * 5.5;
       glow.scale.set(gs, gs, 1);
       glow.renderOrder = 3;
       group.add(glow);
@@ -612,7 +613,7 @@ export class StargateScene {
       n.sphereMat.uniforms.uBoost.value = n.boost;
       n.sphereMat.uniforms.uTime.value = t;
       n.glowMat.opacity = 0.55 * n.boost * (isActive ? 1.25 : 1);
-      const gs = n.radius * 6.5 * (isActive ? 1.35 : 1);
+      const gs = n.radius * 5.5 * (isActive ? 1.35 : 1);
       n.glow.scale.set(gs, gs, 1);
 
       // 瞄准环：激活时显现并旋转
@@ -689,7 +690,7 @@ export class StargateScene {
     if (delta > Math.PI) delta -= twoPi;
     this.cam.tgt.ry = this.cam.cur.ry + delta;
     this.cam.tgt.rx = targetRx;
-    this.cam.tgt.dist = 3.05;
+    this.cam.tgt.dist = 3.4;
     this.cam.vel.rx = 0;
     this.cam.vel.ry = 0;
     this.lastInteract = performance.now();

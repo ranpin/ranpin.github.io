@@ -237,7 +237,7 @@ const DigitalGarden: React.FC = () => {
       title: n.title,
       designation: designation(n.id),
       color: STAGE[stageOf(n)].color,
-      radius: 0.055 + Math.min(degree[n.id] || 0, 5) * 0.016,
+      radius: 0.068 + Math.min(degree[n.id] || 0, 5) * 0.02,
       position: [layout[n.id].x, layout[n.id].y, layout[n.id].z],
     }));
 

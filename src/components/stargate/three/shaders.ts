@@ -40,12 +40,15 @@ export const starFrag = /* glsl */ `
   varying vec3 vViewDir;
   void main() {
     float ndv = max(dot(vNormal, vViewDir), 0.0);
-    // 白热核心：朝向相机处趋近白色
-    vec3 col = mix(uColor, vec3(1.0), pow(ndv, 3.0) * 0.85);
-    // 边缘染上阶段色并微微呼吸
-    float rim = pow(1.0 - ndv, 2.2);
-    float breathe = 0.9 + 0.1 * sin(uTime * 1.6);
-    col += uColor * rim * 1.3 * breathe;
+    // 恒星观感：白热核心集中在中心，球体本身只是发光体，
+    // 弱化"实心球"感 —— 外围光晕交给加色 glow sprite
+    float core = pow(ndv, 5.0);
+    vec3 col = uColor * (0.30 + 0.55 * pow(ndv, 1.5));
+    col += vec3(1.0, 0.98, 0.92) * core * 1.7;
+    // 边缘只微微透出阶段色（呼吸），不再是浓霓虹描边
+    float rim = pow(1.0 - ndv, 2.5);
+    float breathe = 0.92 + 0.08 * sin(uTime * 1.6);
+    col += uColor * rim * 0.5 * breathe;
     gl_FragColor = vec4(col * uBoost, 1.0);
   }
 `;
@@ -80,16 +83,17 @@ export const horizonFrag = /* glsl */ `
     // 向外扩散的同心涟漪
     float rings = sin(r * 13.0 - uTime * 2.4) * 0.5 + 0.5;
 
-    vec3 deep = vec3(0.015, 0.08, 0.24);
-    vec3 bright = vec3(0.22, 0.72, 1.0);
-    vec3 col = mix(deep, bright, v * 0.45 + rings * 0.3);
-    // 内缘更亮，靠边缘淡出
+    vec3 deep = vec3(0.012, 0.06, 0.18);
+    vec3 bright = vec3(0.18, 0.62, 0.95);
+    vec3 col = mix(deep, bright, v * 0.4 + rings * 0.28);
+    // 内缘一抹微光
     float body = smoothstep(1.0, 0.45, r);
     float edgeGlow = smoothstep(0.72, 0.98, r);
-    col += bright * edgeGlow * 0.7;
+    col += bright * edgeGlow * 0.5;
 
-    float alpha = body * (0.28 + 0.35 * v) + edgeGlow * 0.25;
-    gl_FragColor = vec4(col, alpha * 0.5);
+    // 整体压成"淡背景漩涡"，把主角让给前景星图
+    float alpha = body * (0.18 + 0.26 * v) + edgeGlow * 0.18;
+    gl_FragColor = vec4(col, alpha * 0.32);
   }
 `;
 
