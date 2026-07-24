@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
 
 interface MarkdownProps {
   children?: string;
@@ -21,11 +20,7 @@ const Markdown: React.FC<MarkdownProps> = ({
   components,
 }) => (
   <div className={`prose max-w-none ${className}`.trim()}>
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeHighlight]}
-      components={components}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
       {children || ''}
     </ReactMarkdown>
   </div>
