@@ -58,6 +58,92 @@ const atomByGardenId = new Map<string, DocBody>(
   ),
 );
 
+/** 全部星体（数据序），用于同主线关联的全宇宙遍历 */
+const allBodies: DocBody[] = stargateGalaxies.flatMap((g) => g.bodies);
+/** 语义母体 → 子星体（详情面板「子体」分组；保留语义真值而非渲染母体） */
+const childrenByParentId = new Map<string, DocBody[]>();
+for (const b of allBodies) {
+  if (!b.parentId) continue;
+  const arr = childrenByParentId.get(b.parentId) ?? [];
+  arr.push(b);
+  childrenByParentId.set(b.parentId, arr);
+}
+
+/** 同主线关联的展示上限（避免面板被长列表淹没） */
+const RELATED_THREAD_CAP = 6;
+
+interface RelatedBodies {
+  parent: DocBody | null;
+  children: DocBody[];
+  sameThread: DocBody[];
+}
+
+/** 关联星体：母体 / 子体 / 同主线（重叠主线多者优先、同星系优先，其余保持数据序） */
+const relatedOf = (body: DocBody): RelatedBodies => {
+  const parent = body.parentId
+    ? docBodyById.get(body.parentId) ?? null
+    : null;
+  const children = childrenByParentId.get(body.id) ?? [];
+  const excluded = new Set<string>([
+    body.id,
+    ...(parent ? [parent.id] : []),
+    ...children.map((c) => c.id),
+  ]);
+  const galaxy = galaxyOfBody.get(body.id);
+  const overlap = (b: DocBody): number =>
+    b.threads.reduce((n, t) => n + (body.threads.includes(t) ? 1 : 0), 0);
+  const sameThread = allBodies
+    .filter((b) => !excluded.has(b.id) && overlap(b) > 0)
+    .sort(
+      (a, b) =>
+        overlap(b) - overlap(a) ||
+        Number(galaxyOfBody.get(b.id) === galaxy) -
+          Number(galaxyOfBody.get(a.id) === galaxy),
+    )
+    .slice(0, RELATED_THREAD_CAP);
+  return { parent, children, sameThread };
+};
+
+/** 星体 → 星系主题色（关联星体 chips 着色） */
+const bodyColor = (b: DocBody): string => {
+  const gid = galaxyOfBody.get(b.id);
+  return (gid ? galaxyById.get(gid)?.color : undefined) ?? '#67e8f9';
+};
+
+/** 关联星体分组：组名 + 可点 chips（跨星系由 selectBody 自动跃迁） */
+const RelatedGroup: React.FC<{
+  label: string;
+  bodies: DocBody[];
+  onPick: (b: DocBody) => void;
+}> = ({ label, bodies, onPick }) => {
+  if (bodies.length === 0) return null;
+  return (
+    <div className="mb-2.5 last:mb-0">
+      <p className="text-[10px] font-mono text-slate-400/50 mb-1.5">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {bodies.map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            onClick={() => onPick(b)}
+            title={b.title}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300/85 transition-colors hover:border-cyan-400/50 hover:text-white"
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{
+                background: bodyColor(b),
+                boxShadow: `0 0 5px ${bodyColor(b)}66`,
+              }}
+            />
+            <span className="truncate max-w-[11rem]">{b.title}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /**
  * 文档宇宙导航 —— 把 edge-ai-docs 的三大领域渲染为三个星系，
  * 以「总览 ↔ 星系」两级视图 + warp 跃迁在星际之门内穿行。
@@ -254,6 +340,15 @@ const DigitalGarden: React.FC = () => {
   const selectedGardenNote = selected?.gardenId
     ? gardenById.get(selected.gardenId)
     : undefined;
+  const related = useMemo(
+    () => (selected ? relatedOf(selected) : null),
+    [selected],
+  );
+  const relatedCount = related
+    ? (related.parent ? 1 : 0) +
+      related.children.length +
+      related.sameThread.length
+    : 0;
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -474,6 +569,18 @@ const DigitalGarden: React.FC = () => {
                 {selected.desc}
               </p>
             )}
+            {selected.tags && selected.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2.5">
+                {selected.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="text-[10px] font-mono rounded bg-white/5 text-slate-300/60 px-1.5 py-0.5"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
             {selected.url && (
               <a
                 href={selected.url}
@@ -485,10 +592,35 @@ const DigitalGarden: React.FC = () => {
                 打开完整文档
               </a>
             )}
+            {related && relatedCount > 0 && (
+              <div className="mt-5 pt-4 border-t border-white/10">
+                <p className="stargate-catalog mb-2">ORBIT · 关联星体</p>
+                <RelatedGroup
+                  label="母体"
+                  bodies={related.parent ? [related.parent] : []}
+                  onPick={selectBody}
+                />
+                <RelatedGroup
+                  label="子体"
+                  bodies={related.children}
+                  onPick={selectBody}
+                />
+                <RelatedGroup
+                  label="同主线"
+                  bodies={related.sameThread}
+                  onPick={selectBody}
+                />
+              </div>
+            )}
             {selectedGardenNote && (
               <div
                 className={
-                  selected.desc || selected.url
+                  !!(
+                    selected.desc ||
+                    (selected.tags && selected.tags.length > 0) ||
+                    selected.url ||
+                    relatedCount
+                  )
                     ? 'mt-5 pt-4 border-t border-white/10'
                     : ''
                 }
