@@ -7,6 +7,10 @@ interface WarpProps {
   onDone: () => void;
   /** 总时长（毫秒），默认 2200ms */
   duration?: number;
+  /** 主标题（默认 ENTERING STARGATE；星系跃迁时可自定义） */
+  title?: string;
+  /** 副标题（默认"正在建立时空跃迁…"） */
+  sub?: string;
 }
 
 /**
@@ -18,7 +22,12 @@ interface WarpProps {
  * SSG / 测试安全：渲染在 useEffect（仅客户端）中创建；无 WebGL（如 jsdom）时
  * 按时序淡出并回调，保证内容始终可揭示。尊重 prefers-reduced-motion：直接短淡出。
  */
-const Warp: React.FC<WarpProps> = ({ onDone, duration = 2200 }) => {
+const Warp: React.FC<WarpProps> = ({
+  onDone,
+  duration = 2200,
+  title = 'ENTERING\u00A0STARGATE',
+  sub = '正在建立时空跃迁…',
+}) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const [fading, setFading] = useState(false);
@@ -196,8 +205,8 @@ const Warp: React.FC<WarpProps> = ({ onDone, duration = 2200 }) => {
       <div ref={mountRef} className="block w-full h-full" />
       <div ref={flashRef} className="stargate-warp__flash" />
       <div className="stargate-warp__label">
-        <span className="stargate-warp__title">ENTERING&nbsp;STARGATE</span>
-        <span className="stargate-warp__sub">正在建立时空跃迁…</span>
+        <span className="stargate-warp__title">{title}</span>
+        <span className="stargate-warp__sub">{sub}</span>
       </div>
     </div>
   );

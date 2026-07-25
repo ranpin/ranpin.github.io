@@ -295,6 +295,10 @@
 .sg3-label.is-dim {
   opacity: 0.25;
 }
+/* 导航显隐：总览只亮星系核心、星系内只亮本星系星体（场景逐帧切换） */
+.sg3-label.is-galaxy-hidden {
+  display: none;
+}
 .sg3-label:focus-visible {
   outline: 1px solid rgba(120, 220, 255, 0.7);
   outline-offset: 2px;

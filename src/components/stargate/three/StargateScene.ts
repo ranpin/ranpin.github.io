@@ -34,13 +34,15 @@ import {
   type BodySpec,
 } from './systems';
 
-/** 每个花园节点的展示元数据（由 React 侧传入） */
+/** 每个星体的展示元数据（由 React 侧传入） */
 export interface SceneBodyMeta {
   id: string;
   title: string;
   designation: string;
-  /** 成长阶段色（恒星边缘/辉光着色） */
+  /** 主题色（恒星边缘/辉光着色；星系内所有星体共用星系色） */
   color: string;
+  /** 所属星系 id（导航时按星系显隐标签） */
+  galaxy: string;
   /** 原始关联（用于悬停/选中时的邻居高亮） */
   links?: string[];
 }
@@ -57,7 +59,7 @@ export interface StargateSceneOptions {
 /* ---------- 相机常量 ---------- */
 const FOV = 55;
 const DIST_MIN = 2.2;
-const DIST_MAX = 16;
+const DIST_MAX = 32; // 总览视距（~25）之上仍留滚轮余量
 const HOME = { rx: 0.32, ry: 0.52, dist: 7.6 };
 const RX_LIMIT = 1.15;
 const AUTO_SPEED = 0.00026; // 空闲自转 rad/帧
@@ -75,6 +77,8 @@ const PANEL_BREAKPOINT = 640;
 interface BodyRT {
   spec: BodySpec;
   group: THREE.Group;
+  /** 所属星系 id（导航时按星系显隐标签） */
+  galaxy: string;
   /** 恒星：自发光等离子体着色器（行星为 null） */
   sphereMat: THREE.ShaderMaterial | null;
   /** 行星：物理光照材质 + 烘焙地表贴图（恒星为 null） */
@@ -156,6 +160,18 @@ export class StargateScene {
   private hovered: string | null = null;
   private selected: string | null = null;
 
+  /* ---------- 文档宇宙导航状态 ----------
+     相机焦点不绑定"整个宇宙的原点"，而是绑定当前导航视图：
+     - 总览（activeGalaxy === null）：focusCenter = null，注视宇宙质心（原点）
+     - 星系内：focusCenter = 该星系质心，镜头拉近到星系取景距离
+     选中星体时临时追踪星体（CHASE_DIST），取消选中回到 viewDist。 */
+  /** 当前导航视图的注视中心；null = 总览（原点） */
+  private focusCenter: THREE.Vector3 | null = null;
+  /** 当前导航视图的取景距离（取消选中/复位时回到它） */
+  private viewDist = HOME.dist;
+  /** 当前所在星系 id；null = 总览。驱动标签按星系显隐 */
+  private activeGalaxy: string | null = null;
+
   /** 画布 CSS 尺寸（resize 时更新），供 setViewOffset 使用 */
   private view = { w: 800, h: 600 };
   /** 可见区修正偏移量（px）：面板打开时把渲染视口左移，cur 逐帧缓动到 tgt */
@@ -217,9 +233,6 @@ export class StargateScene {
     this.buildStarfield();
     this.buildNebulae();
     this.buildSystems(reduce);
-
-    // TEMP-DEBUG: 星云渲染排查用，提交前删除
-    (window as unknown as Record<string, unknown>).__stargate = this;
 
     this.resize();
     this.bindEvents();
@@ -685,6 +698,7 @@ export class StargateScene {
     return {
       spec: body,
       group,
+      galaxy: meta?.galaxy ?? '',
       sphereMat,
       stdMat,
       spinMesh,
@@ -935,6 +949,12 @@ export class StargateScene {
         // 标签状态类（CSS 控制明暗/描边）
         b.labelEl.classList.toggle('is-active', isActive);
         b.labelEl.classList.toggle('is-dim', !!act && !isActive && !isNeighbor);
+        // 导航显隐：总览只亮核心（星系标题），星系内只亮本星系星体
+        const labelHidden =
+          this.activeGalaxy === null
+            ? b.spec.role !== 'core'
+            : b.galaxy !== this.activeGalaxy;
+        b.labelEl.classList.toggle('is-galaxy-hidden', labelHidden);
       }
 
       // 质心辉光呼吸
@@ -943,9 +963,10 @@ export class StargateScene {
       }
     }
 
-    // 相机追踪目标：选中星体的实时世界位置 / 系统质心
+    // 相机追踪目标：选中星体的实时世界位置 / 导航焦点（星系质心）/ 宇宙质心
     const sel = this.selected ? this.bodyById.get(this.selected) : undefined;
     if (sel) sel.group.getWorldPosition(this.camTargetTgt);
+    else if (this.focusCenter) this.camTargetTgt.copy(this.focusCenter);
     else this.camTargetTgt.set(0, 0, 0);
   }
 
@@ -1024,12 +1045,46 @@ export class StargateScene {
   setSelected(id: string | null) {
     this.selected = id;
     this.shift.tgt = this.panelShift();
-    if (!id) return;
+    if (!id) {
+      // 取消选中：回到当前导航视图（总览/星系）的取景距离
+      this.cam.tgt.dist = this.viewDist;
+      return;
+    }
     if (!this.bodyById.has(id)) return;
     this.cam.tgt.dist = CHASE_DIST;
     this.cam.vel.rx = 0;
     this.cam.vel.ry = 0;
     this.lastInteract = performance.now();
+  }
+
+  /**
+   * 切换导航视图（总览 ↔ 星系）。
+   * center = null 表示总览（注视宇宙质心）；否则为星系质心世界坐标。
+   * snap = true 时相机立即就位（用于 warp 遮蔽下的瞬间跃迁），
+   * 否则平滑缓动过去。
+   */
+  setNavView(
+    center: [number, number, number] | null,
+    dist: number,
+    snap = true,
+  ) {
+    this.focusCenter = center ? new THREE.Vector3(...center) : null;
+    this.viewDist = dist;
+    this.cam.tgt.dist = dist;
+    if (snap) {
+      this.cam.cur.dist = dist;
+      if (this.focusCenter) this.camTarget.copy(this.focusCenter);
+      else this.camTarget.set(0, 0, 0);
+      this.camTargetTgt.copy(this.camTarget);
+    }
+    this.cam.vel.rx = 0;
+    this.cam.vel.ry = 0;
+    this.lastInteract = performance.now();
+  }
+
+  /** 设置当前所在星系（null = 总览），驱动标签按星系显隐 */
+  setActiveGalaxy(id: string | null) {
+    this.activeGalaxy = id;
   }
 
   dolly(factor: number) {
@@ -1044,7 +1099,8 @@ export class StargateScene {
     if (delta > Math.PI) delta -= twoPi;
     this.cam.tgt.ry = this.cam.cur.ry + delta;
     this.cam.tgt.rx = HOME.rx;
-    this.cam.tgt.dist = HOME.dist;
+    // 复位到"当前导航视图"的取景距离，而非固定的 HOME.dist
+    this.cam.tgt.dist = this.viewDist;
     this.cam.vel.rx = 0;
     this.cam.vel.ry = 0;
     this.lastInteract = performance.now();
