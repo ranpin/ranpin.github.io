@@ -1,23 +1,32 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { Components } from 'react-markdown';
 import Icon from '../Icon';
 import Markdown from '../Markdown';
+import Warp from './Warp';
 import { gardenNotes } from '../../data/content';
 import type { GardenNote } from '../../types';
+import {
+  stargateGalaxies,
+  docBodyById,
+  galaxyOfBody,
+  THREADS,
+  type DocBody,
+  type GalaxyId,
+} from '../../data/stargateDocs';
 import { StargateScene, type SceneBodyMeta } from './three/StargateScene';
-import { buildSystems } from './three/systems';
+import { buildGalaxies } from './three/galaxies';
 import { supportsWebGL } from './three/shaders';
 
-type Stage = 'seedling' | 'budding' | 'evergreen';
-
-// 成长阶段 → 恒星分类观感（暖金 / 青白 / 蓝紫）
-const STAGE: Record<Stage, { label: string; color: string }> = {
-  seedling: { label: '🌱 萌芽', color: '#fbbf24' },
-  budding: { label: '🌿 生长', color: '#67e8f9' },
-  evergreen: { label: '🌲 常青', color: '#a78bfa' },
-};
-
-const stageOf = (n: GardenNote): Stage => (n.stage as Stage) || 'seedling';
+/* ---------- 导航取景距离（世界单位） ---------- */
+const OVERVIEW_DIST = 26; // 总览：三星系宽三角形尽收眼底
+const GALAXY_DIST = 8.5; // 星系内：单星系星团取景
+const NAV_WARP_MS = 1100; // 星系跃迁的 warp 时长（比入场穿梭更短促）
 
 // 稳定的字符串散列，用于确定性星表编号
 const hash = (s: string): number => {
@@ -29,19 +38,7 @@ const hash = (s: string): number => {
 // 天文台观感的"星表编号"，如 HD 4821
 const designation = (id: string): string => `HD ${1000 + (hash(id) % 8999)}`;
 
-// 颜色混合：用于图例小圆点的球体观感渐变
-const mixColor = (hex: string, hex2: string, t: number): string => {
-  const a = parseInt(hex.slice(1), 16);
-  const b = parseInt(hex2.slice(1), 16);
-  const ch = (sh: number) => {
-    const c1 = (a >> sh) & 255;
-    const c2 = (b >> sh) & 255;
-    return Math.round(c1 * (1 - t) + c2 * t);
-  };
-  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
-};
-
-// 把正文里的 [[id]] 记法转成可点击的内部链接（href 为 #gnode-<id>）
+// 把花园正文里的 [[id]] 记法转成可点击的内部链接（href 为 #gnode-<id>）
 const WIKI_HREF = '#gnode-';
 const linkifyWikiLinks = (md: string, byId: Map<string, GardenNote>): string =>
   md.replace(/\[\[([^\]]+)\]\]/g, (_, id: string) => {
@@ -49,54 +46,147 @@ const linkifyWikiLinks = (md: string, byId: Map<string, GardenNote>): string =>
     return t ? `[${t.title}](${WIKI_HREF}${id})` : id;
   });
 
+/* ---------- 模块级索引（策展数据是静态的，构建一次） ---------- */
+const galaxyById = new Map(stargateGalaxies.map((g) => [g.id, g]));
+const threadById = new Map(THREADS.map((t) => [t.id, t]));
+/** 花园笔记 id → 概念原子星体（wikilink 点击据此跳回星图） */
+const atomByGardenId = new Map<string, DocBody>(
+  stargateGalaxies.flatMap((g) =>
+    g.bodies
+      .filter((b) => b.gardenId)
+      .map((b) => [b.gardenId as string, b] as const),
+  ),
+);
+
+/**
+ * 文档宇宙导航 —— 把 edge-ai-docs 的三大领域渲染为三个星系，
+ * 以「总览 ↔ 星系」两级视图 + warp 跃迁在星际之门内穿行。
+ *
+ * 导航是纯相机运动（不重建场景）：三个星系始终在场，warp 覆盖层
+ * （不透明星场）遮蔽相机瞬移，淡出后即已置身目标星系。
+ */
 const DigitalGarden: React.FC = () => {
-  const notes = gardenNotes;
-  const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
-
-  // 关联图 → 恒星系（连通分量 = 恒星系，度数最高者为双星/三星核心，
-  // 其余为行星/卫星，按开普勒轨道自行运动；纯确定性，SSG 可复现）
-  const systems = useMemo(() => buildSystems(notes), [notes]);
-
-  // 每个节点的展示元数据（标题 / 星表编号 / 阶段色 / 关联）
-  const bodyMeta = useMemo<SceneBodyMeta[]>(
-    () =>
-      notes.map((n) => ({
-        id: n.id,
-        title: n.title,
-        designation: designation(n.id),
-        color: STAGE[stageOf(n)].color,
-        links: n.links,
-      })),
-    [notes],
+  // 策展数据 → 可渲染星系（确定性，SSG 可复现）
+  const galaxies = useMemo(() => buildGalaxies(stargateGalaxies), []);
+  // 花园笔记索引：概念原子的详情正文仍来自数字花园
+  const gardenById = useMemo(
+    () => new Map(gardenNotes.map((n) => [n.id, n])),
+    [],
   );
 
+  // 每个星体的展示元数据：星系主题色着色辉光/恒星，galaxy 驱动标签显隐
+  const bodyMeta = useMemo<SceneBodyMeta[]>(
+    () =>
+      stargateGalaxies.flatMap((g) =>
+        g.bodies.map((b) => ({
+          id: b.id,
+          title: b.title,
+          designation: designation(b.id),
+          color: g.color,
+          galaxy: g.id,
+        })),
+      ),
+    [],
+  );
+
+  /* ---------- 导航状态机 ----------
+     activeGalaxy = null → 总览；= GalaxyId → 置身该星系。
+     ref 镜像供场景回调读取（回调闭包在场景构建时固化，须读活值）。 */
+  const [activeGalaxy, setActiveGalaxy] = useState<GalaxyId | null>(null);
+  const [selected, setSelected] = useState<DocBody | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [selected, setSelected] = useState<GardenNote | null>(null);
   const [noWebgl, setNoWebgl] = useState(false);
+  const [warping, setWarping] = useState(false);
+  const [warpKey, setWarpKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<StargateScene | null>(null);
+  const activeGalaxyRef = useRef<GalaxyId | null>(null);
+  /** 跃迁途中预定的选中星体（抵达后揭示详情） */
+  const pendingSelectRef = useRef<string | null>(null);
 
-  // 详情正文里的 [[双链]]：内部链接点击直接切换到目标节点；其余链接照常外开
+  /** 跃迁到星系 / 返回总览。相机状态在 warp 遮蔽下瞬间切换。 */
+  const navigateTo = useCallback(
+    (galaxy: GalaxyId | null) => {
+      if (galaxy === activeGalaxyRef.current) return;
+      activeGalaxyRef.current = galaxy;
+      setActiveGalaxy(galaxy);
+      setSelected(null);
+      setWarpKey((k) => k + 1);
+      setWarping(true);
+      const scene = sceneRef.current;
+      if (scene) {
+        scene.setSelected(null);
+        scene.setActiveGalaxy(galaxy);
+        if (galaxy) {
+          const spec = galaxies.find((g) => g.id === galaxy);
+          if (spec) scene.setNavView(spec.center, GALAXY_DIST, true);
+        } else {
+          scene.setNavView(null, OVERVIEW_DIST, true);
+        }
+      }
+    },
+    [galaxies],
+  );
+
+  /** 点击星体：不在当前星系 → 跃迁过去并选中；已在 → 开合详情。 */
+  const handleBodyClick = useCallback(
+    (id: string) => {
+      const body = docBodyById.get(id);
+      if (!body) return;
+      const g = galaxyOfBody.get(id) ?? null;
+      if (g && g !== activeGalaxyRef.current) {
+        navigateTo(g);
+        pendingSelectRef.current = id;
+      } else {
+        setSelected((prev) => (prev?.id === id ? null : body));
+      }
+    },
+    [navigateTo],
+  );
+
+  /** 选中星体（wikilink 用）：跨星系时先跃迁。 */
+  const selectBody = useCallback(
+    (body: DocBody) => {
+      const g = galaxyOfBody.get(body.id) ?? null;
+      if (g && g !== activeGalaxyRef.current) {
+        navigateTo(g);
+        pendingSelectRef.current = body.id;
+      } else {
+        setSelected(body);
+      }
+    },
+    [navigateTo],
+  );
+
+  const onWarpDone = useCallback(() => {
+    setWarping(false);
+    const pid = pendingSelectRef.current;
+    pendingSelectRef.current = null;
+    if (pid) {
+      const body = docBodyById.get(pid);
+      if (body) setSelected(body);
+    }
+  }, []);
+
+  // 详情正文里的 [[双链]]：命中概念原子 → 跳回星图选中；其余链接照常外开
   const mdComponents = useMemo<Components>(
     () => ({
       a({ href, children, ...props }) {
         if (href && href.startsWith(WIKI_HREF)) {
-          const target = byId.get(href.slice(WIKI_HREF.length));
-          if (target) {
+          const atom = atomByGardenId.get(href.slice(WIKI_HREF.length));
+          if (atom) {
             return (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelected(target);
-                }}
+                onClick={() => selectBody(atom)}
                 className="text-cyan-300 underline decoration-dotted underline-offset-2 hover:text-cyan-100 transition-colors"
               >
                 {children}
               </button>
             );
           }
+          return <span className="text-slate-400/70">{children}</span>;
         }
         return (
           <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
@@ -105,13 +195,13 @@ const DigitalGarden: React.FC = () => {
         );
       },
     }),
-    [byId],
+    [selectBody],
   );
 
   // ---------- 构建 / 销毁 three.js 场景（仅客户端且支持 WebGL） ----------
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || notes.length === 0) return;
+    if (!el) return;
     if (!supportsWebGL()) {
       setNoWebgl(true);
       return;
@@ -123,28 +213,28 @@ const DigitalGarden: React.FC = () => {
     try {
       scene = new StargateScene({
         container: el,
-        systems,
+        systems: galaxies,
         meta: bodyMeta,
         reduceMotion: reduce,
-        onNodeClick: (id) => {
-          const nd = byId.get(id);
-          if (nd) setSelected((prev) => (prev?.id === id ? null : nd));
-        },
-        onNodeHover: (id) => setHovered(id),
+        onNodeClick: handleBodyClick,
+        onNodeHover: setHovered,
       });
     } catch {
       setNoWebgl(true);
       return;
     }
+    // 初始视图：总览（入场 warp 淡出后揭示三星系全景）
+    scene.setActiveGalaxy(null);
+    scene.setNavView(null, OVERVIEW_DIST, true);
     sceneRef.current = scene;
     return () => {
       scene?.dispose();
       sceneRef.current = null;
     };
-    // notes/systems/bodyMeta/byId 均为稳定 memo，场景只构建一次
-  }, [notes, systems, bodyMeta, byId]);
+    // galaxies/bodyMeta 为稳定 memo，handleBodyClick 经 useCallback 稳定，场景只构建一次
+  }, [galaxies, bodyMeta, handleBodyClick]);
 
-  // React 状态 → 场景（高亮 / fly-to）
+  // React 状态 → 场景（高亮 / 选中追踪）
   useEffect(() => {
     sceneRef.current?.setHovered(hovered);
   }, [hovered]);
@@ -155,16 +245,33 @@ const DigitalGarden: React.FC = () => {
   const dolly = (factor: number) => sceneRef.current?.dolly(factor);
   const reset = () => sceneRef.current?.reset();
 
-  if (notes.length === 0) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center text-slate-400/70 font-mono text-sm">
-        花园尚未播种 —— 在 content/garden/ 添加节点即可生长。
-      </div>
-    );
-  }
+  const activeGalaxyData = activeGalaxy
+    ? galaxyById.get(activeGalaxy)
+    : undefined;
+  const selectedGalaxy = selected
+    ? galaxyById.get(galaxyOfBody.get(selected.id)!)
+    : undefined;
+  const selectedGardenNote = selected?.gardenId
+    ? gardenById.get(selected.gardenId)
+    : undefined;
 
   return (
     <div className="absolute inset-0 overflow-hidden">
+      {/* 星系跃迁覆盖层：不透明星场遮蔽相机瞬移，key 保证每次跃迁重新播放 */}
+      {warping && (
+        <Warp
+          key={warpKey}
+          duration={NAV_WARP_MS}
+          title="WARP\u00A0JUMP"
+          sub={
+            activeGalaxy
+              ? `跃迁至 · ${galaxyById.get(activeGalaxy)?.name ?? ''}`
+              : '返回 · 星图总览'
+          }
+          onDone={onWarpDone}
+        />
+      )}
+
       {/* three.js 画布 + CSS2D 标签层由场景管理器注入到此容器 */}
       <div
         ref={containerRef}
@@ -176,28 +283,107 @@ const DigitalGarden: React.FC = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400/70 font-mono text-sm pointer-events-none">
           <p>当前环境不支持 WebGL，星图暂不可渲染。</p>
           <p className="text-[11px] text-slate-500/60">
-            想法笔记仍可在下方 HUD 中浏览。
+            文档仍可经详情面板的外链访问。
           </p>
         </div>
       )}
 
-      {/* 图例（左下 HUD） */}
-      <div className="stargate-panel stargate-hud absolute bottom-3 left-3 rounded-md px-3 py-2 text-[11px] pointer-events-none z-10">
-        <div className="stargate-catalog mb-1.5">GROWTH · 成长阶段</div>
-        <div className="flex flex-col gap-1">
-          {(Object.keys(STAGE) as Stage[]).map((s) => (
-            <span key={s} className="inline-flex items-center gap-1.5">
+      {/* 星系切换轨（左中 HUD）：总览 ↔ 三星系 */}
+      <div className="stargate-hud absolute left-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1.5">
+        <div className="stargate-catalog pl-1 mb-0.5">GALAXIES · 星系</div>
+        <button
+          onClick={() => navigateTo(null)}
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12px] transition-all border ${
+            activeGalaxy === null
+              ? 'text-white'
+              : 'border-cyan-400/15 text-slate-300/70 bg-[#060c1e]/40 hover:text-white hover:border-cyan-400/45'
+          }`}
+          style={
+            activeGalaxy === null
+              ? {
+                  borderColor: 'rgba(103,232,249,0.7)',
+                  background: 'rgba(103,232,249,0.12)',
+                  boxShadow: '0 0 14px rgba(103,232,249,0.35)',
+                }
+              : undefined
+          }
+        >
+          <span className="w-2 h-2 rounded-full border border-cyan-300/80 shrink-0" />
+          星图总览
+        </button>
+        {stargateGalaxies.map((g) => {
+          const active = activeGalaxy === g.id;
+          return (
+            <button
+              key={g.id}
+              onClick={() => navigateTo(g.id)}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12px] transition-all border ${
+                active
+                  ? 'text-white'
+                  : 'border-cyan-400/15 text-slate-300/70 bg-[#060c1e]/40 hover:text-white hover:border-cyan-400/45'
+              }`}
+              style={
+                active
+                  ? {
+                      borderColor: `${g.color}b3`,
+                      background: `${g.color}1f`,
+                      boxShadow: `0 0 14px ${g.color}55`,
+                    }
+                  : undefined
+              }
+            >
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{
+                  background: g.color,
+                  boxShadow: active
+                    ? `0 0 8px ${g.color}`
+                    : `0 0 5px ${g.color}66`,
+                }}
+              />
+              {g.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 当前视图信息（左下 HUD） */}
+      <div className="stargate-panel stargate-hud absolute bottom-3 left-3 rounded-md px-3 py-2 z-10 pointer-events-none max-w-[17rem]">
+        {activeGalaxyData ? (
+          <>
+            <div className="stargate-catalog mb-1">
+              GALAXY · {activeGalaxyData.id.toUpperCase()}
+            </div>
+            <div className="flex items-center gap-1.5">
               <span
                 className="w-2 h-2 rounded-full"
                 style={{
-                  background: `radial-gradient(circle at 32% 28%, #fff, ${STAGE[s].color} 55%, ${mixColor(STAGE[s].color, '#04060f', 0.55)})`,
-                  boxShadow: `0 0 8px ${STAGE[s].color}`,
+                  background: activeGalaxyData.color,
+                  boxShadow: `0 0 8px ${activeGalaxyData.color}`,
                 }}
               />
-              <span className="text-slate-300/80">{STAGE[s].label}</span>
-            </span>
-          ))}
-        </div>
+              <span className="text-[13px] font-bold text-cyan-50">
+                {activeGalaxyData.name}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300/70 mt-1 leading-relaxed">
+              {activeGalaxyData.note}
+            </p>
+            <p className="text-[10px] font-mono text-slate-400/50 mt-1.5">
+              {activeGalaxyData.bodies.length} 星体 · 点击星体展开详情
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="stargate-catalog mb-1">UNIVERSE · 文档宇宙</div>
+            <p className="text-[11px] text-slate-300/70 leading-relaxed">
+              三大领域星系 · 三条能力主线
+            </p>
+            <p className="text-[10px] font-mono text-slate-400/50 mt-1.5">
+              选择星系跃迁 · 或直接点击星体
+            </p>
+          </>
+        )}
       </div>
 
       {/* 镜头控件（右下 HUD） */}
@@ -219,11 +405,6 @@ const DigitalGarden: React.FC = () => {
         ))}
       </div>
 
-      {/* 操作提示（顶部居中，细小） */}
-      <div className="stargate-catalog absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap z-10">
-        点击星体展开 · 拖拽旋转星系 · 滚轮推拉镜头
-      </div>
-
       {/* 详情面板（右侧滑入） */}
       {selected && (
         <div
@@ -231,26 +412,51 @@ const DigitalGarden: React.FC = () => {
           className="stargate-hud absolute inset-y-0 right-0 w-full sm:w-[400px] bg-[#050a1c]/95 backdrop-blur-md border-l border-cyan-400/25 shadow-[0_0_50px_-12px_rgba(80,200,255,0.55)] flex flex-col animate-fade-in z-20"
         >
           <div className="flex items-start justify-between gap-3 p-5 border-b border-white/10">
-            <div>
-              <span className="stargate-catalog block mb-1">
+            <div className="min-w-0">
+              <span className="stargate-catalog block mb-1.5">
                 {designation(selected.id)}
               </span>
-              <span
-                className="inline-block text-[11px] font-mono px-2 py-0.5 rounded mb-2"
-                style={{
-                  color: STAGE[stageOf(selected)].color,
-                  border: `1px solid ${STAGE[stageOf(selected)].color}66`,
-                }}
-              >
-                {STAGE[stageOf(selected)].label}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                {selected.badge && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-cyan-400/30 text-cyan-200/80 bg-cyan-400/5">
+                    {selected.badge}
+                  </span>
+                )}
+                {selectedGalaxy && (
+                  <span
+                    className="text-[10px] font-mono px-2 py-0.5 rounded border inline-flex items-center gap-1"
+                    style={{
+                      borderColor: `${selectedGalaxy.color}66`,
+                      color: selectedGalaxy.color,
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: selectedGalaxy.color }}
+                    />
+                    {selectedGalaxy.name}
+                  </span>
+                )}
+              </div>
               <h3 className="text-lg font-bold text-cyan-50 leading-snug">
                 {selected.title}
               </h3>
-              {selected.updated && (
-                <p className="text-[11px] font-mono text-slate-400/60 mt-1">
-                  更新于 {selected.updated}
-                </p>
+              {selected.threads.length > 0 && (
+                <div className="flex gap-1.5 mt-2 flex-wrap">
+                  {selected.threads.map((tid) => {
+                    const th = threadById.get(tid);
+                    if (!th) return null;
+                    return (
+                      <span
+                        key={tid}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-full border"
+                        style={{ borderColor: `${th.color}55`, color: th.color }}
+                      >
+                        {th.name}
+                      </span>
+                    );
+                  })}
+                </div>
               )}
             </div>
             <button
@@ -263,36 +469,40 @@ const DigitalGarden: React.FC = () => {
           </div>
 
           <div className="p-5 overflow-y-auto flex-1">
-            <Markdown
-              className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300"
-              components={mdComponents}
-            >
-              {linkifyWikiLinks(selected.content || '', byId)}
-            </Markdown>
-
-            {(selected.links || []).filter((id) => byId.has(id)).length > 0 && (
-              <div className="mt-6">
-                <p className="stargate-catalog mb-2">LINKED · 关联节点</p>
-                <div className="flex flex-wrap gap-2">
-                  {(selected.links || [])
-                    .filter((id) => byId.has(id))
-                    .map((id) => {
-                      const t = byId.get(id)!;
-                      return (
-                        <button
-                          key={id}
-                          onClick={() => setSelected(t)}
-                          className="stargate-neon rounded-full px-3 py-1 text-xs inline-flex items-center gap-1.5"
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full"
-                            style={{ background: STAGE[stageOf(t)].color }}
-                          />
-                          {t.title}
-                        </button>
-                      );
-                    })}
-                </div>
+            {selected.desc && (
+              <p className="text-[13px] leading-relaxed text-slate-300/85">
+                {selected.desc}
+              </p>
+            )}
+            {selected.url && (
+              <a
+                href={selected.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="stargate-neon mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px]"
+              >
+                <Icon name="external-link-alt" />
+                打开完整文档
+              </a>
+            )}
+            {selectedGardenNote && (
+              <div
+                className={
+                  selected.desc || selected.url
+                    ? 'mt-5 pt-4 border-t border-white/10'
+                    : ''
+                }
+              >
+                <p className="stargate-catalog mb-2">GARDEN · 概念原子</p>
+                <Markdown
+                  className="prose-invert prose-sm prose-headings:text-cyan-100 prose-a:text-cyan-300"
+                  components={mdComponents}
+                >
+                  {linkifyWikiLinks(
+                    selectedGardenNote.content || '',
+                    gardenById,
+                  )}
+                </Markdown>
               </div>
             )}
           </div>
