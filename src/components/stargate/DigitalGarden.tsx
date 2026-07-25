@@ -18,6 +18,7 @@ import {
   THREADS,
   type DocBody,
   type GalaxyId,
+  type ThreadId,
 } from '../../data/stargateDocs';
 import { StargateScene, type SceneBodyMeta } from './three/StargateScene';
 import { buildGalaxies } from './three/galaxies';
@@ -56,6 +57,16 @@ const atomByGardenId = new Map<string, DocBody>(
       .filter((b) => b.gardenId)
       .map((b) => [b.gardenId as string, b] as const),
   ),
+);
+
+/** 主线 → 成员星体 id（数据序，跨星系；航线按序两两连段） */
+const threadMembers = new Map<ThreadId, string[]>(
+  THREADS.map((th) => [
+    th.id,
+    stargateGalaxies.flatMap((g) =>
+      g.bodies.filter((b) => b.threads.includes(th.id)).map((b) => b.id),
+    ),
+  ]),
 );
 
 /** 全部星体（数据序），用于同主线关联的全宇宙遍历 */
@@ -179,6 +190,8 @@ const DigitalGarden: React.FC = () => {
      activeGalaxy = null → 总览；= GalaxyId → 置身该星系。
      ref 镜像供场景回调读取（回调闭包在场景构建时固化，须读活值）。 */
   const [activeGalaxy, setActiveGalaxy] = useState<GalaxyId | null>(null);
+  /** P4 主线虫洞：当前点亮的主线（null = 关闭） */
+  const [activeThread, setActiveThread] = useState<ThreadId | null>(null);
   const [selected, setSelected] = useState<DocBody | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [noWebgl, setNoWebgl] = useState(false);
@@ -243,6 +256,20 @@ const DigitalGarden: React.FC = () => {
       }
     },
     [navigateTo],
+  );
+
+  /** 主线虫洞开关：再点一次关闭。激活时退出星系视图（跨星系航线需总览取景）并收起详情。 */
+  const toggleThread = useCallback(
+    (tid: ThreadId) => {
+      const next = tid === activeThread ? null : tid;
+      if (next) {
+        if (activeGalaxyRef.current !== null) navigateTo(null);
+        setSelected(null);
+        sceneRef.current?.setSelected(null);
+      }
+      setActiveThread(next);
+    },
+    [activeThread, navigateTo],
   );
 
   const onWarpDone = useCallback(() => {
@@ -328,11 +355,29 @@ const DigitalGarden: React.FC = () => {
     sceneRef.current?.setSelected(selected?.id ?? null);
   }, [selected]);
 
+  // 主线态 → 场景：成员高亮 + 跨星系航线（声明于挂载 effect 之后，sceneRef 已就位）
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    if (activeThread) {
+      const th = threadById.get(activeThread);
+      scene.setActiveThread(
+        threadMembers.get(activeThread) ?? [],
+        th?.color ?? null,
+      );
+    } else {
+      scene.setActiveThread(null, null);
+    }
+  }, [activeThread]);
+
   const dolly = (factor: number) => sceneRef.current?.dolly(factor);
   const reset = () => sceneRef.current?.reset();
 
   const activeGalaxyData = activeGalaxy
     ? galaxyById.get(activeGalaxy)
+    : undefined;
+  const activeThreadData = activeThread
+    ? threadById.get(activeThread)
     : undefined;
   const selectedGalaxy = selected
     ? galaxyById.get(galaxyOfBody.get(selected.id)!)
@@ -440,11 +485,74 @@ const DigitalGarden: React.FC = () => {
             </button>
           );
         })}
+        {/* 主线虫洞轨：单选切换，点亮跨星系成员与弧线航线 */}
+        <div className="stargate-catalog pl-1 mb-0.5 mt-3">THREADS · 主线</div>
+        {THREADS.map((th) => {
+          const active = activeThread === th.id;
+          const count = (threadMembers.get(th.id) ?? []).length;
+          return (
+            <button
+              key={th.id}
+              onClick={() => toggleThread(th.id)}
+              title={`${th.name} · ${count} 星体`}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12px] transition-all border ${
+                active
+                  ? 'text-white'
+                  : 'border-cyan-400/15 text-slate-300/70 bg-[#060c1e]/40 hover:text-white hover:border-cyan-400/45'
+              }`}
+              style={
+                active
+                  ? {
+                      borderColor: `${th.color}b3`,
+                      background: `${th.color}1f`,
+                      boxShadow: `0 0 14px ${th.color}55`,
+                    }
+                  : undefined
+              }
+            >
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{
+                  background: th.color,
+                  boxShadow: active
+                    ? `0 0 8px ${th.color}`
+                    : `0 0 5px ${th.color}66`,
+                }}
+              />
+              {th.name}
+              <span className="ml-auto pl-1 text-[9px] font-mono opacity-60">
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* 当前视图信息（左下 HUD） */}
       <div className="stargate-panel stargate-hud absolute bottom-3 left-3 rounded-md px-3 py-2 z-10 pointer-events-none max-w-[17rem]">
-        {activeGalaxyData ? (
+        {activeThreadData ? (
+          <>
+            <div className="stargate-catalog mb-1">
+              THREAD · {activeThreadData.id.toUpperCase()}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{
+                  background: activeThreadData.color,
+                  boxShadow: `0 0 8px ${activeThreadData.color}`,
+                }}
+              />
+              <span className="text-[13px] font-bold text-cyan-50">
+                {activeThreadData.name}
+              </span>
+            </div>
+            <p className="text-[10px] font-mono text-slate-400/50 mt-1.5">
+              {(threadMembers.get(activeThreadData.id) ?? []).length} 星体 ·
+              跨星系航线已点亮
+            </p>
+          </>
+        ) : activeGalaxyData ? (
           <>
             <div className="stargate-catalog mb-1">
               GALAXY · {activeGalaxyData.id.toUpperCase()}
