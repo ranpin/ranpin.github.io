@@ -69,6 +69,9 @@ const CHASE_DIST = 2.6; // 选中追踪时的镜头距离
 const TRAIL_N = 40; // 尾迹顶点数
 const TRAIL_ARC = 0.09; // 尾迹覆盖的轨道弧长比例
 
+/* ---------- 主线航线（P4） ---------- */
+const THREAD_ROUTE_N = 24; // 每条航线的采样点数（贝塞尔弧）
+
 /* 详情面板布局（与 DigitalGarden 的 sm:w-[400px] / Tailwind sm 断点保持一致）：
    面板打开时渲染视口需左移半个面板宽，让选中恒星落在"可见区"中心 */
 const DETAIL_PANEL_W = 400;
@@ -172,6 +175,15 @@ export class StargateScene {
   /** 当前所在星系 id；null = 总览。驱动标签按星系显隐 */
   private activeGalaxy: string | null = null;
 
+  /* ---------- 主线航线状态（P4） ----------
+     threadSet 非空时：成员星体提亮、其余压暗，并在成员间（数据序相邻）
+     拉起逐帧跟随开普勒运动的贝塞尔弧线，作为跨星系「航线/虫洞」。 */
+  private threadSet: Set<string> | null = null;
+  private threadColor = new THREE.Color('#ffffff');
+  private threadRoutes: THREE.Group | null = null;
+  private threadRouteMat: THREE.LineBasicMaterial | null = null;
+  private threadSegs: { a: BodyRT; b: BodyRT }[] = [];
+
   /** 画布 CSS 尺寸（resize 时更新），供 setViewOffset 使用 */
   private view = { w: 800, h: 600 };
   /** 可见区修正偏移量（px）：面板打开时把渲染视口左移，cur 逐帧缓动到 tgt */
@@ -246,6 +258,7 @@ export class StargateScene {
       const t = this.timer.getElapsed();
       const tSim = reduce ? 0 : t;
       this.updateBodies(tSim, dt, reduce);
+      this.updateThreadRoutes(tSim);
       this.updateCamera(dt);
       // 天空盒跟随相机（位置 + 朝向）：星云始终贴在视野外围球壳上，
       // 任意轨道方位都保证有彩雾景深；远景星场（世界坐标 Points）提供 3D 视差。
@@ -891,10 +904,22 @@ export class StargateScene {
         // 追踪推近时标签不会脱离星体，拉远时也不会糊到球面上
         b.label.position.y = b.labelBaseY * (this.cam.cur.dist / HOME.dist);
 
-        // 高亮：激活 1.45 / 邻居 1.1 / 有激活时的其余 0.42 / 无激活 1
+        // 高亮：激活 1.45 / 邻居 1.1 / 有激活时的其余 0.42 / 无激活 1；
+        // 主线开启时：成员 ≥0.95 提亮、非成员压暗至 0.32（层级：激活 > 成员 > 其余）
         const isActive = act === b.spec.id;
         const isNeighbor = act ? activeNeighbors.has(b.spec.id) : false;
-        b.boostT = isActive ? 1.45 : act ? (isNeighbor ? 1.1 : 0.42) : 1;
+        const threadOn = this.threadSet !== null;
+        const inThread = threadOn && this.threadSet!.has(b.spec.id);
+        let boostT: number;
+        if (isActive) boostT = 1.45;
+        else if (act) boostT = isNeighbor ? 1.1 : 0.42;
+        else if (threadOn) boostT = inThread ? 1.18 : 0.3;
+        else boostT = 1;
+        if (threadOn && !isActive) {
+          if (inThread) boostT = Math.max(boostT, 0.95);
+          else boostT = Math.min(boostT, 0.32);
+        }
+        b.boostT = boostT;
         b.boost += (b.boostT - b.boost) * k;
 
         if (b.sphereMat) {
@@ -948,7 +973,10 @@ export class StargateScene {
 
         // 标签状态类（CSS 控制明暗/描边）
         b.labelEl.classList.toggle('is-active', isActive);
-        b.labelEl.classList.toggle('is-dim', !!act && !isActive && !isNeighbor);
+        b.labelEl.classList.toggle(
+          'is-dim',
+          (!!act && !isActive && !isNeighbor) || (threadOn && !inThread),
+        );
         // 导航显隐：总览只亮核心（星系标题），星系内只亮本星系星体
         const labelHidden =
           this.activeGalaxy === null
@@ -1085,6 +1113,111 @@ export class StargateScene {
   /** 设置当前所在星系（null = 总览），驱动标签按星系显隐 */
   setActiveGalaxy(id: string | null) {
     this.activeGalaxy = id;
+  }
+
+  /**
+   * P4 主线虫洞：高亮跨星系的主线成员星体，并在它们之间绘制弧线航线。
+   * ids = null / 空 → 清除主线态（恢复常态亮度、移除航线）。
+   */
+  setActiveThread(ids: string[] | null, color: string | null) {
+    this.clearThreadRoutes();
+    if (!ids || ids.length === 0 || !color) {
+      this.threadSet = null;
+      return;
+    }
+    this.threadSet = new Set(ids);
+    this.threadColor.set(color);
+
+    // 成员按数据序两两连段（跨星系边自然产生）
+    const members = ids
+      .map((id) => this.bodyById.get(id))
+      .filter((b): b is BodyRT => !!b);
+    for (let i = 0; i + 1 < members.length; i++) {
+      this.threadSegs.push({ a: members[i], b: members[i + 1] });
+    }
+    if (this.threadSegs.length === 0) return;
+
+    // 单个 LineSegments 承载全部段：每段按二次贝塞尔采样 THREAD_ROUTE_N 点，
+    // 控制点从中点向外（远离宇宙质心）抬升 → 弧线鼓出星系盘面，不穿膛而过
+    const segVert = (THREAD_ROUTE_N - 1) * 2;
+    const pos = new Float32Array(this.threadSegs.length * segVert * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage),
+    );
+    this.threadRouteMat = new THREE.LineBasicMaterial({
+      color: this.threadColor,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const lines = new THREE.LineSegments(geo, this.threadRouteMat);
+    lines.frustumCulled = false; // 顶点每帧重写，包围盒无意义
+    this.threadRoutes = new THREE.Group();
+    this.threadRoutes.add(lines);
+    this.scene.add(this.threadRoutes);
+    this.updateThreadRoutes(0);
+  }
+
+  /** 清除主线航线并释放几何体/材质 */
+  private clearThreadRoutes() {
+    this.threadSegs = [];
+    if (this.threadRoutes) {
+      this.scene.remove(this.threadRoutes);
+      this.threadRoutes.traverse((obj) => {
+        const l = obj as THREE.LineSegments;
+        if (l.geometry) l.geometry.dispose();
+        (l.material as THREE.Material | undefined)?.dispose();
+      });
+      this.threadRoutes = null;
+    }
+    this.threadRouteMat = null;
+  }
+
+  /** 每帧重写航线顶点（星体在运动，弧线随之游动）并脉动透明度 */
+  private updateThreadRoutes(t: number) {
+    if (!this.threadRoutes || !this.threadRouteMat || this.threadSegs.length === 0)
+      return;
+    const lines = this.threadRoutes.children[0] as THREE.LineSegments;
+    const attr = lines.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const arr = attr.array as Float32Array;
+    let w = 0;
+    for (const { a, b } of this.threadSegs) {
+      const A = a.group.getWorldPosition(this.tmpV);
+      const B = b.group.getWorldPosition(this.tmpV2);
+      // 控制点 = 弦中点沿径向抬升 lift，形成跨星系的鼓出弧线
+      const C = this.tmpV3.copy(A).add(B).multiplyScalar(0.5);
+      const chord = A.distanceTo(B);
+      const lift = chord * 0.18 + 0.6;
+      const len = C.length();
+      if (len < 1e-3) C.set(0, lift, 0);
+      else C.multiplyScalar(1 + lift / len);
+      let px = 0;
+      let py = 0;
+      let pz = 0;
+      for (let i = 0; i < THREAD_ROUTE_N; i++) {
+        const s = i / (THREAD_ROUTE_N - 1);
+        const ia = 1 - s;
+        const x = ia * ia * A.x + 2 * ia * s * C.x + s * s * B.x;
+        const y = ia * ia * A.y + 2 * ia * s * C.y + s * s * B.y;
+        const z = ia * ia * A.z + 2 * ia * s * C.z + s * s * B.z;
+        if (i > 0) {
+          arr[w++] = px;
+          arr[w++] = py;
+          arr[w++] = pz;
+          arr[w++] = x;
+          arr[w++] = y;
+          arr[w++] = z;
+        }
+        px = x;
+        py = y;
+        pz = z;
+      }
+    }
+    attr.needsUpdate = true;
+    this.threadRouteMat.opacity = 0.3 + 0.12 * Math.sin(t * 1.8);
   }
 
   dolly(factor: number) {
