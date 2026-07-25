@@ -20,12 +20,16 @@ import {
   starFrag,
   starfieldVert,
   starfieldFrag,
+  atmosphereVert,
+  atmosphereFrag,
   makeGlowTexture,
-  makeNebulaTexture,
+  rawSrgbColor,
 } from './shaders';
+import { TextureBaker, surfaceStyleFor } from './planetTextures';
 import {
   orbitalPosition,
   orbitEllipsePoints,
+  hashId,
   type SystemSpec,
   type BodySpec,
 } from './systems';
@@ -71,9 +75,21 @@ const PANEL_BREAKPOINT = 640;
 interface BodyRT {
   spec: BodySpec;
   group: THREE.Group;
-  sphereMat: THREE.ShaderMaterial;
+  /** 恒星：自发光等离子体着色器（行星为 null） */
+  sphereMat: THREE.ShaderMaterial | null;
+  /** 行星：物理光照材质 + 烘焙地表贴图（恒星为 null） */
+  stdMat: THREE.MeshStandardMaterial | null;
+  /** 自转网格（行星；挂在倾斜容器内） */
+  spinMesh: THREE.Mesh | null;
+  cloudMesh: THREE.Mesh | null;
+  atmoMat: THREE.ShaderMaterial | null;
+  spinSpeed: number;
+  /** 熔岩裂纹的基础自发光强度（0 = 无） */
+  baseEmissive: number;
   glowMat: THREE.SpriteMaterial;
   glow: THREE.Sprite;
+  /** 辉光基础不透明度（恒星浓 / 行星淡） */
+  glowBase: number;
   /** 核心恒星的日冕脉冲 sprite */
   corona: THREE.Sprite | null;
   coronaMat: THREE.SpriteMaterial | null;
@@ -119,7 +135,10 @@ export class StargateScene {
 
   private starfieldMat: THREE.ShaderMaterial | null = null;
   private glowTex: THREE.CanvasTexture;
-  private nebulaTexs: THREE.CanvasTexture[] = [];
+  /** 星云天空盒组：每帧位置同步到相机，保证任意轨道方位都有彩雾景深 */
+  private nebulaGroup!: THREE.Group;
+  /** GPU 贴图烘焙器（行星地表 / 云层 / 星云 / 银河带，持有全部 render target） */
+  private baker: TextureBaker;
 
   private cam = {
     cur: { rx: HOME.rx + 0.5, ry: HOME.ry - 1.3, dist: 11.5 },
@@ -145,6 +164,8 @@ export class StargateScene {
   private raycaster = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
   private tmpV = new THREE.Vector3();
+  private tmpV2 = new THREE.Vector3();
+  private tmpV3 = new THREE.Vector3();
   private timer = new THREE.Timer();
   private raf = 0;
   private ro: ResizeObserver | null = null;
@@ -174,6 +195,10 @@ export class StargateScene {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(0x000000, 0);
+    // 物理光照管线：ACES 色调映射让行星的日照面/夜半球过渡更电影感；
+    // 自定义着色器（恒星/星海/大气）不含 tonemapping chunk，亮度不受影响
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
     const canvas = this.renderer.domElement;
     canvas.className = 'sg3-canvas';
     this.container.appendChild(canvas);
@@ -185,10 +210,16 @@ export class StargateScene {
 
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
+    // 冷色环境光：行星夜半球保留微弱可见度（不至于死黑）
+    this.scene.add(new THREE.AmbientLight('#3a4f6f', 0.7));
+    this.baker = new TextureBaker(this.renderer);
     this.glowTex = makeGlowTexture();
     this.buildStarfield();
     this.buildNebulae();
     this.buildSystems(reduce);
+
+    // TEMP-DEBUG: 星云渲染排查用，提交前删除
+    (window as unknown as Record<string, unknown>).__stargate = this;
 
     this.resize();
     this.bindEvents();
@@ -203,6 +234,10 @@ export class StargateScene {
       const tSim = reduce ? 0 : t;
       this.updateBodies(tSim, dt, reduce);
       this.updateCamera(dt);
+      // 天空盒跟随相机（位置 + 朝向）：星云始终贴在视野外围球壳上，
+      // 任意轨道方位都保证有彩雾景深；远景星场（世界坐标 Points）提供 3D 视差。
+      this.nebulaGroup.position.copy(this.camera.position);
+      this.nebulaGroup.quaternion.copy(this.camera.quaternion);
       if (this.starfieldMat) this.starfieldMat.uniforms.uTime.value = tSim;
       this.renderer.render(this.scene, this.camera);
       this.labelRenderer.render(this.scene, this.camera);
@@ -213,16 +248,12 @@ export class StargateScene {
   /* ================= 构建 ================= */
 
   private buildStarfield() {
-    const COUNT = 1500;
-    const pos = new Float32Array(COUNT * 3);
-    const col = new Float32Array(COUNT * 3);
-    const size = new Float32Array(COUNT);
-    const phase = new Float32Array(COUNT);
     const palette: [number, number, number][] = [
       [0.83, 0.9, 1.0], // 冷白
       [0.59, 0.78, 1.0], // 淡蓝
       [1.0, 0.89, 0.7], // 暖金
       [0.78, 0.67, 1.0], // 淡紫
+      [1.0, 0.72, 0.5], // 橙红
     ];
     let seed = 0x5a7f21;
     const rnd = () => {
@@ -232,26 +263,43 @@ export class StargateScene {
       x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
       return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
     };
-    for (let i = 0; i < COUNT; i++) {
-      // 均匀球壳 25..60
-      const r = 25 + rnd() * 35;
-      const th = rnd() * Math.PI * 2;
-      const ph = Math.acos(2 * rnd() - 1);
-      pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
-      pos[i * 3 + 1] = r * Math.cos(ph);
-      pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
-      const c = palette[rnd() < 0.62 ? 0 : rnd() < 0.55 ? 1 : rnd() < 0.7 ? 2 : 3];
-      col[i * 3] = c[0];
-      col[i * 3 + 1] = c[1];
-      col[i * 3 + 2] = c[2];
-      size[i] = 0.3 + rnd() * 0.85;
-      phase[i] = rnd();
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
-    geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
-    geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+    const makeLayer = (
+      count: number,
+      rMin: number,
+      rMax: number,
+      sMin: number,
+      sMax: number,
+      dim: number,
+    ): THREE.Points => {
+      const pos = new Float32Array(count * 3);
+      const col = new Float32Array(count * 3);
+      const size = new Float32Array(count);
+      const phase = new Float32Array(count);
+      for (let i = 0; i < count; i++) {
+        // 均匀球壳
+        const r = rMin + rnd() * (rMax - rMin);
+        const th = rnd() * Math.PI * 2;
+        const ph = Math.acos(2 * rnd() - 1);
+        pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+        pos[i * 3 + 1] = r * Math.cos(ph);
+        pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+        const c = palette[rnd() < 0.58 ? 0 : rnd() < 0.5 ? 1 : rnd() < 0.62 ? 2 : rnd() < 0.72 ? 3 : 4];
+        col[i * 3] = c[0] * dim;
+        col[i * 3 + 1] = c[1] * dim;
+        col[i * 3 + 2] = c[2] * dim;
+        size[i] = sMin + rnd() * (sMax - sMin);
+        phase[i] = rnd();
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+      geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+      geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+      const points = new THREE.Points(geo, this.starfieldMat!);
+      points.frustumCulled = false;
+      return points;
+    };
+
     this.starfieldMat = new THREE.ShaderMaterial({
       vertexShader: starfieldVert,
       fragmentShader: starfieldFrag,
@@ -260,34 +308,102 @@ export class StargateScene {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
-    const points = new THREE.Points(geo, this.starfieldMat);
-    points.frustumCulled = false;
-    this.scene.add(points);
+    // 近层亮星（闪烁明显）+ 远层暗星（景深感），共享同一材质
+    this.scene.add(makeLayer(2600, 25, 60, 0.3, 1.15, 1));
+    this.scene.add(makeLayer(3200, 55, 95, 0.12, 0.36, 0.72));
   }
 
   private buildNebulae() {
-    const defs: { rgb: [number, number, number]; p: [number, number, number]; s: number; o: number }[] =
-      [
-        { rgb: [124, 58, 237], p: [-30, 12, -38], s: 42, o: 0.14 }, // 紫
-        { rgb: [192, 38, 211], p: [34, -8, -30], s: 36, o: 0.11 }, // 品红
-        { rgb: [34, 211, 238], p: [10, 20, -44], s: 46, o: 0.1 }, // 青
-        { rgb: [56, 90, 200], p: [-24, -18, -26], s: 30, o: 0.09 }, // 蓝
-      ];
-    for (const d of defs) {
-      const tex = makeNebulaTexture(d.rgb);
-      this.nebulaTexs.push(tex);
+    // 天空盒组：每帧同步相机位置 + 朝向，子级坐标即"相机空间"
+    // （local -z 恒为视线方向），因此可以把星云精确贴到视野外围，
+    // 任意轨道方位都保证外围有彩雾景深。
+    this.nebulaGroup = new THREE.Group();
+    this.scene.add(this.nebulaGroup);
+
+    // 5 张 GPU 烘焙的 fBm 星云贴图（双色混合 + 丝缕结构）。
+    // 烘焙次数固定为 5（+1 银河带），保证 baker 后续行星 RT 索引稳定。
+    // 色相按"类似色相邻"排布（青→青蓝→品红，琥珀→绿→回到青），
+    // 避免近互补色（如品红↔青）紧邻——加色混合下互补色叠加会冲淡成白，
+    // 吞掉弱色相；类似色叠加仍保持饱和，各色相才能各自显色。
+    const palettes: { a: string; b: string; seed: number }[] = [
+      { a: '#22d3ee', b: '#0ea5e9', seed: 43.1 }, // 亮青 → 天蓝（k=0，0°）
+      { a: '#2dd4bf', b: '#3b82f6', seed: 11.3 }, // 青 → 蓝（k=1，36°）
+      { a: '#e879f9', b: '#c026d3', seed: 27.8 }, // 品红（k=2，72°，双色相 ~292°、高饱和）
+      { a: '#fbbf24', b: '#f97316', seed: 58.6 }, // 琥珀 → 橙（k=3，288°）
+      { a: '#34d399', b: '#14b8a6', seed: 71.2 }, // 翠绿 → 碧青（k=4，324°）
+    ];
+    const texs = palettes.map((p) =>
+      this.baker.bakeNebula(this.renderer, p.a, p.b, p.seed),
+    );
+
+    const addSprite = (
+      tex: THREE.Texture,
+      x: number,
+      y: number,
+      z: number,
+      s: number,
+      o: number,
+      rot: number,
+    ) => {
       const mat = new THREE.SpriteMaterial({
         map: tex,
         transparent: true,
-        opacity: d.o,
+        opacity: o,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
+        rotation: rot,
+        // 背景装饰绕过 ACES：暗色在色调映射里会被压到不可见，直出 sRGB 保住彩雾
+        toneMapped: false,
       });
       const spr = new THREE.Sprite(mat);
-      spr.position.set(...d.p);
-      spr.scale.set(d.s, d.s, 1);
-      this.scene.add(spr);
+      spr.position.set(x, y, z);
+      spr.scale.set(s, s, 1);
+      spr.frustumCulled = false;
+      this.nebulaGroup.add(spr);
+    };
+
+    // 外围彩雾环：5 对镜像星云沿视野外围椭圆（相机空间 x 半轴 38 / y 半轴 18，z=-50）。
+    // 每对在 (x,y) 与 (-x,y) 各放一团——同贴图（已水平对称）、同参数、旋转互为镜像，
+    // 因此整环严格左右平衡，背景重心不偏斜；5 色相循环 → 外围青/品红/亮青/琥珀/翠俱全。
+    const baseAng = [0, 36, 72, 288, 324]; // 右半 5 个基准角（度），镜像覆盖全环
+    // 逐色相配平：冷色（青/青蓝）饱和度高、加色下极易显色，给低不透明度；
+    // 品红/翠绿饱和度低、琥珀偏暖，需更高不透明度才能与冷色分庭抗礼。
+    // 尺寸刻意收小（≈相邻间距），让每团保有不被邻居冲淡的饱和核心——
+    // 团太大则核心互相重叠，加色混合把弱色相洗成白/青。
+    const pairO = [0.24, 0.26, 0.40, 0.34, 0.38]; // k=0..4：亮青/青蓝/品红/琥珀/翠绿
+    const pairS = [30, 30, 30, 32, 30];
+    for (let k = 0; k < baseAng.length; k++) {
+      const ang = (baseAng[k] * Math.PI) / 180;
+      const x = Math.cos(ang) * 38;
+      const y = Math.sin(ang) * 18;
+      const z = -50 + (k % 3) * 4; // -50 / -46 / -42 错落景深
+      const s = pairS[k];
+      const o = pairO[k];
+      const rot = (k * 1.3) % Math.PI;
+      const tex = texs[k % texs.length];
+      addSprite(tex, x, y, z, s, o, rot);
+      addSprite(tex, -x, y, z, s, o, -rot); // 镜像对：保证左右平衡
     }
+
+    // 银河带：横贯远景的暗弱光带（暖核 → 冷缘）。
+    // 必须保持水平（rotation=0）：贴图已水平对称，水平放置时银河带关于屏幕竖直
+    // 中线严格镜像，与镜像星云环加色叠加后整体亮度左右平衡；一旦倾斜，带心会在
+    // 左右两侧穿过不同不透明度的星云团，加色非线性会把亮结推到一侧、拉偏画面重心。
+    const bandTex = this.baker.bakeBand(this.renderer, '#f5d0a9', '#7aa5d8');
+    const bandMat = new THREE.SpriteMaterial({
+      map: bandTex,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      rotation: 0,
+      toneMapped: false,
+    });
+    const band = new THREE.Sprite(bandMat);
+    band.position.set(0, 4, -62);
+    band.scale.set(150, 42, 1);
+    band.frustumCulled = false;
+    this.nebulaGroup.add(band);
   }
 
   private buildSystems(reduce: boolean) {
@@ -296,6 +412,11 @@ export class StargateScene {
       const sysGroup = new THREE.Group();
       sysGroup.position.set(...spec.center);
       this.scene.add(sysGroup);
+
+      // 质心点光源：行星的昼夜晨昏线朝向恒星系中心（decay=1 缓和距离衰减，
+      // 外行星稍暗但依然可见，符合"离恒星越远越暗"的直觉）
+      const sunLight = new THREE.PointLight('#fff2e0', 7.5, 0, 1);
+      sysGroup.add(sunLight);
 
       const sysRT: SystemRT = {
         spec,
@@ -319,7 +440,7 @@ export class StargateScene {
           host.add(
             this.buildOrbitLine(
               body,
-              body.role === 'moon' ? 0.09 : body.role === 'core' ? 0.1 : 0.13,
+              body.role === 'moon' ? 0.11 : body.role === 'core' ? 0.13 : 0.16,
             ),
           );
         }
@@ -337,7 +458,7 @@ export class StargateScene {
           map: this.glowTex,
           color: new THREE.Color('#bcd6ff'),
           transparent: true,
-          opacity: 0.16,
+          opacity: 0.2,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         });
@@ -362,30 +483,111 @@ export class StargateScene {
     const group = new THREE.Group();
     const baseColor = new THREE.Color(meta?.color ?? '#9fd8ff');
     const phase = (body.id.length * 2.399963) % (Math.PI * 2);
+    const isStar = body.role === 'core' || body.role === 'lone';
 
-    // 发光球体（白热核心 + 阶段色边缘）
-    const sphereMat = new THREE.ShaderMaterial({
-      vertexShader: starVert,
-      fragmentShader: starFrag,
-      uniforms: {
-        uColor: { value: baseColor.clone() },
-        uBoost: { value: 1 },
-        uTime: { value: 0 },
-      },
-    });
-    group.add(new THREE.Mesh(new THREE.SphereGeometry(body.radius, 24, 24), sphereMat));
+    let sphereMat: THREE.ShaderMaterial | null = null;
+    let stdMat: THREE.MeshStandardMaterial | null = null;
+    let spinMesh: THREE.Mesh | null = null;
+    let cloudMesh: THREE.Mesh | null = null;
+    let atmoMat: THREE.ShaderMaterial | null = null;
+    let spinSpeed = 0;
+    let baseEmissive = 0;
+    const glowBase = isStar ? 0.55 : 0.3;
 
-    // 大气辉光 sprite
+    const sphereGeo = new THREE.SphereGeometry(body.radius, 48, 32);
+    if (isStar) {
+      // 恒星：自发光等离子体（fBm 翻涌 + 白热核心 + 阶段色边缘）
+      sphereMat = new THREE.ShaderMaterial({
+        vertexShader: starVert,
+        fragmentShader: starFrag,
+        uniforms: {
+          uColor: { value: baseColor.clone() },
+          uBoost: { value: 1 },
+          uTime: { value: 0 },
+          uSeed: { value: (phase * 7.13) % 10 },
+        },
+      });
+      group.add(new THREE.Mesh(sphereGeo, sphereMat));
+    } else {
+      // 行星/卫星：烘焙地表 + 物理光照（昼夜来自质心点光源）
+      const style = surfaceStyleFor(body.id);
+      const maps = this.baker.bakePlanetMaps(this.renderer, body.id, style);
+      stdMat = new THREE.MeshStandardMaterial({
+        map: maps.map,
+        roughness: style.roughness,
+        metalness: 0,
+        emissive: new THREE.Color(style.emissive ?? '#000000'),
+        emissiveIntensity: style.emissive ? 1.5 : 0,
+        // 仅在确有自发光贴图时传该键，避免 THREE 对 undefined 参数告警
+        ...(maps.emissiveMap ? { emissiveMap: maps.emissiveMap } : {}),
+      });
+      baseEmissive = style.emissive ? 1.5 : 0;
+
+      // 自转：倾斜容器 + 内部网格绕 Y 旋转（标签在 group 层不受影响）
+      const h = hashId(body.id);
+      const tilt = new THREE.Group();
+      tilt.rotation.z = (((h % 1000) / 1000) - 0.5) * 0.6;
+      spinMesh = new THREE.Mesh(sphereGeo, stdMat);
+      tilt.add(spinMesh);
+      group.add(tilt);
+      spinSpeed =
+        (((hashId(`${body.id}::spin`) % 1000) / 1000) * 0.22 + 0.06) *
+        (hashId(`${body.id}::dir`) % 2 === 0 ? 1 : -1);
+
+      // 云层：独立球壳，转速略快于地表
+      if (style.clouds) {
+        const cloudTex = this.baker.bakeClouds(this.renderer, body.id);
+        const cloudMat = new THREE.MeshStandardMaterial({
+          map: cloudTex,
+          transparent: true,
+          depthWrite: false,
+          roughness: 1,
+          metalness: 0,
+        });
+        cloudMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(body.radius * 1.025, 48, 32),
+          cloudMat,
+        );
+        cloudMesh.renderOrder = 1;
+        tilt.add(cloudMesh);
+      }
+
+      // 大气层：BackSide 菲涅尔辉光壳，昼半球一侧更亮
+      if (style.atmosphere) {
+        atmoMat = new THREE.ShaderMaterial({
+          vertexShader: atmosphereVert,
+          fragmentShader: atmosphereFrag,
+          uniforms: {
+            uColor: { value: rawSrgbColor(style.atmosphere.color) },
+            uIntensity: { value: style.atmosphere.intensity },
+            uBoost: { value: 1 },
+            uLightDir: { value: new THREE.Vector3(1, 0, 0) },
+          },
+          side: THREE.BackSide,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const shell = new THREE.Mesh(
+          new THREE.SphereGeometry(body.radius * 1.16, 48, 32),
+          atmoMat,
+        );
+        shell.renderOrder = 2;
+        group.add(shell);
+      }
+    }
+
+    // 大气辉光 sprite（行星收敛为淡光环，恒星保持浓辉光）
     const glowMat = new THREE.SpriteMaterial({
       map: this.glowTex,
       color: baseColor.clone(),
       transparent: true,
-      opacity: 0.55,
+      opacity: glowBase,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
     const glow = new THREE.Sprite(glowMat);
-    const gs = body.radius * 5.5;
+    const gs = body.radius * (isStar ? 5.5 : 3.6);
     glow.scale.set(gs, gs, 1);
     glow.renderOrder = 3;
     group.add(glow);
@@ -398,7 +600,7 @@ export class StargateScene {
         map: this.glowTex,
         color: baseColor.clone().lerp(new THREE.Color('#ffffff'), 0.35),
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.26,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
@@ -484,8 +686,15 @@ export class StargateScene {
       spec: body,
       group,
       sphereMat,
+      stdMat,
+      spinMesh,
+      cloudMesh,
+      atmoMat,
+      spinSpeed,
+      baseEmissive,
       glowMat,
       glow,
+      glowBase,
       corona,
       coronaMat,
       hit,
@@ -526,7 +735,7 @@ export class StargateScene {
     const trailPos = new Float32Array(TRAIL_N * 3);
     const colors = new Float32Array(TRAIL_N * 3);
     for (let k = 0; k < TRAIL_N; k++) {
-      const f = Math.pow(1 - k / (TRAIL_N - 1), 1.6) * 0.85;
+      const f = Math.pow(1 - k / (TRAIL_N - 1), 1.6);
       colors[k * 3] = b.baseColor.r * f;
       colors[k * 3 + 1] = b.baseColor.g * f;
       colors[k * 3 + 2] = b.baseColor.b * f;
@@ -674,10 +883,34 @@ export class StargateScene {
         b.boostT = isActive ? 1.45 : act ? (isNeighbor ? 1.1 : 0.42) : 1;
         b.boost += (b.boostT - b.boost) * k;
 
-        b.sphereMat.uniforms.uBoost.value = b.boost;
-        b.sphereMat.uniforms.uTime.value = t;
-        b.glowMat.opacity = 0.55 * b.boost * (isActive ? 1.25 : 1);
-        const gs = b.spec.radius * 5.5 * (isActive ? 1.35 : 1);
+        if (b.sphereMat) {
+          // 恒星：等离子体流动 + 提亮
+          b.sphereMat.uniforms.uBoost.value = b.boost;
+          b.sphereMat.uniforms.uTime.value = t;
+        } else if (b.stdMat) {
+          // 行星：自转（云层稍快）+ 高亮/压暗反馈
+          if (!reduce) {
+            if (b.spinMesh) b.spinMesh.rotation.y += b.spinSpeed * dt;
+            if (b.cloudMesh) b.cloudMesh.rotation.y += b.spinSpeed * 1.65 * dt;
+          }
+          b.stdMat.color.setScalar(b.boost);
+          if (b.baseEmissive > 0) {
+            // 熔岩裂纹：选中时夜半球流光更盛
+            b.stdMat.emissiveIntensity =
+              b.baseEmissive * (0.7 + 0.5 * b.boost) * (isActive ? 1.3 : 1);
+          }
+          if (b.atmoMat) {
+            // 大气层昼半球朝向系统质心（光源方向逐帧更新）
+            b.group.getWorldPosition(this.tmpV2);
+            sys.group.getWorldPosition(this.tmpV3);
+            this.tmpV3.sub(this.tmpV2).normalize();
+            b.atmoMat.uniforms.uLightDir.value.copy(this.tmpV3);
+            b.atmoMat.uniforms.uBoost.value = b.boost * (isActive ? 1.5 : 1);
+          }
+        }
+        b.glowMat.opacity = b.glowBase * b.boost * (isActive ? 1.25 : 1);
+        const gs =
+          b.spec.radius * (b.sphereMat ? 5.5 : 3.6) * (isActive ? 1.35 : 1);
         b.glow.scale.set(gs, gs, 1);
 
         // 日冕脉冲
@@ -685,7 +918,7 @@ export class StargateScene {
           const pulse = reduce ? 0.5 : Math.sin(t * 2.1 + b.phase) * 0.5 + 0.5;
           const cs = b.spec.radius * 9 * (1 + 0.07 * pulse);
           b.corona.scale.set(cs, cs, 1);
-          b.coronaMat.opacity = (0.18 + 0.12 * pulse) * b.boost;
+          b.coronaMat.opacity = (0.22 + 0.14 * pulse) * b.boost;
         }
 
         // 瞄准环：激活时显现并旋转
@@ -706,7 +939,7 @@ export class StargateScene {
 
       // 质心辉光呼吸
       if (sys.baryMat) {
-        sys.baryMat.opacity = reduce ? 0.16 : 0.14 + 0.05 * Math.sin(t * 1.3);
+        sys.baryMat.opacity = reduce ? 0.2 : 0.18 + 0.06 * Math.sin(t * 1.3);
       }
     }
 
@@ -853,7 +1086,8 @@ export class StargateScene {
       else if (mat) mat.dispose();
     });
     this.glowTex.dispose();
-    this.nebulaTexs.forEach((t) => t.dispose());
+    // 烘焙器持有全部 render target（地表/云层/星云/银河带贴图），统一释放
+    this.baker.dispose();
     this.renderer.dispose();
     el.remove();
     this.labelRenderer.domElement.remove();
