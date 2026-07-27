@@ -77,7 +77,7 @@ const App = () => {
         // 超出内容在框内自行滚动
         <main id="main" className="flex-1 w-full">
           <iframe
-            src="/resume/"
+            src="/openResume/"
             title="简历中心"
             className="w-full block border-0 bg-warm-gray-50"
             style={{ height: 'calc(100vh - 60px)' }}

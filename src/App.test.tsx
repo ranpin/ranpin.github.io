@@ -19,10 +19,10 @@ describe('App', () => {
   it('switches to the resume section and embeds the resume center', () => {
     render(<App />);
     fireEvent.click(screen.getByText('简历中心'));
-    // 简历中心已独立，主站以 iframe 内嵌 /resume/ 直接呈现
+    // 简历中心已独立，主站以 iframe 内嵌 /openResume/ 直接呈现
     const frame = screen.getByTitle('简历中心');
     expect(frame).toBeInTheDocument();
-    expect(frame.getAttribute('src')).toBe('/resume/');
+    expect(frame.getAttribute('src')).toBe('/openResume/');
   });
 
   it('switches to 星际之门 and shows the cyberpunk stage', async () => {
