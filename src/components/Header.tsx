@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
+import { SECTIONS } from '../data/sections';
+import { usePortfolioStore } from '../store/usePortfolioStore';
 import type { PersonalInfo } from '../types';
 
 interface HeaderProps {
@@ -8,13 +10,6 @@ interface HeaderProps {
   onSectionChange?: (section: string) => void;
   personalInfo: PersonalInfo;
 }
-
-const navItems = [
-  { id: 'home', label: '首页', shortLabel: '首页', icon: 'home' },
-  { id: 'resume', label: '简历中心', shortLabel: '简历', icon: 'user' },
-  { id: 'docs', label: '技术文档', shortLabel: '文档', icon: 'file-alt' },
-  { id: 'stargate', label: '星际之门', shortLabel: '星际之门', icon: 'star' },
-];
 
 const Avatar: React.FC<{ personalInfo: PersonalInfo; size: string }> = ({
   personalInfo,
@@ -43,6 +38,14 @@ const Header: React.FC<HeaderProps> = ({
   const [showMobileProfile, setShowMobileProfile] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const presentationMode = usePortfolioStore((s) => s.presentationMode);
+  const setPresentationMode = usePortfolioStore((s) => s.setPresentationMode);
+
+  // 演示模式下隐藏 private 板块，访客看不到其存在
+  const navItems = presentationMode
+    ? SECTIONS.filter((s) => s.visibility !== 'private')
+    : SECTIONS;
 
   const go = (id: string) => {
     if (onSectionChange) onSectionChange(id);
@@ -117,7 +120,31 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            <div className="justify-self-end" />
+            {/* 演示模式开关：演示模式下隐藏 private 板块，点击切到完整模式 */}
+            <div className="justify-self-end flex items-center">
+              <button
+                onClick={() => setPresentationMode(!presentationMode)}
+                aria-pressed={!presentationMode}
+                title={
+                  presentationMode
+                    ? '当前为演示模式（仅展示公开板块），点击查看全部'
+                    : '当前为完整模式，点击切回演示模式'
+                }
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  presentationMode
+                    ? 'bg-warm-gray-100 text-warm-gray-500 hover:bg-warm-gray-200'
+                    : 'bg-sage-100 text-sage-700 hover:bg-sage-200'
+                }`}
+              >
+                <Icon
+                  name={presentationMode ? 'eye-off' : 'eye'}
+                  className="text-sm"
+                />
+                <span className="hidden sm:inline">
+                  {presentationMode ? '演示模式' : '完整模式'}
+                </span>
+              </button>
+            </div>
           </div>
         </nav>
       </header>
