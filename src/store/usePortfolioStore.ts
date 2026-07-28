@@ -11,18 +11,14 @@ export type { PersonalInfo, NewsItem } from '../types';
 // 演示模式持久化键。值为 'present'（仅公开板块）或 'full'（全部板块）。
 const MODE_STORAGE_KEY = 'portfolio.presentationMode';
 
-// 初始演示模式：URL 参数优先（便于分享指定模式的链接），其次 localStorage，
-// 最后回退到「演示模式」这一安全默认——访客首次进入只看到公开板块。
+// 初始演示模式：仅依据 localStorage（由密码框解锁写入），否则回退到「演示模式」
+// 这一安全默认——访客首次进入只看到公开板块。
+// 注意：不再支持任何 URL 参数解锁，避免留下免密码后门；解锁唯一入口是密码框。
 // SSG 预渲染阶段没有 window，直接返回安全默认。
 const initialPresentationMode = (): boolean => {
   if (typeof window === 'undefined') return true;
   try {
-    const param = new URL(window.location.href).searchParams.get('mode');
-    if (param === 'full') return false;
-    if (param === 'present') return true;
-    const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
-    if (stored === 'full') return false;
-    if (stored === 'present') return true;
+    if (window.localStorage.getItem(MODE_STORAGE_KEY) === 'full') return false;
   } catch {
     // localStorage 不可用（隐私模式等）时静默回退默认
   }
