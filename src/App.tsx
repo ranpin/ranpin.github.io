@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from './components/Header';
 import HomeSection from './components/HomeSection';
 import Icon from './components/Icon';
+import ModeDialog from './components/ModeDialog';
 import { SECTION_IDS, isPrivateSection } from './data/sections';
 import { usePortfolioStore } from './store/usePortfolioStore';
 
@@ -14,6 +15,23 @@ const App = () => {
   const { personalInfo, recentNews, activeSection, setActiveSection } =
     usePortfolioStore();
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
+
+  // 演示模式解锁弹窗：界面上无可见入口，仅通过隐藏快捷键 Ctrl/Cmd+Shift+M 唤出。
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key === 'M' || e.key === 'm')
+      ) {
+        e.preventDefault();
+        setModeDialogOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // 板块状态 ↔ URL hash 双向同步：可分享直达链接，浏览器前进/后退可用。
   // 演示模式下 private 板块的内容门禁由下方渲染守卫（hiddenByPresentation）统一处理。
@@ -74,7 +92,7 @@ const App = () => {
             该板块在演示模式下已隐藏
           </p>
           <p className="text-sm text-warm-gray-400">
-            点击右上角「演示模式」开关可切换到完整视图
+            如需查看完整内容，请联系站点主人
           </p>
         </main>
       ) : isStargate ? (
@@ -96,7 +114,9 @@ const App = () => {
         // 超出内容在框内自行滚动
         <main id="main" className="flex-1 w-full">
           <iframe
-            src="/openResume/"
+            // 把主站模式透传给简历中心：演示模式下其私密项目同样被隐藏。
+            // 切换模式会改变 src 从而重载 iframe，属预期行为。
+            src={`/openResume/?mode=${presentationMode ? 'present' : 'full'}`}
             title="简历中心"
             className="w-full block border-0 bg-warm-gray-50"
             style={{ height: 'calc(100vh - 60px)' }}
@@ -124,6 +144,8 @@ const App = () => {
           )}
         </main>
       )}
+
+      {modeDialogOpen && <ModeDialog onClose={() => setModeDialogOpen(false)} />}
     </div>
   );
 };

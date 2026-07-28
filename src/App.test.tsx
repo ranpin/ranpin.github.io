@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 import { personalInfo } from './data/content';
+import { ACCESS_CODE } from './data/access';
 import { usePortfolioStore } from './store/usePortfolioStore';
 
 describe('App', () => {
@@ -23,10 +24,11 @@ describe('App', () => {
   it('switches to the resume section and embeds the resume center', () => {
     render(<App />);
     fireEvent.click(screen.getByText('简历中心'));
-    // 简历中心已独立，主站以 iframe 内嵌 /openResume/ 直接呈现
+    // 简历中心已独立，主站以 iframe 内嵌，并把当前模式透传给它
     const frame = screen.getByTitle('简历中心');
     expect(frame).toBeInTheDocument();
-    expect(frame.getAttribute('src')).toBe('/openResume/');
+    // 默认演示模式 → 透传 mode=present，简历中心据此隐藏私密项目
+    expect(frame.getAttribute('src')).toBe('/openResume/?mode=present');
   });
 
   it('switches to 星际之门 and shows the cyberpunk stage', async () => {
@@ -86,15 +88,35 @@ describe('App', () => {
     expect(screen.getByText('该板块在演示模式下已隐藏')).toBeInTheDocument();
   });
 
-  it('点击工具栏开关可从演示模式切到完整模式', () => {
+  it('界面上不提供任何可见的演示模式开关', () => {
     render(<App />);
-    // 初始为演示模式：private 板块不可见
+    expect(
+      screen.queryByRole('button', { name: /演示模式|完整模式/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('隐藏快捷键唤出密码框，访问码错误时保持锁定', () => {
+    render(<App />);
+    fireEvent.keyDown(window, { key: 'm', ctrlKey: true, shiftKey: true });
+    const input = screen.getByLabelText('访问码');
+    expect(input).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: 'wrong-code' } });
+    fireEvent.click(screen.getByRole('button', { name: '解锁' }));
+    expect(screen.getByText('访问码不正确')).toBeInTheDocument();
+    // 仍然锁定：private 板块不可见
     expect(screen.queryByText('技术文档')).not.toBeInTheDocument();
-    // 点击开关切到完整模式
-    fireEvent.click(screen.getByRole('button', { name: /演示模式/ }));
+  });
+
+  it('输入正确访问码后解锁完整模式并持久化', () => {
+    render(<App />);
+    fireEvent.keyDown(window, { key: 'm', metaKey: true, shiftKey: true });
+    const input = screen.getByLabelText('访问码');
+    fireEvent.change(input, { target: { value: ACCESS_CODE } });
+    fireEvent.click(screen.getByRole('button', { name: '解锁' }));
+    // 解锁后 private 板块出现，弹窗关闭
     expect(screen.getByText('技术文档')).toBeInTheDocument();
     expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
-    // 偏好已持久化
+    expect(screen.queryByLabelText('访问码')).not.toBeInTheDocument();
     expect(window.localStorage.getItem('portfolio.presentationMode')).toBe(
       'full',
     );

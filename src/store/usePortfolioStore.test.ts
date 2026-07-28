@@ -42,17 +42,18 @@ describe('usePortfolioStore', () => {
     );
   });
 
-  it('initial mode honors ?mode=full URL param', async () => {
-    window.history.replaceState(null, '', '/?mode=full');
-    vi.resetModules();
-    const mod = await import('./usePortfolioStore');
-    expect(mod.usePortfolioStore.getState().presentationMode).toBe(false);
-  });
-
   it('initial mode honors a stored full preference', async () => {
     window.localStorage.setItem('portfolio.presentationMode', 'full');
     vi.resetModules();
     const mod = await import('./usePortfolioStore');
     expect(mod.usePortfolioStore.getState().presentationMode).toBe(false);
+  });
+
+  it('URL 参数不能解锁（无免密码后门）', async () => {
+    // 即便带上 ?mode=full，未经密码框解锁仍保持演示模式
+    window.history.replaceState(null, '', '/?mode=full');
+    vi.resetModules();
+    const mod = await import('./usePortfolioStore');
+    expect(mod.usePortfolioStore.getState().presentationMode).toBe(true);
   });
 });

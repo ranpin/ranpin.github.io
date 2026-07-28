@@ -40,9 +40,9 @@ const Header: React.FC<HeaderProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
-  const setPresentationMode = usePortfolioStore((s) => s.setPresentationMode);
 
-  // 演示模式下隐藏 private 板块，访客看不到其存在
+  // 演示模式下隐藏 private 板块，访客看不到其存在。
+  // 解锁入口不在导航里（隐藏快捷键唤出密码框），此处只负责按模式过滤导航。
   const navItems = presentationMode
     ? SECTIONS.filter((s) => s.visibility !== 'private')
     : SECTIONS;
@@ -120,31 +120,9 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* 演示模式开关：演示模式下隐藏 private 板块，点击切到完整模式 */}
-            <div className="justify-self-end flex items-center">
-              <button
-                onClick={() => setPresentationMode(!presentationMode)}
-                aria-pressed={!presentationMode}
-                title={
-                  presentationMode
-                    ? '当前为演示模式（仅展示公开板块），点击查看全部'
-                    : '当前为完整模式，点击切回演示模式'
-                }
-                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  presentationMode
-                    ? 'bg-warm-gray-100 text-warm-gray-500 hover:bg-warm-gray-200'
-                    : 'bg-sage-100 text-sage-700 hover:bg-sage-200'
-                }`}
-              >
-                <Icon
-                  name={presentationMode ? 'eye-off' : 'eye'}
-                  className="text-sm"
-                />
-                <span className="hidden sm:inline">
-                  {presentationMode ? '演示模式' : '完整模式'}
-                </span>
-              </button>
-            </div>
+            {/* 右栏占位：三栏网格保持导航居中。演示模式解锁入口为隐藏快捷键，
+                界面上不提供任何可见开关，避免访客发现并点击。 */}
+            <div className="justify-self-end" />
           </div>
         </nav>
       </header>
