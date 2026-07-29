@@ -3,7 +3,7 @@ import { usePortfolioStore } from './usePortfolioStore';
 
 describe('usePortfolioStore', () => {
   beforeEach(() => {
-    window.localStorage.clear();
+    window.sessionStorage.clear();
     window.history.replaceState(null, '', '/');
     usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
   });
@@ -28,22 +28,22 @@ describe('usePortfolioStore', () => {
     expect(usePortfolioStore.getState().presentationMode).toBe(true);
   });
 
-  it('setPresentationMode updates state and persists to localStorage', () => {
+  it('setPresentationMode updates state and persists to sessionStorage', () => {
     usePortfolioStore.getState().setPresentationMode(false);
     expect(usePortfolioStore.getState().presentationMode).toBe(false);
-    expect(window.localStorage.getItem('portfolio.presentationMode')).toBe(
+    expect(window.sessionStorage.getItem('portfolio.presentationMode')).toBe(
       'full',
     );
 
     usePortfolioStore.getState().setPresentationMode(true);
     expect(usePortfolioStore.getState().presentationMode).toBe(true);
-    expect(window.localStorage.getItem('portfolio.presentationMode')).toBe(
+    expect(window.sessionStorage.getItem('portfolio.presentationMode')).toBe(
       'present',
     );
   });
 
   it('initial mode honors a stored full preference', async () => {
-    window.localStorage.setItem('portfolio.presentationMode', 'full');
+    window.sessionStorage.setItem('portfolio.presentationMode', 'full');
     vi.resetModules();
     const mod = await import('./usePortfolioStore');
     expect(mod.usePortfolioStore.getState().presentationMode).toBe(false);

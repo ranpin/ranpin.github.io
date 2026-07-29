@@ -8,8 +8,8 @@ import { usePortfolioStore } from './store/usePortfolioStore';
 describe('App', () => {
   beforeEach(() => {
     // 板块状态会同步到 URL hash；避免上一个用例的 hash 影响下一个用例。
-    // 同时把演示模式复位到默认（仅公开板块），并清理持久化偏好。
-    window.localStorage.clear();
+    // 同时把演示模式复位到默认（仅公开板块），并清理会话内的解锁状态。
+    window.sessionStorage.clear();
     window.history.replaceState(null, '', '/');
     usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
   });
@@ -107,7 +107,7 @@ describe('App', () => {
     expect(screen.queryByText('技术文档')).not.toBeInTheDocument();
   });
 
-  it('输入正确访问码后解锁完整模式并持久化', () => {
+  it('输入正确访问码后解锁完整模式（写入会话存储）', () => {
     render(<App />);
     fireEvent.keyDown(window, { key: 'm', metaKey: true, shiftKey: true });
     const input = screen.getByLabelText('访问码');
@@ -117,7 +117,7 @@ describe('App', () => {
     expect(screen.getByText('技术文档')).toBeInTheDocument();
     expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
     expect(screen.queryByLabelText('访问码')).not.toBeInTheDocument();
-    expect(window.localStorage.getItem('portfolio.presentationMode')).toBe(
+    expect(window.sessionStorage.getItem('portfolio.presentationMode')).toBe(
       'full',
     );
   });
