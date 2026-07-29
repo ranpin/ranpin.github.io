@@ -8,19 +8,21 @@ import type { PersonalInfo, NewsItem } from '../types';
 // 向后兼容：允许从 store 处继续导入这些类型
 export type { PersonalInfo, NewsItem } from '../types';
 
-// 演示模式持久化键。值为 'present'（仅公开板块）或 'full'（全部板块）。
+// 演示模式会话键。值为 'present'（仅公开板块）或 'full'（全部板块）。
+// 用 sessionStorage：解锁只在当前标签页会话内有效，关闭浏览器/标签后自动恢复锁定，
+// 既免去本次会话反复输码，又避免在共享电脑上长期暴露完整内容。
 const MODE_STORAGE_KEY = 'portfolio.presentationMode';
 
-// 初始演示模式：仅依据 localStorage（由密码框解锁写入），否则回退到「演示模式」
+// 初始演示模式：仅依据 sessionStorage（由密码框解锁写入），否则回退到「演示模式」
 // 这一安全默认——访客首次进入只看到公开板块。
 // 注意：不再支持任何 URL 参数解锁，避免留下免密码后门；解锁唯一入口是密码框。
 // SSG 预渲染阶段没有 window，直接返回安全默认。
 const initialPresentationMode = (): boolean => {
   if (typeof window === 'undefined') return true;
   try {
-    if (window.localStorage.getItem(MODE_STORAGE_KEY) === 'full') return false;
+    if (window.sessionStorage.getItem(MODE_STORAGE_KEY) === 'full') return false;
   } catch {
-    // localStorage 不可用（隐私模式等）时静默回退默认
+    // sessionStorage 不可用（隐私模式等）时静默回退默认
   }
   return true;
 };
@@ -49,7 +51,7 @@ export const usePortfolioStore = create<PortfolioState>()((set) => ({
   presentationMode: initialPresentationMode(),
   setPresentationMode: (mode) => {
     try {
-      window.localStorage.setItem(MODE_STORAGE_KEY, mode ? 'present' : 'full');
+      window.sessionStorage.setItem(MODE_STORAGE_KEY, mode ? 'present' : 'full');
     } catch {
       // 持久化失败不影响本次切换
     }
