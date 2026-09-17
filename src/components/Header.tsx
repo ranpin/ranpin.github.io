@@ -3,6 +3,7 @@ import Icon from './Icon';
 import { SECTIONS } from '../data/sections';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useVisibilityStore, isSectionShown } from '../store/useVisibilityStore';
+import { useDocsAvailability } from '../store/useDocsAvailability';
 import type { PersonalInfo } from '../types';
 
 interface HeaderProps {
@@ -44,12 +45,16 @@ const Header: React.FC<HeaderProps> = ({
 
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
   const sectionVisibility = useVisibilityStore((s) => s.sections);
+  const docsAvailable = useDocsAvailability((s) => s.available);
 
-  // 演示模式下按可见性配置过滤导航（配置优先，未配置回退代码默认），
+  // 导航过滤（两套机制取交集）：
+  // ① 演示模式：按可见性配置过滤（配置优先，未配置回退代码默认）；
+  // ② 「技术文档」额外受 edge-ai-docs 仓库可见性自动控制——仓库私有（docs.json 取不到）时隐藏。
   // 访客看不到被隐藏板块的存在。解锁入口为隐藏快捷键，此处不放任何模式开关。
-  const navItems = presentationMode
-    ? SECTIONS.filter((s) => isSectionShown(s, sectionVisibility))
-    : SECTIONS;
+  const navItems = SECTIONS.filter((s) => {
+    if (s.id === 'docs' && !docsAvailable) return false;
+    return presentationMode ? isSectionShown(s, sectionVisibility) : true;
+  });
 
   const go = (id: string) => {
     if (onSectionChange) onSectionChange(id);

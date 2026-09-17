@@ -8,6 +8,7 @@ import {
   VISIBILITY_CONFIG_KEY,
   useVisibilityStore,
 } from './store/useVisibilityStore';
+import { useDocsAvailability } from './store/useDocsAvailability';
 
 describe('App', () => {
   beforeEach(() => {
@@ -18,6 +19,8 @@ describe('App', () => {
     window.history.replaceState(null, '', '/');
     usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
     useVisibilityStore.setState({ sections: {}, projects: {} });
+    // 默认假定 edge-ai-docs 公开可达（多数用例不针对可见性）；探测私有态的用例单独覆盖
+    useDocsAvailability.setState({ available: true, checked: true });
   });
 
   it('renders the home section with personal info', () => {
@@ -68,6 +71,18 @@ describe('App', () => {
       await screen.findByRole('heading', { name: '智能座舱' }),
     ).toBeInTheDocument();
     vi.unstubAllGlobals();
+  });
+
+  it('edge-ai-docs 私有/不可达时自动隐藏技术文档板块（导航+路由）', () => {
+    // 模拟仓库私有：探测判定不可用；即便完整模式也应隐藏
+    useDocsAvailability.setState({ available: false, checked: true });
+    usePortfolioStore.setState({ presentationMode: false });
+    window.history.replaceState(null, '', '/#docs');
+    render(<App />);
+    // 导航不再出现技术文档入口
+    expect(screen.queryAllByText('技术文档').length).toBe(0);
+    // 直达 #docs 也只显示中性占位，不渲染目录
+    expect(screen.getByText('该内容当前不可用')).toBeInTheDocument();
   });
 
   it('supports deep links via URL hash', async () => {
