@@ -4,14 +4,20 @@ import App from './App';
 import { personalInfo } from './data/content';
 import { ACCESS_CODE } from './data/access';
 import { usePortfolioStore } from './store/usePortfolioStore';
+import {
+  VISIBILITY_CONFIG_KEY,
+  useVisibilityStore,
+} from './store/useVisibilityStore';
 
 describe('App', () => {
   beforeEach(() => {
     // 板块状态会同步到 URL hash；避免上一个用例的 hash 影响下一个用例。
     // 同时把演示模式复位到默认（仅公开板块），并清理会话内的解锁状态。
     window.sessionStorage.clear();
+    window.localStorage.clear();
     window.history.replaceState(null, '', '/');
     usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
+    useVisibilityStore.setState({ sections: {}, projects: {} });
   });
 
   it('renders the home section with personal info', () => {
@@ -120,5 +126,91 @@ describe('App', () => {
     expect(window.sessionStorage.getItem('portfolio.presentationMode')).toBe(
       'full',
     );
+  });
+
+  it('演示模式下不显示「演示配置」入口', () => {
+    render(<App />);
+    expect(
+      screen.queryByRole('button', { name: '演示配置' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('完整模式下可从「演示配置」入口打开配置面板', async () => {
+    usePortfolioStore.setState({ presentationMode: false });
+    // 面板会从数据仓库拉取项目清单，mock 为空清单避免网络依赖
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ projects: [] }),
+        }),
+      ),
+    );
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '演示配置' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('站点板块')).toBeInTheDocument();
+    // 等待项目清单加载完成（空清单 → 计数 0/0），避免异步 setState 落在 act 之外
+    expect(await screen.findByText('0/0 展示')).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('面板开启板块后写入持久化配置，并即时体现在演示模式导航', async () => {
+    usePortfolioStore.setState({ presentationMode: false });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ projects: [] }),
+        }),
+      ),
+    );
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '演示配置' }));
+    // 等待项目清单加载完成，避免异步 setState 落在 act 之外
+    expect(await screen.findByText('0/0 展示')).toBeInTheDocument();
+    // 星际之门默认隐藏 → 开关语义为「展示」
+    fireEvent.click(
+      screen.getByRole('switch', { name: '星际之门在演示模式下展示' }),
+    );
+    expect(
+      JSON.parse(window.localStorage.getItem(VISIBILITY_CONFIG_KEY)!).sections,
+    ).toEqual({ stargate: true });
+    // 「预览演示效果」：切回演示模式，星际之门因配置出现在导航
+    fireEvent.click(screen.getByRole('button', { name: '预览演示效果' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
+    vi.unstubAllGlobals();
+  });
+
+  it('演示模式下配置可强制展示被隐藏板块（含 hash 直达）', async () => {
+    useVisibilityStore.setState({ sections: { docs: true } });
+    window.history.replaceState(null, '', '/#docs');
+    const manifest = {
+      categories: [{ name: '智能座舱', id: 'cockpit', general: [], projects: [] }],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({ ok: true, json: () => Promise.resolve(manifest) }),
+      ),
+    );
+    render(<App />);
+    expect(screen.getAllByText('技术文档').length).toBeGreaterThan(0);
+    expect(
+      screen.queryByText('该板块在演示模式下已隐藏'),
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: '智能座舱' }),
+    ).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('演示模式下配置可反向隐藏原本公开的板块', () => {
+    useVisibilityStore.setState({ sections: { home: false } });
+    render(<App />);
+    expect(screen.queryAllByText('首页').length).toBe(0);
   });
 });

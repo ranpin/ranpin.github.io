@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
 import { SECTIONS } from '../data/sections';
 import { usePortfolioStore } from '../store/usePortfolioStore';
+import { useVisibilityStore, isSectionShown } from '../store/useVisibilityStore';
 import type { PersonalInfo } from '../types';
 
 interface HeaderProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   onSectionChange?: (section: string) => void;
+  onOpenConfig?: () => void;
   personalInfo: PersonalInfo;
 }
 
@@ -33,6 +35,7 @@ const Header: React.FC<HeaderProps> = ({
   activeSection,
   setActiveSection,
   onSectionChange,
+  onOpenConfig,
   personalInfo,
 }) => {
   const [showMobileProfile, setShowMobileProfile] = useState(false);
@@ -40,11 +43,12 @@ const Header: React.FC<HeaderProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
+  const sectionVisibility = useVisibilityStore((s) => s.sections);
 
-  // 演示模式下隐藏 private 板块，访客看不到其存在。
-  // 解锁入口不在导航里（隐藏快捷键唤出密码框），此处只负责按模式过滤导航。
+  // 演示模式下按可见性配置过滤导航（配置优先，未配置回退代码默认），
+  // 访客看不到被隐藏板块的存在。解锁入口为隐藏快捷键，此处不放任何模式开关。
   const navItems = presentationMode
-    ? SECTIONS.filter((s) => s.visibility !== 'private')
+    ? SECTIONS.filter((s) => isSectionShown(s, sectionVisibility))
     : SECTIONS;
 
   const go = (id: string) => {
@@ -120,9 +124,26 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* 右栏占位：三栏网格保持导航居中。演示模式解锁入口为隐藏快捷键，
-                界面上不提供任何可见开关，避免访客发现并点击。 */}
-            <div className="justify-self-end" />
+            {/* 右栏：三栏网格保持导航居中。演示模式下这里是空占位（访客看不到任何开关）；
+                完整模式下显示「演示配置」入口，供站点主人配置演示时展示的内容。 */}
+            <div className="flex items-center justify-self-end">
+              {!presentationMode && onOpenConfig && (
+                <button
+                  onClick={onOpenConfig}
+                  aria-label="演示配置"
+                  title="演示配置"
+                  className="group flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-warm-gray-500 transition-colors hover:bg-sage-50 hover:text-sage-700"
+                >
+                  <Icon
+                    name="cog"
+                    className="text-base transition-transform duration-500 group-hover:rotate-90"
+                  />
+                  <span className="hidden text-xs font-medium lg:inline">
+                    演示配置
+                  </span>
+                </button>
+              )}
+            </div>
           </div>
         </nav>
       </header>

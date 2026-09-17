@@ -3,8 +3,10 @@ import Header from './components/Header';
 import HomeSection from './components/HomeSection';
 import Icon from './components/Icon';
 import ModeDialog from './components/ModeDialog';
-import { SECTION_IDS, isPrivateSection } from './data/sections';
+import VisibilityPanel from './components/VisibilityPanel';
+import { SECTIONS, SECTION_IDS } from './data/sections';
 import { usePortfolioStore } from './store/usePortfolioStore';
+import { useVisibilityStore, isSectionShown } from './store/useVisibilityStore';
 
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
@@ -15,9 +17,12 @@ const App = () => {
   const { personalInfo, recentNews, activeSection, setActiveSection } =
     usePortfolioStore();
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
+  const sectionVisibility = useVisibilityStore((s) => s.sections);
 
   // 演示模式解锁弹窗：界面上无可见入口，仅通过隐藏快捷键 Ctrl/Cmd+Shift+M 唤出。
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
+  // 演示配置面板：仅完整模式下可打开（入口按钮也只在完整模式渲染）。
+  const [configOpen, setConfigOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (
@@ -60,9 +65,11 @@ const App = () => {
   // 星际之门是全屏沉浸式深空板块，跳出常规 container 边距，自行占满视口
   const isStargate = activeSection === 'stargate';
   const isResume = activeSection === 'resume';
-  // 安全网：演示模式下即便 activeSection 落在 private 板块（如状态竞争），也不渲染其内容
+  // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
+  // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
+  const activeMeta = SECTIONS.find((s) => s.id === activeSection);
   const hiddenByPresentation =
-    presentationMode && isPrivateSection(activeSection);
+    presentationMode && !!activeMeta && !isSectionShown(activeMeta, sectionVisibility);
 
   return (
     <div className="min-h-screen flex flex-col bg-warm-gray-50">
@@ -78,6 +85,7 @@ const App = () => {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         onSectionChange={setActiveSection}
+        onOpenConfig={() => setConfigOpen(true)}
         personalInfo={personalInfo}
       />
 
@@ -146,6 +154,8 @@ const App = () => {
       )}
 
       {modeDialogOpen && <ModeDialog onClose={() => setModeDialogOpen(false)} />}
+
+      {configOpen && <VisibilityPanel onClose={() => setConfigOpen(false)} />}
     </div>
   );
 };
