@@ -47,13 +47,12 @@ const Header: React.FC<HeaderProps> = ({
   const sectionVisibility = useVisibilityStore((s) => s.sections);
   const docsAvailable = useDocsAvailability((s) => s.available);
 
-  // 导航过滤：
-  // ① 「技术文档」：仓库公开(docsAvailable) 或 完整模式(!presentationMode) 任一满足即显示。
-  //    仓库私有 + 完整模式时入口可见，点进去给本地预览指引（线上此时无内容）。
-  // ② 其余板块：演示模式按可见性配置过滤（配置优先，未配置回退代码默认）。
+  // 导航过滤（两套机制取交集）：
+  // ① 演示模式：按可见性配置过滤（配置优先，未配置回退代码默认）；
+  // ② 「技术文档」额外受 edge-ai-docs 仓库可见性自动控制——仓库私有（docs.json 取不到）时隐藏。
   // 访客看不到被隐藏板块的存在。解锁入口为隐藏快捷键，此处不放任何模式开关。
   const navItems = SECTIONS.filter((s) => {
-    if (s.id === 'docs') return docsAvailable || !presentationMode;
+    if (s.id === 'docs' && !docsAvailable) return false;
     return presentationMode ? isSectionShown(s, sectionVisibility) : true;
   });
 

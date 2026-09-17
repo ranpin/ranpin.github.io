@@ -73,28 +73,16 @@ describe('App', () => {
     vi.unstubAllGlobals();
   });
 
-  it('仓库私有 + 演示模式：技术文档导航隐藏，直达显示不可用占位', () => {
-    useDocsAvailability.setState({ available: false, checked: true });
-    usePortfolioStore.setState({ presentationMode: true });
-    window.history.replaceState(null, '', '/#docs');
-    render(<App />);
-    // 演示模式 + 私有：导航不出现技术文档入口
-    expect(screen.queryAllByText('技术文档').length).toBe(0);
-    // 直达 #docs 显示中性占位
-    expect(screen.getByText('该内容当前不可用')).toBeInTheDocument();
-  });
-
-  it('仓库私有 + 完整模式：技术文档入口可见，点入给本地预览指引', () => {
+  it('edge-ai-docs 私有/不可达时自动隐藏技术文档板块（导航+路由）', () => {
+    // 模拟仓库私有：探测判定不可用；即便完整模式也应隐藏
     useDocsAvailability.setState({ available: false, checked: true });
     usePortfolioStore.setState({ presentationMode: false });
     window.history.replaceState(null, '', '/#docs');
     render(<App />);
-    // 完整模式：即便仓库私有，导航仍显示技术文档入口（OR 逻辑）
-    expect(screen.getAllByText('技术文档').length).toBeGreaterThan(0);
-    // 点入显示本地预览指引（线上无内容）
-    expect(
-      screen.getByText('文档仓库当前为私有，线上无法预览'),
-    ).toBeInTheDocument();
+    // 导航不再出现技术文档入口
+    expect(screen.queryAllByText('技术文档').length).toBe(0);
+    // 直达 #docs 也只显示中性占位，不渲染目录
+    expect(screen.getByText('该内容当前不可用')).toBeInTheDocument();
   });
 
   it('supports deep links via URL hash', async () => {
@@ -106,8 +94,6 @@ describe('App', () => {
   });
 
   it('演示模式下隐藏 private 板块导航，仅保留公开板块', () => {
-    // 仓库私有时，演示模式下「技术文档」（受可用性门控）与「星际之门」（演示私有）都隐藏
-    useDocsAvailability.setState({ available: false, checked: true });
     render(<App />);
     // 公开板块可见（label 与 shortLabel 各渲染一个 span，故用 All 断言）
     expect(screen.getAllByText('首页').length).toBeGreaterThan(0);
@@ -118,7 +104,7 @@ describe('App', () => {
   });
 
   it('演示模式下直达 private 板块 hash 显示已隐藏占位', () => {
-    window.history.replaceState(null, '', '/#stargate');
+    window.history.replaceState(null, '', '/#docs');
     render(<App />);
     expect(screen.getByText('该板块在演示模式下已隐藏')).toBeInTheDocument();
   });
@@ -138,8 +124,8 @@ describe('App', () => {
     fireEvent.change(input, { target: { value: 'wrong-code' } });
     fireEvent.click(screen.getByRole('button', { name: '解锁' }));
     expect(screen.getByText('访问码不正确')).toBeInTheDocument();
-    // 仍然锁定：演示私有板块（星际之门）不可见
-    expect(screen.queryByText('星际之门')).not.toBeInTheDocument();
+    // 仍然锁定：private 板块不可见
+    expect(screen.queryByText('技术文档')).not.toBeInTheDocument();
   });
 
   it('输入正确访问码后解锁完整模式（写入会话存储）', () => {
