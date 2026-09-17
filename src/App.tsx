@@ -76,9 +76,13 @@ const App = () => {
   const isResume = activeSection === 'resume';
   // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
   // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
+  // 「技术文档」不在此列：它由「仓库可见性 + 模式」单独治理（见下方 docs 路由分支）。
   const activeMeta = SECTIONS.find((s) => s.id === activeSection);
   const hiddenByPresentation =
-    presentationMode && !!activeMeta && !isSectionShown(activeMeta, sectionVisibility);
+    presentationMode &&
+    !!activeMeta &&
+    activeMeta.id !== 'docs' &&
+    !isSectionShown(activeMeta, sectionVisibility);
 
   return (
     <div className="min-h-screen flex flex-col bg-warm-gray-50">
@@ -153,15 +157,7 @@ const App = () => {
               <div className="py-16 text-center text-warm-gray-400">
                 加载中…
               </div>
-            ) : !docsAvailable ? (
-              // 仓库私有（或不可达）：中性占位，不暴露板块内容；导航此时也已隐藏该入口
-              <div className="py-24 flex flex-col items-center justify-center text-center">
-                <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
-                <p className="text-warm-gray-500 font-medium">
-                  该内容当前不可用
-                </p>
-              </div>
-            ) : (
+            ) : docsAvailable ? (
               <Suspense
                 fallback={
                   <div className="py-16 text-center text-warm-gray-400">
@@ -171,6 +167,32 @@ const App = () => {
               >
                 <DocsSection />
               </Suspense>
+            ) : !presentationMode ? (
+              // 完整模式 + 仓库私有：线上无内容（Free 套餐私有即停用 Pages），给本地预览指引
+              <div className="py-20 flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
+                <p className="text-warm-gray-700 font-medium mb-2">
+                  文档仓库当前为私有，线上无法预览
+                </p>
+                <p className="text-sm text-warm-gray-500 mb-3">
+                  本地预览（无需公开仓库）——在 edge-ai-docs 仓库目录运行：
+                </p>
+                <pre className="text-left text-xs bg-warm-gray-100 text-warm-gray-700 rounded-lg px-4 py-3 whitespace-pre-wrap">
+{`python3 _build/build.py
+cd dist && python3 -m http.server 8000`}
+                </pre>
+                <p className="text-sm text-warm-gray-400 mt-3">
+                  然后打开 http://localhost:8000
+                </p>
+              </div>
+            ) : (
+              // 演示模式 + 私有：导航已隐藏该入口，此处为直达 hash 的兜底
+              <div className="py-24 flex flex-col items-center justify-center text-center">
+                <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
+                <p className="text-warm-gray-500 font-medium">
+                  该内容当前不可用
+                </p>
+              </div>
             )
           )}
         </main>
