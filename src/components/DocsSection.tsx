@@ -184,6 +184,9 @@ const DocsSection: React.FC = () => {
   const cats = state === 'ready' ? normalize(data!) : [];
   const idx = Math.min(active, Math.max(cats.length - 1, 0));
 
+  // 仓库私有 / 清单不可达：整段隐藏（与导航的自动隐藏一致），不显示错误态、不暴露板块存在
+  if (state === 'error') return null;
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* 顶部导航：三个领域 */}
@@ -209,21 +212,6 @@ const DocsSection: React.FC = () => {
         <div className="text-center py-16 text-warm-gray-400">
           <Icon name="spinner" spin className="text-3xl" />
           <p className="mt-3">正在加载文档目录…</p>
-        </div>
-      )}
-
-      {state === 'error' && (
-        <div className="text-center py-16 text-warm-gray-500">
-          <Icon name="exclamation-triangle" className="text-3xl mb-3" />
-          <p>目录加载失败（本地开发环境下需线上访问）。</p>
-          <a
-            href={DOCS_BASE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sage-600 hover:underline mt-2 py-2 inline-flex items-center"
-          >
-            直接前往知识库 →
-          </a>
         </div>
       )}
 
