@@ -24,6 +24,7 @@ interface Category {
   name: string;
   id?: string;
   note?: string;
+  overview?: DocItem;
   general?: DocItem[];
   projects?: Project[];
 }
@@ -60,7 +61,9 @@ const normalize = (data: Manifest): Category[] => {
 
 const DocCard: React.FC<{ doc: DocItem }> = ({ doc }) => (
   <a
-    href={/^(https?:)?\/\//.test(doc.file) ? doc.file : `${DOCS_BASE}${doc.file}`}
+    href={
+      /^(https?:)?\/\//.test(doc.file) ? doc.file : `${DOCS_BASE}${doc.file}`
+    }
     target="_blank"
     rel="noopener noreferrer"
     className="relative block bg-white rounded-xl border border-warm-gray-200 p-5 hover:shadow-md hover:border-sage-300 transition-[border-color,box-shadow] group"
@@ -108,8 +111,17 @@ const CategoryView: React.FC<{ cat: Category }> = ({ cat }) => (
     {/* 大类标题 */}
     <div className="flex items-baseline gap-3 pb-3 mb-6 border-b border-warm-gray-200">
       <h3 className="text-2xl font-extrabold text-warm-gray-900">{cat.name}</h3>
-      {cat.note && <span className="text-sm text-warm-gray-400">{cat.note}</span>}
+      {cat.note && (
+        <span className="text-sm text-warm-gray-400">{cat.note}</span>
+      )}
     </div>
+
+    {/* 置顶导读（overview） */}
+    {cat.overview && (
+      <div className="mb-8">
+        <DocCard doc={cat.overview} />
+      </div>
+    )}
 
     {/* 上半部分：通用文档（网格） */}
     {cat.general && cat.general.length > 0 && (
