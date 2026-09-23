@@ -11,8 +11,6 @@ import { useDocsAvailability } from './store/useDocsAvailability';
 
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
-// 文档目录运行时读取 edge-ai-docs 清单，按需加载
-const DocsSection = lazy(() => import('./components/DocsSection'));
 
 const App = () => {
   const { personalInfo, recentNews, activeSection, setActiveSection } =
@@ -74,11 +72,14 @@ const App = () => {
   // 星际之门是全屏沉浸式深空板块，跳出常规 container 边距，自行占满视口
   const isStargate = activeSection === 'stargate';
   const isResume = activeSection === 'resume';
+  const isDocs = activeSection === 'docs';
   // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
   // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
   const activeMeta = SECTIONS.find((s) => s.id === activeSection);
   const hiddenByPresentation =
-    presentationMode && !!activeMeta && !isSectionShown(activeMeta, sectionVisibility);
+    presentationMode &&
+    !!activeMeta &&
+    !isSectionShown(activeMeta, sectionVisibility);
 
   return (
     <div className="min-h-screen flex flex-col bg-warm-gray-50">
@@ -139,6 +140,28 @@ const App = () => {
             style={{ height: 'calc(100vh - 60px)' }}
           />
         </main>
+      ) : isDocs ? (
+        // 技术文档：iframe 内嵌 edge-ai-docs 首页（?embed=1 隐藏其页头大标题），
+        // 布局随 edge-ai-docs 仓库自动同步，主站不再单独维护一套渲染。
+        // 高度固定为视口高，超出内容在框内自行滚动（与简历中心一致）。
+        <main id="main" className="flex-1 w-full">
+          {!docsChecked ? (
+            <div className="py-16 text-center text-warm-gray-400">加载中…</div>
+          ) : !docsAvailable ? (
+            // 仓库私有（或不可达）：中性占位，不暴露板块内容；导航此时也已隐藏该入口
+            <div className="py-24 flex flex-col items-center justify-center text-center">
+              <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
+              <p className="text-warm-gray-500 font-medium">该内容当前不可用</p>
+            </div>
+          ) : (
+            <iframe
+              src="/edge-ai-docs/?embed=1"
+              title="Edge AI Docs"
+              className="w-full block border-0 bg-warm-gray-50"
+              style={{ height: 'calc(100vh - 60px)' }}
+            />
+          )}
+        </main>
       ) : (
         <main
           id="main"
@@ -147,36 +170,12 @@ const App = () => {
           {activeSection === 'home' && (
             <HomeSection personalInfo={personalInfo} recentNews={recentNews} />
           )}
-
-          {activeSection === 'docs' && (
-            !docsChecked ? (
-              <div className="py-16 text-center text-warm-gray-400">
-                加载中…
-              </div>
-            ) : !docsAvailable ? (
-              // 仓库私有（或不可达）：中性占位，不暴露板块内容；导航此时也已隐藏该入口
-              <div className="py-24 flex flex-col items-center justify-center text-center">
-                <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
-                <p className="text-warm-gray-500 font-medium">
-                  该内容当前不可用
-                </p>
-              </div>
-            ) : (
-              <Suspense
-                fallback={
-                  <div className="py-16 text-center text-warm-gray-400">
-                    加载中…
-                  </div>
-                }
-              >
-                <DocsSection />
-              </Suspense>
-            )
-          )}
         </main>
       )}
 
-      {modeDialogOpen && <ModeDialog onClose={() => setModeDialogOpen(false)} />}
+      {modeDialogOpen && (
+        <ModeDialog onClose={() => setModeDialogOpen(false)} />
+      )}
 
       {configOpen && <VisibilityPanel onClose={() => setConfigOpen(false)} />}
     </div>

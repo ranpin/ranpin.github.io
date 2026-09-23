@@ -17,7 +17,10 @@ describe('App', () => {
     window.sessionStorage.clear();
     window.localStorage.clear();
     window.history.replaceState(null, '', '/');
-    usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
+    usePortfolioStore.setState({
+      activeSection: 'home',
+      presentationMode: true,
+    });
     useVisibilityStore.setState({ sections: {}, projects: {} });
     // 默认假定 edge-ai-docs 公开可达（多数用例不针对可见性）；探测私有态的用例单独覆盖
     useDocsAvailability.setState({ available: true, checked: true });
@@ -50,27 +53,16 @@ describe('App', () => {
     expect(await screen.findByText(/简历之外的实验空间/)).toBeInTheDocument();
   });
 
-  it('switches to 技术文档 and renders the docs catalog', async () => {
+  it('switches to 技术文档 and embeds edge-ai-docs via iframe', async () => {
     // 技术文档为 private 板块：需先切到完整模式才可见
     usePortfolioStore.setState({ presentationMode: false });
-    // mock docs.json 清单，避免依赖网络；DocsSection 读取后渲染领域标签
-    const manifest = {
-      categories: [{ name: '智能座舱', id: 'cockpit', general: [], projects: [] }],
-    };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(manifest) }),
-      ),
-    );
     render(<App />);
     fireEvent.click(screen.getAllByText('技术文档')[0]);
-    // DocsSection 懒加载；清单加载成功后渲染对应领域标题
-    // （领域名同时出现在标签按钮与标题中，用 role 精确断言标题）
-    expect(
-      await screen.findByRole('heading', { name: '智能座舱' }),
-    ).toBeInTheDocument();
-    vi.unstubAllGlobals();
+    // docs 板块改为 iframe 内嵌 edge-ai-docs 首页（?embed=1 隐藏其页头大标题），
+    // 布局随 edge-ai-docs 仓库自动同步，主站不再单独渲染目录
+    const frame = await screen.findByTitle('Edge AI Docs');
+    expect(frame).toBeInTheDocument();
+    expect(frame.getAttribute('src')).toBe('/edge-ai-docs/?embed=1');
   });
 
   it('edge-ai-docs 私有/不可达时自动隐藏技术文档板块（导航+路由）', () => {
@@ -203,24 +195,13 @@ describe('App', () => {
   it('演示模式下配置可强制展示被隐藏板块（含 hash 直达）', async () => {
     useVisibilityStore.setState({ sections: { docs: true } });
     window.history.replaceState(null, '', '/#docs');
-    const manifest = {
-      categories: [{ name: '智能座舱', id: 'cockpit', general: [], projects: [] }],
-    };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(manifest) }),
-      ),
-    );
     render(<App />);
     expect(screen.getAllByText('技术文档').length).toBeGreaterThan(0);
     expect(
       screen.queryByText('该板块在演示模式下已隐藏'),
     ).not.toBeInTheDocument();
-    expect(
-      await screen.findByRole('heading', { name: '智能座舱' }),
-    ).toBeInTheDocument();
-    vi.unstubAllGlobals();
+    // 直达 #docs 渲染 edge-ai-docs iframe
+    expect(await screen.findByTitle('Edge AI Docs')).toBeInTheDocument();
   });
 
   it('演示模式下配置可反向隐藏原本公开的板块', () => {
