@@ -22,6 +22,23 @@ interface HeaderProps {
   personalInfo: PersonalInfo;
 }
 
+// 「编辑内容」深链：按当前板块一键跳到对应源文件/目录（GitHub 网页 ✏️ 或按 . 开 github.dev）。
+// 主站日常内容都在 content/（编辑指南见 content/README.md）；简历/文档是独立仓库，
+// 各有自己的编辑入口，这里只给仓库级快捷方式。仅完整模式显示（演示时访客看不到）。
+const EDIT_TARGETS: Record<string, { url: string; label: string }> = {
+  home: {
+    url: 'https://github.com/ranpin/ranpin.github.io/tree/main/content',
+    label: '编辑内容',
+  },
+  stargate: {
+    url: 'https://github.com/ranpin/ranpin.github.io/tree/main/content/garden',
+    label: '编辑花园',
+  },
+  resume: { url: 'https://github.com/ranpin/openResume', label: '编辑简历' },
+  docs: { url: 'https://github.com/ranpin/edge-ai-docs', label: '编辑文档' },
+};
+const DEFAULT_EDIT = EDIT_TARGETS.home;
+
 const Avatar: React.FC<{ personalInfo: PersonalInfo; size: string }> = ({
   personalInfo,
   size,
@@ -56,6 +73,8 @@ const Header: React.FC<HeaderProps> = ({
   const docsAvailable = useDocsAvailability((s) => s.available);
   // 中英文切换：挂载后判定是否处于 translate.goog 代理（英文模式）
   const { onProxy } = useTranslateProxy();
+  // 当前板块对应的「编辑内容」深链（无匹配则回退首页内容目录）
+  const editTarget = EDIT_TARGETS[activeSection] || DEFAULT_EDIT;
 
   // 导航过滤（两套机制取交集）：
   // ① 演示模式：按可见性配置过滤（配置优先，未配置回退代码默认）；
@@ -164,6 +183,21 @@ const Header: React.FC<HeaderProps> = ({
                   {onProxy ? '中文' : 'EN'}
                 </span>
               </button>
+              {!presentationMode && (
+                <a
+                  href={editTarget.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={editTarget.label}
+                  title={editTarget.label}
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-warm-gray-500 transition-colors hover:bg-sage-50 hover:text-sage-700"
+                >
+                  <Icon name="edit" className="text-base" />
+                  <span className="hidden text-xs font-medium lg:inline">
+                    {editTarget.label}
+                  </span>
+                </a>
+              )}
               {!presentationMode && onOpenConfig && (
                 <button
                   onClick={onOpenConfig}

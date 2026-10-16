@@ -209,4 +209,32 @@ describe('App', () => {
     render(<App />);
     expect(screen.queryAllByText('首页').length).toBe(0);
   });
+
+  it('完整模式下 Header 显示「编辑内容」深链，指向 content/ 目录', () => {
+    usePortfolioStore.setState({ presentationMode: false });
+    render(<App />);
+    const link = screen.getByRole('link', { name: '编辑内容' });
+    expect(link.getAttribute('href')).toBe(
+      'https://github.com/ranpin/ranpin.github.io/tree/main/content',
+    );
+  });
+
+  it('编辑深链随板块切换指向对应源（星际之门→content/garden/）', async () => {
+    usePortfolioStore.setState({ presentationMode: false });
+    render(<App />);
+    fireEvent.click(screen.getAllByText('星际之门')[0]);
+    const link = await screen.findByRole('link', { name: '编辑花园' });
+    expect(link.getAttribute('href')).toBe(
+      'https://github.com/ranpin/ranpin.github.io/tree/main/content/garden',
+    );
+  });
+
+  it('演示模式下不显示编辑深链（访客看不到）', () => {
+    render(<App />);
+    expect(
+      screen.queryByRole('link', {
+        name: /编辑内容|编辑花园|编辑简历|编辑文档/,
+      }),
+    ).not.toBeInTheDocument();
+  });
 });
