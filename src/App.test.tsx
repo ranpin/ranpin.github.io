@@ -65,15 +65,6 @@ describe('App', () => {
     expect(frame.getAttribute('src')).toBe('/edge-ai-docs/?embed=1');
   });
 
-  it('switches to 压缩部署 and embeds homebot-wm via iframe', () => {
-    // 压缩部署为 public 板块：演示模式下也可见，无需切完整模式
-    render(<App />);
-    fireEvent.click(screen.getByText('压缩部署'));
-    const frame = screen.getByTitle('HomeBot-WM 压缩部署');
-    expect(frame).toBeInTheDocument();
-    expect(frame.getAttribute('src')).toBe('/homebot-wm/');
-  });
-
   it('edge-ai-docs 私有/不可达时自动隐藏技术文档板块（导航+路由）', () => {
     // 模拟仓库私有：探测判定不可用；即便完整模式也应隐藏
     useDocsAvailability.setState({ available: false, checked: true });

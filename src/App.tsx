@@ -73,7 +73,6 @@ const App = () => {
   const isStargate = activeSection === 'stargate';
   const isResume = activeSection === 'resume';
   const isDocs = activeSection === 'docs';
-  const isHomebot = activeSection === 'homebot-wm';
   // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
   // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
   const activeMeta = SECTIONS.find((s) => s.id === activeSection);
@@ -162,17 +161,6 @@ const App = () => {
               style={{ height: 'calc(100vh - 60px)' }}
             />
           )}
-        </main>
-      ) : isHomebot ? (
-        // 压缩部署：iframe 内嵌 homebot-wm 的 GitHub Pages 展示页（同源 /homebot-wm/）。
-        // 该页自带报告/方法/问题三 tab，主站不再单独渲染。高度同简历/文档板块。
-        <main id="main" className="flex-1 w-full">
-          <iframe
-            src="/homebot-wm/"
-            title="HomeBot-WM 压缩部署"
-            className="w-full block border-0 bg-warm-gray-50"
-            style={{ height: 'calc(100vh - 60px)' }}
-          />
         </main>
       ) : (
         <main

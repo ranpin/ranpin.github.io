@@ -26,12 +26,6 @@ export const SECTIONS: SectionMeta[] = [
     visibility: 'private',
   },
   {
-    id: 'homebot-wm',
-    label: '压缩部署',
-    shortLabel: '压缩',
-    icon: 'layer-group',
-  },
-  {
     id: 'stargate',
     label: '星际之门',
     shortLabel: '星际之门',
