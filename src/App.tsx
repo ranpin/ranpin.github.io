@@ -8,6 +8,7 @@ import { SECTIONS, SECTION_IDS } from './data/sections';
 import { usePortfolioStore } from './store/usePortfolioStore';
 import { useVisibilityStore, isSectionShown } from './store/useVisibilityStore';
 import { useDocsAvailability } from './store/useDocsAvailability';
+import { useTranslateProxy, subSiteSrc } from './utils/translate';
 
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
@@ -20,6 +21,8 @@ const App = () => {
   const docsAvailable = useDocsAvailability((s) => s.available);
   const docsChecked = useDocsAvailability((s) => s.checked);
   const checkDocs = useDocsAvailability((s) => s.check);
+  // 英文（translate.goog 代理）模式下，内嵌子站 iframe 也指向各自的代理地址
+  const { onProxy, lang } = useTranslateProxy();
 
   // 探测 edge-ai-docs 仓库可见性：公开→显示「技术文档」，私有→隐藏（导航+路由）。仅挂载时一次。
   useEffect(() => {
@@ -134,7 +137,12 @@ const App = () => {
           <iframe
             // 把主站模式透传给简历中心：演示模式下其私密项目同样被隐藏。
             // 切换模式会改变 src 从而重载 iframe，属预期行为。
-            src={`/openResume/?mode=${presentationMode ? 'present' : 'full'}`}
+            src={subSiteSrc(
+              '/openResume/',
+              `mode=${presentationMode ? 'present' : 'full'}`,
+              onProxy,
+              lang,
+            )}
             title="简历中心"
             className="w-full block border-0 bg-warm-gray-50"
             style={{ height: 'calc(100vh - 60px)' }}
@@ -155,7 +163,7 @@ const App = () => {
             </div>
           ) : (
             <iframe
-              src="/edge-ai-docs/?embed=1"
+              src={subSiteSrc('/edge-ai-docs/', 'embed=1', onProxy, lang)}
               title="Edge AI Docs"
               className="w-full block border-0 bg-warm-gray-50"
               style={{ height: 'calc(100vh - 60px)' }}

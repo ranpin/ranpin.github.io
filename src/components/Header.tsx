@@ -2,8 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
 import { SECTIONS } from '../data/sections';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import { useVisibilityStore, isSectionShown } from '../store/useVisibilityStore';
+import {
+  useVisibilityStore,
+  isSectionShown,
+} from '../store/useVisibilityStore';
 import { useDocsAvailability } from '../store/useDocsAvailability';
+import {
+  useTranslateProxy,
+  buildTranslateUrl,
+  buildOriginalUrl,
+} from '../utils/translate';
 import type { PersonalInfo } from '../types';
 
 interface HeaderProps {
@@ -46,6 +54,8 @@ const Header: React.FC<HeaderProps> = ({
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
   const sectionVisibility = useVisibilityStore((s) => s.sections);
   const docsAvailable = useDocsAvailability((s) => s.available);
+  // 中英文切换：挂载后判定是否处于 translate.goog 代理（英文模式）
+  const { onProxy } = useTranslateProxy();
 
   // 导航过滤（两套机制取交集）：
   // ① 演示模式：按可见性配置过滤（配置优先，未配置回退代码默认）；
@@ -122,7 +132,9 @@ const Header: React.FC<HeaderProps> = ({
                     >
                       <Icon name={item.icon} className="text-xs sm:text-sm" />
                       <span className="hidden sm:inline">{item.label}</span>
-                      <span className="sm:hidden text-xs">{item.shortLabel}</span>
+                      <span className="sm:hidden text-xs">
+                        {item.shortLabel}
+                      </span>
                     </button>
                   );
                 })}
@@ -132,6 +144,26 @@ const Header: React.FC<HeaderProps> = ({
             {/* 右栏：三栏网格保持导航居中。演示模式下这里是空占位（访客看不到任何开关）；
                 完整模式下显示「演示配置」入口，供站点主人配置演示时展示的内容。 */}
             <div className="flex items-center justify-self-end">
+              {/* 中英文切换：跳 translate.goog 代理（英文）或回原文。
+                  notranslate + translate="no" 防止按钮自身文案被谷歌翻译 */}
+              <button
+                onClick={() => {
+                  window.location.href = onProxy
+                    ? buildOriginalUrl()
+                    : buildTranslateUrl();
+                }}
+                aria-label={onProxy ? '显示中文原文' : 'Translate to English'}
+                title={
+                  onProxy ? '显示中文原文' : 'Translate to English (Google)'
+                }
+                translate="no"
+                className="notranslate flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-warm-gray-500 transition-colors hover:bg-sage-50 hover:text-sage-700"
+              >
+                <Icon name="globe" className="text-base" />
+                <span className="hidden text-xs font-medium lg:inline">
+                  {onProxy ? '中文' : 'EN'}
+                </span>
+              </button>
               {!presentationMode && onOpenConfig && (
                 <button
                   onClick={onOpenConfig}
