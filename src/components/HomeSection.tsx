@@ -25,8 +25,13 @@ const components: Components = {
       ? ({ target: '_blank', rel: 'noopener noreferrer' } as const)
       : {};
 
-    // demo 链接 → 胶囊徽章
-    if (/演示/.test(textOf(children))) {
+    // demo 链接 → 胶囊徽章。README 侧为在 GitHub 上与项目名区分，写成
+    // [<sup>🎬 演示Demo</sup>](…)；react-markdown 不渲染原始 HTML，会把 <sup>
+    // 转义成可见文本，故这里剥掉 HTML 标记后只渲染干净文案。
+    const rawText = textOf(children);
+    if (/演示/.test(rawText)) {
+      const label =
+        rawText.replace(/<\/?[a-z][^>]*>/gi, '').trim() || '🎬 演示Demo';
       return (
         <a
           href={href}
@@ -34,7 +39,7 @@ const components: Components = {
           title="打开在线演示"
           className="mx-0.5 inline-flex items-center rounded-full bg-sage-50 px-2 py-0.5 align-middle text-xs font-semibold text-sage-700 ring-1 ring-inset ring-sage-200 transition-colors hover:bg-sage-100 hover:text-sage-900"
         >
-          {children}
+          {label}
         </a>
       );
     }
