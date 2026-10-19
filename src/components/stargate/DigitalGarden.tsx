@@ -92,7 +92,7 @@ interface RelatedBodies {
 /** 关联星体：母体 / 子体 / 同主线（重叠主线多者优先、同星系优先，其余保持数据序） */
 const relatedOf = (body: DocBody): RelatedBodies => {
   const parent = body.parentId
-    ? docBodyById.get(body.parentId) ?? null
+    ? (docBodyById.get(body.parentId) ?? null)
     : null;
   const children = childrenByParentId.get(body.id) ?? [];
   const excluded = new Set<string>([
@@ -432,6 +432,7 @@ const DigitalGarden: React.FC = () => {
       <div className="stargate-hud absolute left-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1.5">
         <div className="stargate-catalog pl-1 mb-0.5">GALAXIES · 星系</div>
         <button
+          type="button"
           onClick={() => navigateTo(null)}
           className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12px] transition-all border ${
             activeGalaxy === null
@@ -455,6 +456,7 @@ const DigitalGarden: React.FC = () => {
           const active = activeGalaxy === g.id;
           return (
             <button
+              type="button"
               key={g.id}
               onClick={() => navigateTo(g.id)}
               className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[12px] transition-all border ${
@@ -492,6 +494,7 @@ const DigitalGarden: React.FC = () => {
           const count = (threadMembers.get(th.id) ?? []).length;
           return (
             <button
+              type="button"
               key={th.id}
               onClick={() => toggleThread(th.id)}
               title={`${th.name} · ${count} 星体`}
@@ -590,13 +593,17 @@ const DigitalGarden: React.FC = () => {
       </div>
 
       {/* 镜头控件（右下 HUD） */}
-      <div data-ui className="absolute bottom-3 right-3 flex flex-col gap-1.5 z-10">
+      <div
+        data-ui
+        className="absolute bottom-3 right-3 flex flex-col gap-1.5 z-10"
+      >
         {[
           { t: '推近镜头', ic: 'plus', fn: () => dolly(1.25) },
           { t: '拉远镜头', ic: 'arrow-down', fn: () => dolly(1 / 1.25) },
           { t: '复位视角', ic: 'redo', fn: reset },
         ].map((b) => (
           <button
+            type="button"
             key={b.ic}
             onClick={b.fn}
             title={b.t}
@@ -653,7 +660,10 @@ const DigitalGarden: React.FC = () => {
                       <span
                         key={tid}
                         className="text-[10px] font-mono px-2 py-0.5 rounded-full border"
-                        style={{ borderColor: `${th.color}55`, color: th.color }}
+                        style={{
+                          borderColor: `${th.color}55`,
+                          color: th.color,
+                        }}
                       >
                         {th.name}
                       </span>
@@ -663,6 +673,7 @@ const DigitalGarden: React.FC = () => {
               )}
             </div>
             <button
+              type="button"
               onClick={() => setSelected(null)}
               aria-label="关闭"
               className="stargate-neon w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"

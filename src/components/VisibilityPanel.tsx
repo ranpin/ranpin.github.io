@@ -161,7 +161,8 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
             };
           }),
         );
-        if (!cancelled) setProjectList(entries.sort((a, b) => a.id.localeCompare(b.id)));
+        if (!cancelled)
+          setProjectList(entries.sort((a, b) => a.id.localeCompare(b.id)));
       } catch {
         if (!cancelled) setLoadFailed(true);
       }
@@ -216,6 +217,7 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
             </p>
           </div>
           <button
+            type="button"
             ref={closeRef}
             onClick={onClose}
             aria-label="关闭演示配置"
@@ -232,8 +234,9 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
             <p className="flex items-start gap-2">
               <Icon name="eye" className="text-sage-500 mt-0.5" />
               <span>
-                开关只影响<b>演示模式</b>（访客视角）；完整模式下所有内容照常可见。
-                配置保存在<b>本浏览器</b>，用于你自己设备上的演示，不会同步给其他访客。
+                开关只影响<b>演示模式</b>
+                （访客视角）；完整模式下所有内容照常可见。 配置保存在
+                <b>本浏览器</b>，用于你自己设备上的演示，不会同步给其他访客。
               </span>
             </p>
           </div>
@@ -311,6 +314,7 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
                   项目清单加载失败
                 </p>
                 <button
+                  type="button"
                   onClick={() => setRetryKey((k) => k + 1)}
                   className="mt-3 px-3 py-1.5 text-xs font-medium text-sage-700 bg-sage-50 hover:bg-sage-100 rounded-lg transition-colors"
                 >
@@ -374,7 +378,8 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
             个板块
             {projectList && (
               <>
-                {' '}·{' '}
+                {' '}
+                ·{' '}
                 <b className="text-sage-700">
                   {shownProjectCount}/{projectList.length}
                 </b>{' '}
@@ -384,12 +389,14 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
           </p>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={resetAll}
               className="flex-1 py-2 rounded-lg text-sm font-medium text-warm-gray-600 bg-white border border-warm-gray-200 hover:bg-warm-gray-100 transition-colors"
             >
               恢复默认
             </button>
             <button
+              type="button"
               onClick={() => {
                 setPresentationMode(true);
                 onClose();

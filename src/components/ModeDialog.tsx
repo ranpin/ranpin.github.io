@@ -62,6 +62,7 @@ const ModeDialog: React.FC<ModeDialogProps> = ({ onClose }) => {
             {presentationMode ? '解锁完整模式' : '完整模式'}
           </h2>
           <button
+            type="button"
             ref={closeRef}
             onClick={onClose}
             aria-label="关闭"
@@ -91,9 +92,7 @@ const ModeDialog: React.FC<ModeDialogProps> = ({ onClose }) => {
                 error ? 'border-red-400' : 'border-warm-gray-200'
               }`}
             />
-            {error && (
-              <p className="text-sm text-red-500 mt-2">访问码不正确</p>
-            )}
+            {error && <p className="text-sm text-red-500 mt-2">访问码不正确</p>}
             <button
               type="submit"
               className="mt-4 w-full bg-sage-600 hover:bg-sage-700 text-white font-medium py-2 rounded-lg transition-colors"
@@ -107,6 +106,7 @@ const ModeDialog: React.FC<ModeDialogProps> = ({ onClose }) => {
               当前正在显示全部板块（含私密内容）。
             </p>
             <button
+              type="button"
               onClick={() => {
                 setPresentationMode(true);
                 onClose();

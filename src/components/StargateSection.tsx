@@ -81,6 +81,7 @@ const StargateSection: React.FC = () => {
           简历之外的实验空间 —— 一个持续建造中的赛博前端沙盒。
         </p>
         <button
+          type="button"
           onClick={() => setWarping(true)}
           className="stargate-neon pointer-events-auto mt-3 rounded-full px-3 py-1 inline-flex items-center gap-1.5 font-mono text-[11px]"
         >
