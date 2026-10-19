@@ -26,8 +26,10 @@ interface HeaderProps {
 // 主站日常内容都在 content/（编辑指南见 content/README.md）；简历/文档是独立仓库，
 // 各有自己的编辑入口，这里只给仓库级快捷方式。仅完整模式显示（演示时访客看不到）。
 const EDIT_TARGETS: Record<string, { url: string; label: string }> = {
+  // 首页内容已改为直接取自 ranpin/ranpin 的 profile README（见 scripts/sync-home-readme.mjs），
+  // 因此「编辑内容」直达该 README，而不是本仓 content/ 目录。
   home: {
-    url: 'https://github.com/ranpin/ranpin.github.io/tree/main/content',
+    url: 'https://github.com/ranpin/ranpin/blob/main/README.md',
     label: '编辑内容',
   },
   stargate: {
@@ -113,6 +115,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* 移动端个人信息入口 */}
             <div className="sm:hidden flex items-center justify-self-start min-w-0">
               <button
+                type="button"
                 ref={triggerRef}
                 onClick={() => setShowMobileProfile(true)}
                 className="flex items-center space-x-2 hover:bg-warm-gray-100 rounded-lg p-2 transition-colors min-w-0"
@@ -140,6 +143,7 @@ const Header: React.FC<HeaderProps> = ({
                   const active = activeSection === item.id;
                   return (
                     <button
+                      type="button"
                       key={item.id}
                       onClick={() => go(item.id)}
                       aria-current={active ? 'page' : undefined}
@@ -166,6 +170,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* 中英文切换：跳 translate.goog 代理（英文）或回原文。
                   notranslate + translate="no" 防止按钮自身文案被谷歌翻译 */}
               <button
+                type="button"
                 onClick={() => {
                   window.location.href = onProxy
                     ? buildOriginalUrl()
@@ -200,6 +205,7 @@ const Header: React.FC<HeaderProps> = ({
               )}
               {!presentationMode && onOpenConfig && (
                 <button
+                  type="button"
                   onClick={onOpenConfig}
                   aria-label="演示配置"
                   title="演示配置"
@@ -240,6 +246,7 @@ const Header: React.FC<HeaderProps> = ({
                   个人信息
                 </h2>
                 <button
+                  type="button"
                   ref={closeBtnRef}
                   onClick={() => setShowMobileProfile(false)}
                   aria-label="关闭个人信息弹窗"

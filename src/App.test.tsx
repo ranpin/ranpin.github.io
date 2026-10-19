@@ -30,11 +30,15 @@ describe('App', () => {
     render(<App />);
     // 姓名在导航/Header 出现
     expect(screen.getAllByText(personalInfo.name).length).toBeGreaterThan(0);
-    // 首页直接采用 profile README 的内容：自我介绍 + 分类项目总览（单栏）
+    // 首页内容直接来自 ranpin/ranpin 的 profile README（构建时同步进 content/home-readme.md），
+    // 由 react-markdown 渲染：自我介绍(h3) + 分类标题(h4) + 项目链接
     expect(
       screen.getByText(/我是 ranpin，端侧 AI 工程师/),
     ).toBeInTheDocument();
-    expect(screen.getByText('智能机器人 / 具身智能')).toBeInTheDocument();
+    // 分类名同时出现在「关注方向」一行与分类标题里，故用 All
+    expect(
+      screen.getAllByText(/智能机器人 \/ 具身智能/).length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText('alpamayo-edge')).toBeInTheDocument();
   });
 
@@ -215,12 +219,12 @@ describe('App', () => {
     expect(screen.queryAllByText('首页').length).toBe(0);
   });
 
-  it('完整模式下 Header 显示「编辑内容」深链，指向 content/ 目录', () => {
+  it('完整模式下 Header 显示「编辑内容」深链，指向首页内容源（ranpin/ranpin README）', () => {
     usePortfolioStore.setState({ presentationMode: false });
     render(<App />);
     const link = screen.getByRole('link', { name: '编辑内容' });
     expect(link.getAttribute('href')).toBe(
-      'https://github.com/ranpin/ranpin.github.io/tree/main/content',
+      'https://github.com/ranpin/ranpin/blob/main/README.md',
     );
   });
 

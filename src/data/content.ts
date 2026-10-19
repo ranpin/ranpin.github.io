@@ -51,6 +51,16 @@ export const recentNews = (
   ) || []
 ).map((n) => ({ ...n, date: String(n.date) })); // YAML 可能把日期解析成数字，统一转字符串
 
+// 首页内容 = ranpin/ranpin 的 profile README（由 scripts/sync-home-readme.mjs 构建时同步）。
+// 这里是唯一内容源：改 README 即可，首页下次构建自动跟上。
+export const homeReadme = Object.values(
+  import.meta.glob('/content/home-readme.md', {
+    eager: true,
+    query: '?raw',
+    import: 'default',
+  }) as RawGlob,
+)[0] as string;
+
 // 「星际之门 · 数字花园」想法节点：跳过 _ 开头模板；生产隐藏 draft；按更新时间倒序
 const toGarden = (glob: RawGlob): GardenNote[] =>
   Object.entries(glob)

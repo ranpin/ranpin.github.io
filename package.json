@@ -6,7 +6,8 @@
   "homepage": "https://ranpin.github.io/",
   "scripts": {
     "dev": "vite-react-ssg dev",
-    "build": "vite-react-ssg build",
+    "sync:home": "node scripts/sync-home-readme.mjs",
+    "build": "npm run sync:home && vite-react-ssg build",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",

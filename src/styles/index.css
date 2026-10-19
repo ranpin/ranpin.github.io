@@ -64,8 +64,10 @@
       'PingFang SC',
       'Microsoft YaHei',
       sans-serif;
-    background-color: #fafaf9;
-    color: #292524;
+    /* 与 tailwind.config.js 的 warm-gray-50 / warm-gray-800 保持一致
+       （2026-10-19 配色刷新：暖米色 → 冷白 + 冷调中性灰） */
+    background-color: #f8fafc;
+    color: #1e293b;
     line-height: 1.6;
   }
 

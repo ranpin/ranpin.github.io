@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # 每日定时重建：首页内容取自 ranpin/ranpin 的 README（构建时 sync:home 拉取），
+  # 这样只改 README 也能在一天内自动同步到首页，无需改动本仓代码。
+  schedule:
+    - cron: '20 3 * * *'
 
 permissions:
   contents: read
