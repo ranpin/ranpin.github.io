@@ -14,7 +14,7 @@ import { useTranslateProxy, subSiteSrc } from './utils/translate';
 const StargateSection = lazy(() => import('./components/StargateSection'));
 
 const App = () => {
-  const { personalInfo, recentNews, activeSection, setActiveSection } =
+  const { personalInfo, activeSection, setActiveSection } =
     usePortfolioStore();
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
   const sectionVisibility = useVisibilityStore((s) => s.sections);
@@ -175,9 +175,7 @@ const App = () => {
           id="main"
           className="container mx-auto px-4 py-8 flex-1 scroll-mt-16"
         >
-          {activeSection === 'home' && (
-            <HomeSection personalInfo={personalInfo} recentNews={recentNews} />
-          )}
+          {activeSection === 'home' && <HomeSection />}
         </main>
       )}
 

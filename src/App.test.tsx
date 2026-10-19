@@ -26,11 +26,16 @@ describe('App', () => {
     useDocsAvailability.setState({ available: true, checked: true });
   });
 
-  it('renders the home section with personal info', () => {
+  it('renders the home section with the profile-README project index', () => {
     render(<App />);
-    // 姓名在导航/资料区出现
+    // 姓名在导航/Header 出现
     expect(screen.getAllByText(personalInfo.name).length).toBeGreaterThan(0);
-    expect(screen.getByText('最新动态')).toBeInTheDocument();
+    // 首页直接采用 profile README 的内容：自我介绍 + 分类项目总览（单栏）
+    expect(
+      screen.getByText(/我是 ranpin，端侧 AI 工程师/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('智能机器人 / 具身智能')).toBeInTheDocument();
+    expect(screen.getByText('alpamayo-edge')).toBeInTheDocument();
   });
 
   it('switches to the resume section and embeds the resume center', () => {

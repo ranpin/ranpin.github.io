@@ -1,62 +1,88 @@
 import React from 'react';
-import Profile from './Profile';
 import Icon from './Icon';
-import type { PersonalInfo, NewsItem } from '../types';
+import { homeIntro, homeCategories } from '../data/projects';
 
-interface HomeSectionProps {
-  personalInfo: PersonalInfo;
-  recentNews: NewsItem[];
-}
-
-const HomeSection: React.FC<HomeSectionProps> = ({
-  personalInfo,
-  recentNews,
-}) => {
+// 首页内容与排版直接采用 GitHub 主页 ranpin/ranpin 的 profile README：
+// 单栏文档式布局（自我介绍 + 分类项目总览），不再使用左右两列的资料卡 + 动态时间轴。
+const HomeSection: React.FC = () => {
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      {/* 左侧个人信息侧边栏 */}
-      <div className="lg:w-80 lg:flex-shrink-0">
-        <Profile personalInfo={personalInfo} />
+    <div className="max-w-3xl mx-auto">
+      {/* 自我介绍 */}
+      <h2 className="text-2xl sm:text-3xl font-bold text-warm-gray-900 leading-snug">
+        {homeIntro.greeting}
+      </h2>
+      <ul className="mt-4 space-y-1.5 text-warm-gray-700 leading-relaxed">
+        <li>{homeIntro.focus}</li>
+        <li>{homeIntro.tech}</li>
+      </ul>
+
+      {/* 站点入口 */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        {homeIntro.links.map((l, i) => (
+          <React.Fragment key={l.url}>
+            {i > 0 && (
+              <span className="text-warm-gray-300" aria-hidden="true">
+                ｜
+              </span>
+            )}
+            <a
+              href={l.url}
+              className="inline-flex items-center gap-1.5 text-sage-700 hover:text-sage-900 font-medium transition-colors"
+            >
+              <span aria-hidden="true">{l.emoji}</span>
+              {l.label}
+            </a>
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* 右侧主内容区域 */}
-      <div className="flex-1 min-w-0">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-warm-gray-900 mb-6 flex items-center">
-            <Icon name="bolt" className="text-yellow-500 mr-3" />
-            最新动态
-          </h2>
+      <hr className="my-8 border-warm-gray-200" />
 
-          {/* 时间轴 */}
-          <ol className="relative border-l-2 border-warm-gray-200 ml-2 space-y-8">
-            {recentNews.map((news, index) => (
-              <li key={index} className="ml-6">
-                {/* 节点 */}
-                <span className="absolute -left-[9px] flex items-center justify-center w-4 h-4 bg-sage-500 rounded-full ring-4 ring-warm-gray-50" />
-                <div className="flex items-center flex-wrap gap-3 mb-1">
-                  <time
-                    dateTime={news.date.replace('.', '-')}
-                    className="text-sm text-warm-gray-500 font-mono"
+      {/* 分类项目总览 */}
+      <div className="space-y-9">
+        {homeCategories.map((cat) => (
+          <section key={cat.title}>
+            <h3 className="text-lg font-semibold text-warm-gray-900 flex items-baseline flex-wrap gap-x-2">
+              <span aria-hidden="true">{cat.emoji}</span>
+              <span>{cat.title}</span>
+              {cat.note && (
+                <span className="text-sm font-normal text-warm-gray-400">
+                  （{cat.note}）
+                </span>
+              )}
+            </h3>
+            <ul className="mt-3 space-y-2">
+              {cat.projects.map((p) => (
+                <li
+                  key={p.name}
+                  className="text-warm-gray-700 leading-relaxed pl-4 border-l-2 border-warm-gray-100"
+                >
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-warm-gray-900 hover:text-sage-700 transition-colors"
                   >
-                    {news.date}
-                  </time>
-                  {news.type && (
-                    <span className="px-2 py-0.5 bg-sage-100 text-sage-700 rounded text-xs font-medium">
-                      {news.type}
-                    </span>
+                    {p.name}
+                  </a>
+                  {p.demo && (
+                    <a
+                      href={p.demo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-sage-600 hover:text-sage-800 transition-colors"
+                      title="在线演示"
+                    >
+                      <Icon name="external-link-alt" className="w-3 h-3" />
+                      演示
+                    </a>
                   )}
-                </div>
-                <p className="text-warm-gray-800 leading-relaxed">
-                  {news.content}
-                </p>
-              </li>
-            ))}
-          </ol>
-
-          {recentNews.length === 0 && (
-            <div className="text-center py-12 text-warm-gray-400">暂无动态</div>
-          )}
-        </div>
+                  <span className="text-warm-gray-500"> — {p.desc}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   );
