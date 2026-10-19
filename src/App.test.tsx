@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 import { personalInfo } from './data/content';
@@ -21,7 +21,7 @@ describe('App', () => {
       activeSection: 'home',
       presentationMode: true,
     });
-    useVisibilityStore.setState({ sections: {}, projects: {} });
+    useVisibilityStore.setState({ sections: {} });
     // 默认假定 edge-ai-docs 公开可达（多数用例不针对可见性）；探测私有态的用例单独覆盖
     useDocsAvailability.setState({ available: true, checked: true });
   });
@@ -151,42 +151,22 @@ describe('App', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('完整模式下可从「演示配置」入口打开配置面板', async () => {
+  it('完整模式下可从「演示配置」入口打开配置面板', () => {
     usePortfolioStore.setState({ presentationMode: false });
-    // 面板会从数据仓库拉取项目清单，mock 为空清单避免网络依赖
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ projects: [] }),
-        }),
-      ),
-    );
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: '演示配置' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('站点板块')).toBeInTheDocument();
-    // 等待项目清单加载完成（空清单 → 计数 0/0），避免异步 setState 落在 act 之外
-    expect(await screen.findByText('0/0 展示')).toBeInTheDocument();
-    vi.unstubAllGlobals();
+    // 项目级配置已随 openResume「作品集」移除，面板只剩板块级
+    expect(
+      screen.queryByText(/简历中心 · 项目/),
+    ).not.toBeInTheDocument();
   });
 
-  it('面板开启板块后写入持久化配置，并即时体现在演示模式导航', async () => {
+  it('面板开启板块后写入持久化配置，并即时体现在演示模式导航', () => {
     usePortfolioStore.setState({ presentationMode: false });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ projects: [] }),
-        }),
-      ),
-    );
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: '演示配置' }));
-    // 等待项目清单加载完成，避免异步 setState 落在 act 之外
-    expect(await screen.findByText('0/0 展示')).toBeInTheDocument();
     // 星际之门默认隐藏 → 开关语义为「展示」
     fireEvent.click(
       screen.getByRole('switch', { name: '星际之门在演示模式下展示' }),
@@ -198,7 +178,6 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: '预览演示效果' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
-    vi.unstubAllGlobals();
   });
 
   it('演示模式下配置可强制展示被隐藏板块（含 hash 直达）', async () => {

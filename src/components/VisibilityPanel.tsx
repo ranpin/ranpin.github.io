@@ -1,35 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { load as parseYaml } from 'js-yaml';
 import Icon from './Icon';
 import { SECTIONS } from '../data/sections';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import {
-  useVisibilityStore,
-  isSectionShown,
-  projectShownByDefault,
-} from '../store/useVisibilityStore';
+import { useVisibilityStore, isSectionShown } from '../store/useVisibilityStore';
 
-// 与简历中心同一数据源（openResume/src/data/source.ts 中的 DATA_BASE_URL）。
-// 项目 id 取文件名主干（slug），与简历中心 loadContent 的 id 规则一致，
-// 保证这里的配置键和简历中心 useContentStore 里的 project.id 完全对应。
-const DATA_BASE_URL =
-  'https://raw.githubusercontent.com/ranpin/openResume-data/main';
-
-interface ProjectEntry {
-  id: string;
-  title: string;
-  visibility?: string;
-}
+// 2026-10-19：原「简历中心 · 项目」逐项可见性配置已随 openResume 的「作品集」
+// 模块一并移除，本面板只保留站点板块级的演示可见性控制。
 
 interface VisibilityPanelProps {
   onClose: () => void;
 }
-
-const slugOf = (path: string): string =>
-  path
-    .split('/')
-    .pop()!
-    .replace(/\.(ya?ml)$/, '');
 
 // 胶囊开关：开启 sage、关闭 warm-gray，滑块内带 eye / eye-off 微图标
 const Toggle: React.FC<{
@@ -97,15 +77,10 @@ const Tag: React.FC<{ tone: 'sage' | 'gray'; children: React.ReactNode }> = ({
 const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
   const setPresentationMode = usePortfolioStore((s) => s.setPresentationMode);
   const sectionCfg = useVisibilityStore((s) => s.sections);
-  const projectCfg = useVisibilityStore((s) => s.projects);
   const setSectionShown = useVisibilityStore((s) => s.setSectionShown);
-  const setProjectShown = useVisibilityStore((s) => s.setProjectShown);
   const resetAll = useVisibilityStore((s) => s.resetAll);
 
   const [entered, setEntered] = useState(false);
-  const [projectList, setProjectList] = useState<ProjectEntry[] | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [retryKey, setRetryKey] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
 
@@ -132,53 +107,9 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // 拉取项目清单：index.json 只有路径，标题/visibility 需逐个 YAML 读取
-  useEffect(() => {
-    let cancelled = false;
-    setLoadFailed(false);
-    (async () => {
-      try {
-        const res = await fetch(`${DATA_BASE_URL}/index.json`, {
-          cache: 'no-store',
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const index = (await res.json()) as { projects?: string[] };
-        const paths = index.projects ?? [];
-        const entries = await Promise.all(
-          paths.map(async (p): Promise<ProjectEntry> => {
-            const r = await fetch(`${DATA_BASE_URL}/${p}`, {
-              cache: 'no-store',
-            });
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            const data = parseYaml(await r.text()) as {
-              title?: string;
-              visibility?: string;
-            };
-            return {
-              id: slugOf(p),
-              title: data?.title || slugOf(p),
-              visibility: data?.visibility,
-            };
-          }),
-        );
-        if (!cancelled)
-          setProjectList(entries.sort((a, b) => a.id.localeCompare(b.id)));
-      } catch {
-        if (!cancelled) setLoadFailed(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [retryKey]);
-
-  const isProjectShown = (p: ProjectEntry) =>
-    projectCfg[p.id] ?? projectShownByDefault(p.visibility);
-
   const shownSectionCount = SECTIONS.filter((s) =>
     isSectionShown(s, sectionCfg),
   ).length;
-  const shownProjectCount = (projectList ?? []).filter(isProjectShown).length;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -291,81 +222,6 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
               })}
             </ul>
           </section>
-
-          {/* 简历中心项目 */}
-          <section>
-            <GroupHeading
-              icon="briefcase"
-              title="简历中心 · 项目"
-              count={
-                projectList
-                  ? `${shownProjectCount}/${projectList.length} 展示`
-                  : '加载中'
-              }
-            />
-
-            {loadFailed ? (
-              <div className="rounded-xl border border-warm-gray-200 px-4 py-6 text-center">
-                <Icon
-                  name="exclamation-triangle"
-                  className="text-2xl text-warm-gray-300"
-                />
-                <p className="text-sm text-warm-gray-500 mt-2">
-                  项目清单加载失败
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setRetryKey((k) => k + 1)}
-                  className="mt-3 px-3 py-1.5 text-xs font-medium text-sage-700 bg-sage-50 hover:bg-sage-100 rounded-lg transition-colors"
-                >
-                  重试
-                </button>
-              </div>
-            ) : !projectList ? (
-              <div className="rounded-xl border border-warm-gray-200 px-4 py-6 text-center text-warm-gray-400">
-                <Icon name="spinner" spin className="text-2xl" />
-                <p className="text-sm mt-2">正在加载项目清单…</p>
-              </div>
-            ) : projectList.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-warm-gray-200 px-4 py-5 text-center text-sm text-warm-gray-400">
-                数据仓库中暂无项目
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {projectList.map((p) => {
-                  const shown = isProjectShown(p);
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-warm-gray-50"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p
-                          className={`text-sm font-medium leading-snug transition-colors ${
-                            shown ? 'text-warm-gray-800' : 'text-warm-gray-400'
-                          }`}
-                        >
-                          {p.title}
-                        </p>
-                        <div className="mt-0.5">
-                          {p.visibility === 'public' ? (
-                            <Tag tone="sage">public</Tag>
-                          ) : (
-                            <Tag tone="gray">默认隐藏</Tag>
-                          )}
-                        </div>
-                      </div>
-                      <Toggle
-                        checked={shown}
-                        onChange={(v) => setProjectShown(p.id, v)}
-                        label={`${p.title}在演示模式下${shown ? '隐藏' : '展示'}`}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
         </div>
 
         {/* 底部：实时汇总 + 操作 */}
@@ -376,16 +232,6 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
               {shownSectionCount}/{SECTIONS.length}
             </b>{' '}
             个板块
-            {projectList && (
-              <>
-                {' '}
-                ·{' '}
-                <b className="text-sage-700">
-                  {shownProjectCount}/{projectList.length}
-                </b>{' '}
-                个项目
-              </>
-            )}
           </p>
           <div className="flex gap-2">
             <button
