@@ -10,7 +10,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SRC = 'https://raw.githubusercontent.com/ranpin/ranpin/main/README.md';
+const SRC_BASE =
+  'https://raw.githubusercontent.com/ranpin/ranpin/main/README.md';
 const OUT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../content/home-readme.md',
@@ -21,7 +22,11 @@ const OUT = resolve(
 const MIN_CHARS = 400;
 
 try {
-  const res = await fetch(SRC, {
+  // ⚠️ 必须带一次性查询参数：raw.githubusercontent.com 的 CDN 边缘缓存对「纯 URL」
+  // 有滞后，刚 push 完 README 立刻构建时纯 URL 可能仍返回旧内容，而
+  // `cache-control: no-cache` 只绕浏览器缓存、绕不过 GitHub 的 CDN 边缘。
+  // 实测踩过：push 后构建，sync 抓到旧版把本地新副本覆盖回去了。
+  const res = await fetch(`${SRC_BASE}?cb=${Date.now()}`, {
     signal: AbortSignal.timeout(20_000),
     headers: { 'cache-control': 'no-cache' },
   });

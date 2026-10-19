@@ -7,15 +7,43 @@ import { homeReadme } from '../data/content';
 // 同步进 content/home-readme.md）。本文件只决定「怎么显示」——配色、排版、链接可点性
 // 全由主站掌控；要改首页内容只需改 README，不用动这里。
 //
-// 链接一律「主色 + 常驻下划线」：仅靠加粗不足以传达可点击（用户 2026-10-19 反馈），
-// 下划线是最普适的可点信号，因此不做成 hover 才出现。
+// 两类链接区别对待（用户 2026-10-19 要求「一眼看出哪些项目有 demo」）：
+//   ① 仓库链接 → 主色 + 常驻下划线（仅靠加粗不足以传达可点击）；
+//   ② README 里形如 [🎬 演示](…) 的 demo 链接 → 胶囊徽章，视觉上和普通链接分开。
+
+// react-markdown 传进来的 children 可能是字符串或节点数组，取纯文本用于判定链接类型
+const textOf = (node: React.ReactNode): string => {
+  if (typeof node === 'string') return node;
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  return '';
+};
+
 const components: Components = {
   a: ({ href, children }) => {
     const external = !!href && /^https?:\/\//i.test(href);
+    const extAttrs = external
+      ? ({ target: '_blank', rel: 'noopener noreferrer' } as const)
+      : {};
+
+    // demo 链接 → 胶囊徽章
+    if (/演示/.test(textOf(children))) {
+      return (
+        <a
+          href={href}
+          {...extAttrs}
+          title="打开在线演示"
+          className="mx-0.5 inline-flex items-center rounded-full bg-sage-50 px-2 py-0.5 align-middle text-xs font-semibold text-sage-700 ring-1 ring-inset ring-sage-200 transition-colors hover:bg-sage-100 hover:text-sage-900"
+        >
+          {children}
+        </a>
+      );
+    }
+
+    // 普通链接（仓库 / 站点入口）→ 主色 + 常驻下划线
     return (
       <a
         href={href}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...extAttrs}
         className="font-semibold text-sage-700 underline decoration-sage-300 decoration-2 underline-offset-[3px] transition-colors hover:text-sage-900 hover:decoration-sage-600"
       >
         {children}

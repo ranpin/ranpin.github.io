@@ -7,19 +7,19 @@
 ---
 #### 🧰 工具 / 作品（做点可能无用但有意思的）
 
-- **[openResume](https://github.com/ranpin/openResume)** — 在线简历中心
+- **[openResume](https://github.com/ranpin/openResume)** [🎬 演示](https://ranpin.github.io/openResume/) — 在线简历中心
 - **[easter-egg-map](https://github.com/ranpin/easter-egg-map)** — 旅行彩蛋 UGC 平台
 - **[MagicEye](https://github.com/ranpin/MagicEye)** — 手势 + AI 魔法交互（微信小程序）
 
 #### 🤖 智能机器人 / 具身智能（学习研究中）
 
-- **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** — NVIDIA Physical AI（Alpamayo 1.5 VLA + Cosmos3-Edge WAM）在 Jetson Orin 的量化部署 · INT4/INT8 · Orin 实测 · VLA 轨迹推理
-- **[homebot-wm](https://github.com/ranpin/homebot-wm)** — 世界模型驱动的家用机器人轻量算法框架 · 扩散策略压缩（DDIM+INT8）· Push-T 闭环评测
-- **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** — 视频 → 9 台 Unitree G1 机器人同步起舞
+- **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [🎬 演示](https://ranpin.github.io/alpamayo-edge/) — NVIDIA Physical AI（Alpamayo 1.5 VLA + Cosmos3-Edge WAM）在 Jetson Orin 的量化部署 · INT4/INT8 · Orin 实测 · VLA 轨迹推理
+- **[homebot-wm](https://github.com/ranpin/homebot-wm)** [🎬 演示](https://ranpin.github.io/homebot-wm/) — 世界模型驱动的家用机器人轻量算法框架 · 扩散策略压缩（DDIM+INT8）· Push-T 闭环评测
+- **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [🎬 演示](https://ranpin.github.io/spring-festival-dance-robot/) — 视频 → 9 台 Unitree G1 机器人同步起舞
 
 #### 🚗 智能座舱（主要工作 2025.07-至今）
 
-- **[inforExtra](https://github.com/ranpin/inforExtra)** — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）
+- **[inforExtra](https://github.com/ranpin/inforExtra)** [🎬 演示](https://ranpin.github.io/inforExtra/) — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）
 - **[mirix-cpp](https://github.com/ranpin/mirix-cpp)** — 多模态交互记忆系统（C++）
 - **[aadkMemory](https://github.com/ranpin/aadkMemory)** — FAISS 对话记忆检索
 - **[chat_huanhuan](https://github.com/ranpin/chat_huanhuan)** — 甄嬛传角色对话系统（Ollama + MCP）
