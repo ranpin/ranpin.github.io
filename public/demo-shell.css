@@ -58,8 +58,10 @@ body {
   margin-bottom: 2rem;
 }
 .ds-header__inner { max-width: 920px; margin: 0 auto; padding: 1.25rem 1.4rem 1.15rem; }
-/* 「返回主页 + 大标题 + 分类徽章」同一行，压缩页头高度（2026-10-19 用户要求） */
-.ds-header__row { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; }
+/* 「返回主页 + 大标题 + 分类徽章」同一行，压缩页头高度（2026-10-19 用户要求）。
+   nowrap：标题过长时在自身框内换行，但返回主页与徽章始终留在同一行（垂直居中）；
+   窄屏在下方媒体查询里改回 wrap 以免溢出。 */
+.ds-header__row { display: flex; align-items: center; gap: .9rem; flex-wrap: nowrap; }
 .ds-home {
   display: inline-flex; align-items: center; gap: .4rem; flex: none;
   font-size: .85rem; font-weight: 500; color: var(--ds-muted);
@@ -145,7 +147,8 @@ body {
 /* ---------- 移动端 ---------- */
 @media (max-width: 600px) {
   .ds-wrap { padding: 0 1rem 3rem; }
-  .ds-header__inner { padding: 1.3rem 1rem 1.2rem; }
-  .ds-header h1 { font-size: 1.4rem; }
-  .ds-header__top { flex-wrap: wrap; }
+  .ds-header__inner { padding: 1.1rem 1rem 1rem; }
+  /* 窄屏允许换行：返回主页 + 徽章一行，大标题独占一行 */
+  .ds-header__row { flex-wrap: wrap; gap: .6rem; }
+  .ds-header h1 { font-size: 1.3rem; flex: 1 1 100%; }
 }
