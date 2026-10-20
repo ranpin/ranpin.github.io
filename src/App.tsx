@@ -74,7 +74,6 @@ const App = () => {
 
   // 星际之门是全屏沉浸式深空板块，跳出常规 container 边距，自行占满视口
   const isStargate = activeSection === 'stargate';
-  const isResume = activeSection === 'resume';
   const isDocs = activeSection === 'docs';
   // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
   // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
@@ -128,25 +127,6 @@ const App = () => {
           >
             <StargateSection />
           </Suspense>
-        </main>
-      ) : isResume ? (
-        // 简历中心全宽出血、去掉卡片外壳，内部应用自带 container 与其他板块对齐。
-        // 高度固定为视口高：其编辑器/弹窗均为 fixed 定位，需要稳定的可视框，
-        // 超出内容在框内自行滚动
-        <main id="main" className="flex-1 w-full">
-          <iframe
-            // 把主站模式透传给简历中心：演示模式下其私密项目同样被隐藏。
-            // 切换模式会改变 src 从而重载 iframe，属预期行为。
-            src={subSiteSrc(
-              '/openResume/',
-              `mode=${presentationMode ? 'present' : 'full'}`,
-              onProxy,
-              lang,
-            )}
-            title="简历中心"
-            className="w-full block border-0 bg-warm-gray-50"
-            style={{ height: 'calc(100vh - 60px)' }}
-          />
         </main>
       ) : isDocs ? (
         // 技术文档：iframe 内嵌 edge-ai-docs 首页（?embed=1 隐藏其页头大标题），

@@ -42,16 +42,6 @@ describe('App', () => {
     expect(screen.getByText('alpamayo-edge')).toBeInTheDocument();
   });
 
-  it('switches to the resume section and embeds the resume center', () => {
-    render(<App />);
-    fireEvent.click(screen.getByText('简历中心'));
-    // 简历中心已独立，主站以 iframe 内嵌，并把当前模式透传给它
-    const frame = screen.getByTitle('简历中心');
-    expect(frame).toBeInTheDocument();
-    // 默认演示模式 → 透传 mode=present，简历中心据此隐藏私密项目
-    expect(frame.getAttribute('src')).toBe('/openResume/?mode=present');
-  });
-
   it('switches to 星际之门 and shows the cyberpunk stage', async () => {
     // 星际之门为 private 板块：需先切到完整模式才可见
     usePortfolioStore.setState({ presentationMode: false });
@@ -96,9 +86,10 @@ describe('App', () => {
 
   it('演示模式下隐藏 private 板块导航，仅保留公开板块', () => {
     render(<App />);
-    // 公开板块可见（label 与 shortLabel 各渲染一个 span，故用 All 断言）
+    // 公开板块可见（label 与 shortLabel 各渲染一个 span，故用 All 断言）。
+    // 简历中心入口已移除，演示模式下唯一公开板块是首页。
     expect(screen.getAllByText('首页').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('简历中心').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('简历中心').length).toBe(0);
     // private 板块导航被隐藏
     expect(screen.queryAllByText('技术文档').length).toBe(0);
     expect(screen.queryAllByText('星际之门').length).toBe(0);

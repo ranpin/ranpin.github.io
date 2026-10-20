@@ -17,7 +17,9 @@ export interface SectionMeta {
 
 export const SECTIONS: SectionMeta[] = [
   { id: 'home', label: '首页', shortLabel: '首页', icon: 'home' },
-  { id: 'resume', label: '简历中心', shortLabel: '简历', icon: 'user' },
+  // 2026-10-20：「简历中心」导航入口已移除（用户判断作用不大）。简历改由
+  // 首页项目总览里 openResume 的「🎬 演示Demo」徽章直达（ranpin.github.io/openResume/，
+  // 独立站点，不依赖主站 iframe）。主站不再内嵌简历中心。
   {
     id: 'docs',
     label: '技术文档',

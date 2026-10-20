@@ -9,12 +9,21 @@ import { homeReadme } from '../data/content';
 //
 // 两类链接区别对待（用户 2026-10-19 要求「一眼看出哪些项目有 demo」）：
 //   ① 仓库链接 → 主色 + 常驻下划线（仅靠加粗不足以传达可点击）；
-//   ② README 里形如 [🎬 演示](…) 的 demo 链接 → 胶囊徽章，视觉上和普通链接分开。
+//   ② demo 链接 → 胶囊徽章，视觉上和普通链接分开。README 侧自 2026-10-20 起写成
+//      [![🎬 演示Demo](demo-badge.svg)](…)：GitHub 上图片链接没有文字下划线，
+//      与项目名文字链接明显区分；主站不渲染徽章图，统一渲染自己的主题感知胶囊。
 
-// react-markdown 传进来的 children 可能是字符串或节点数组，取纯文本用于判定链接类型
+// react-markdown 传进来的 children 可能是字符串、节点数组或元素（如徽章 <img>），
+// 取纯文本用于判定链接类型；图片取其 alt 文案。
 const textOf = (node: React.ReactNode): string => {
-  if (typeof node === 'string') return node;
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(textOf).join('');
+  if (React.isValidElement(node)) {
+    const props = node.props as { alt?: unknown; children?: React.ReactNode };
+    if (typeof props.alt === 'string') return props.alt;
+    return textOf(props.children);
+  }
   return '';
 };
 

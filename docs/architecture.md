@@ -4,14 +4,15 @@
 
 纯静态个人站点（聚合入口），无后端、无数据库。内容以仓库中的 **Markdown / YAML 文件**为唯一数据源，构建时由加载器读入并**预渲染（SSG）**为静态 HTML，部署到 GitHub Pages，运行时再 hydrate。
 
-站点由四个板块组成：
+站点由三个板块组成：
 
 | 板块 | 实现方式 |
 |------|----------|
-| 首页 | 个人信息（`profile.yaml`）+ 最新动态（`news.yaml`） |
-| 简历中心 | iframe 嵌入同源子路径 `/openResume/`（独立仓库 [openResume](https://github.com/ranpin/openResume)） |
+| 首页 | 构建时拉取 [ranpin/ranpin](https://github.com/ranpin/ranpin) 的 profile README，react-markdown 原生渲染（个人信息 + 项目总览） |
 | 技术文档 | 运行时 fetch 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) 的 `docs.json` 清单并渲染目录 |
 | 星际之门 | 全屏沉浸式深空体验：Warp 穿越动画 → 数字花园星图（`content/garden/*.md`） |
+
+> 「简历中心」曾是第四个板块（iframe 内嵌 [openResume](https://github.com/ranpin/openResume)），2026-10-20 移除导航入口；简历改由首页项目总览里 openResume 的「🎬 演示Demo」徽章直达独立站点 `ranpin.github.io/openResume/`。
 
 ## 技术栈
 

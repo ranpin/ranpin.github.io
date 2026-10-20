@@ -36,7 +36,6 @@ const EDIT_TARGETS: Record<string, { url: string; label: string }> = {
     url: 'https://github.com/ranpin/ranpin.github.io/tree/main/content/garden',
     label: '编辑花园',
   },
-  resume: { url: 'https://github.com/ranpin/openResume', label: '编辑简历' },
   docs: { url: 'https://github.com/ranpin/edge-ai-docs', label: '编辑文档' },
 };
 const DEFAULT_EDIT = EDIT_TARGETS.home;
