@@ -86,12 +86,16 @@ body {
 /* 满宽（不跟 .ds-wrap 的 920px 对齐）：2026-10-20 用户要求「返回主页/切换主题
    要在页头的最左边和最右边」。此前 inner 被 max-width:920px 夹住，按钮贴的是
    内容盒的边而非页头横幅的边（1440px 视口下实测 left=282 / right=1158）。
-   正文仍由 .ds-wrap 限宽居中，页头通栏是刻意的出血设计。 */
-.ds-header__inner { padding: 1.25rem 1.4rem 1.15rem; }
+   正文仍由 .ds-wrap 限宽居中，页头通栏是刻意的出血设计。
+   inner 同时是「居中的纵向 flex」：只有 .ds-header__row 拉满通栏（align-self:stretch），
+   其余子项（副标题 .ds-header__sub、页头徽章行 .sf-badges/.ie-badges 等）一律水平居中——
+   否则通栏后这些块会贴到最左边（2026-10-20 用户反馈「页头的标签与最左边对齐了，应居中」）。 */
+.ds-header__inner { display: flex; flex-direction: column; align-items: center; padding: 1.25rem 1.4rem 1.15rem; }
 /* 页头三栏：返回主页贴最左、大标题真正居中、主题切换贴最右。
    grid `1fr auto 1fr`：左右两栏等宽，标题才是视觉居中，不会被返回主页挤偏。
+   align-self:stretch 让它无视 inner 的 align-items:center、保持通栏。
    （原「分类徽章」已按用户要求去掉，右栏改放主题切换按钮。） */
-.ds-header__row { display: grid; grid-template-columns: 1fr minmax(0, auto) 1fr; align-items: center; gap: .75rem; }
+.ds-header__row { align-self: stretch; display: grid; grid-template-columns: 1fr minmax(0, auto) 1fr; align-items: center; gap: .75rem; }
 .ds-home {
   grid-column: 1; justify-self: start; white-space: nowrap;
   display: inline-flex; align-items: center; gap: .4rem;
