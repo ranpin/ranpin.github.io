@@ -92,24 +92,25 @@ const components: Components = {
     <li className="leading-relaxed text-warm-gray-700">{children}</li>
   ),
   hr: () => <hr className="my-8 border-warm-gray-200" />,
-  // 时间轴段：README 项目区每个时间段是一个 blockquote（时间行 + 分类行 + 项目列表）。
-  // 渲染成竖向时间轴：一条连续竖线贯穿全部段（::after，段间 my-0、间距全靠 padding），
-  // 每段一个空心圆圈节点（::before，z-10 压在线上把线「分割」成节点）。
-  // sm+ 三栏网格：时间在左（右对齐贴线）、线+圆圈居中、分类与项目列表在右；
+  // 时间轴段：README 项目区每个时间段是一个 blockquote（时间 h6 + 分类 h4 + 项目列表）。
+  // 渲染成靠左的竖向时间轴：一条连续竖线贯穿全部段（::after，段间 my-0、间距全靠 padding），
+  // 每段一个空心圆圈节点（::before，z-10 压在线上、页面底色填充把线「分割」成节点）。
+  // sm+ 三栏网格 7rem/1.5rem/1fr：时间（13px、左对齐贴容器左缘）在左，
+  // 线+圆圈紧随其后（不被时间挤向中间），分类与项目列表在右；
   // 移动端退化为单列（线在最左，时间/分类/项目依次排列）。
+  // 分类 h4 走全局 h4 组件（字号/加粗），此处覆盖其大外边距并隐藏装饰短杠。
   blockquote: ({ children }) => (
     <blockquote
       className={[
         'relative my-0 pb-2 pl-8 pt-6',
-        "before:absolute before:left-0 before:top-[35px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-['']",
+        "before:absolute before:left-0 before:top-[28px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-['']",
         "after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-['']",
-        'sm:grid sm:grid-cols-[9rem_2rem_1fr] sm:items-start sm:pl-0',
-        'sm:before:left-[154px] sm:after:left-[159px]',
-        '[&_p]:my-1',
-        '[&>p:first-of-type]:font-semibold [&>p:first-of-type]:tabular-nums [&>p:first-of-type]:text-sage-700 [&>p:first-of-type]:whitespace-nowrap',
-        'sm:[&>p:first-of-type]:col-start-1 sm:[&>p:first-of-type]:row-start-1 sm:[&>p:first-of-type]:text-right',
-        '[&>p:nth-of-type(2)]:font-bold [&>p:nth-of-type(2)]:text-warm-gray-900',
-        'sm:[&>p:nth-of-type(2)]:col-start-3 sm:[&>p:nth-of-type(2)]:row-start-1',
+        'sm:grid sm:grid-cols-[7rem_1.5rem_1fr] sm:items-start sm:pl-0',
+        'sm:before:left-[118px] sm:after:left-[123px]',
+        '[&>h6]:text-[13px] [&>h6]:font-semibold [&>h6]:leading-relaxed [&>h6]:tabular-nums [&>h6]:text-sage-700 [&>h6]:whitespace-nowrap',
+        'sm:[&>h6]:col-start-1 sm:[&>h6]:row-start-1',
+        '[&>h4]:mt-0 [&>h4]:mb-1 [&>h4>span:first-child]:hidden',
+        'sm:[&>h4]:col-start-3 sm:[&>h4]:row-start-1',
         'sm:[&_ul]:col-start-3 sm:[&_ul]:row-start-2',
       ].join(' ')}
     >

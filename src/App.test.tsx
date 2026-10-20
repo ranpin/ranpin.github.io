@@ -31,7 +31,7 @@ describe('App', () => {
     // 姓名在导航/Header 出现
     expect(screen.getAllByText(personalInfo.name).length).toBeGreaterThan(0);
     // 首页内容直接来自 ranpin/ranpin 的 profile README（构建时同步进 content/home-readme.md），
-    // 由 react-markdown 渲染：自我介绍(h3) + 时间轴段（blockquote：时间行+分类行+项目链接）
+    // 由 react-markdown 渲染：自我介绍(h3) + 时间轴段（blockquote：时间 h6 + 分类 h4 + 项目链接）
     expect(screen.getByText(/我是 ranpin，端侧 AI 工程师/)).toBeInTheDocument();
     // 分类名同时出现在「关注方向」一行与分类标题里，故用 All
     expect(
