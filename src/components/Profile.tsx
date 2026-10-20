@@ -12,7 +12,7 @@ const Profile: React.FC<ProfileProps> = ({ personalInfo }) => {
     avatar && (avatar.startsWith('http') || avatar.startsWith('data:'));
 
   return (
-    <div className="w-full lg:w-80 bg-white shadow-lg rounded-2xl p-6 lg:p-8">
+    <div className="w-full lg:w-80 bg-surface shadow-lg rounded-2xl p-6 lg:p-8">
       {/* 头像与基本信息 */}
       <div className="text-center mb-6">
         <div className="w-24 h-24 bg-gradient-to-br from-sage-500 to-sage-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg overflow-hidden">

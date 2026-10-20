@@ -59,6 +59,36 @@ const Avatar: React.FC<{ personalInfo: PersonalInfo; size: string }> = ({
   return <span className={size}>{avatar || 'A'}</span>;
 };
 
+// 明暗主题切换：调 public/theme.js 的 window.toggleTheme()（首屏绘制前已应用已存主题）。
+// 图标/文案指示「切换目标」：当前亮色显示 🌙/暗色（点了变暗），当前暗色显示 ☀️/亮色。
+// 挂载后从 <html data-theme> 读初始态，避免 SSG 预渲染（恒为亮色）与运行时状态不一致。
+const ThemeToggle: React.FC = () => {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    setDark(document.documentElement.getAttribute('data-theme') === 'dark');
+  }, []);
+  const toggle = () => {
+    (window as unknown as { toggleTheme?: () => void }).toggleTheme?.();
+    setDark(document.documentElement.getAttribute('data-theme') === 'dark');
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={dark ? '切换到亮色主题' : '切换到暗色主题'}
+      title={dark ? '切换到亮色主题' : '切换到暗色主题'}
+      className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-warm-gray-500 transition-colors hover:bg-sage-50 hover:text-sage-700"
+    >
+      <span className="text-base leading-none" aria-hidden="true">
+        {dark ? '☀️' : '🌙'}
+      </span>
+      <span className="hidden text-xs font-medium lg:inline">
+        {dark ? '亮色' : '暗色'}
+      </span>
+    </button>
+  );
+};
+
 const Header: React.FC<HeaderProps> = ({
   activeSection,
   setActiveSection,
@@ -108,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b border-warm-gray-200 sticky top-0 z-40">
+      <header className="bg-surface shadow-sm border-b border-warm-gray-200 sticky top-0 z-40">
         <nav className="px-4 sm:px-6 lg:px-8">
           {/* 三栏网格让导航真正居中，不依赖右侧占位 */}
           <div className="grid grid-cols-[1fr_auto_1fr] items-center min-h-[60px]">
@@ -167,6 +197,8 @@ const Header: React.FC<HeaderProps> = ({
             {/* 右栏：三栏网格保持导航居中。演示模式下这里是空占位（访客看不到任何开关）；
                 完整模式下显示「演示配置」入口，供站点主人配置演示时展示的内容。 */}
             <div className="flex items-center justify-self-end">
+              {/* 明暗主题切换（所有模式下都显示，访客也可切换） */}
+              <ThemeToggle />
               {/* 中英文切换：跳 translate.goog 代理（英文）或回原文。
                   notranslate + translate="no" 防止按钮自身文案被谷歌翻译 */}
               <button
@@ -235,7 +267,7 @@ const Header: React.FC<HeaderProps> = ({
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-profile-title"
-            className="fixed inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-xl overscroll-contain"
+            className="fixed inset-x-0 bottom-0 bg-surface rounded-t-2xl shadow-xl overscroll-contain"
           >
             <div className="p-6" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-6">

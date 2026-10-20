@@ -15,10 +15,13 @@
   var KEY = 'ranpin-theme';
 
   function read() {
-    try { return localStorage.getItem(KEY); } catch (e) { return null; }
+    try { return localStorage.getItem(KEY); } catch { return null; }
   }
   function apply(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    // 同步浏览器 UI 主题色（移动端地址栏），与 --wg-50 保持一致
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#f8fafc');
   }
   function syncControls() {
     var dark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -38,7 +41,7 @@
   window.toggleTheme = function () {
     var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     apply(next);
-    try { localStorage.setItem(KEY, next); } catch (e) { /* 隐私模式等，仅本次会话有效 */ }
+    try { localStorage.setItem(KEY, next); } catch { /* 隐私模式等，仅本次会话有效 */ }
     syncControls();
   };
   window.__syncThemeControls = syncControls;

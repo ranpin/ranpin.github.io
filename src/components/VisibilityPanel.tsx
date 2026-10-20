@@ -126,7 +126,7 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="visibility-panel-title"
-        className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+        className={`absolute right-0 top-0 h-full w-full max-w-md bg-surface shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           entered ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -237,7 +237,7 @@ const VisibilityPanel: React.FC<VisibilityPanelProps> = ({ onClose }) => {
             <button
               type="button"
               onClick={resetAll}
-              className="flex-1 py-2 rounded-lg text-sm font-medium text-warm-gray-600 bg-white border border-warm-gray-200 hover:bg-warm-gray-100 transition-colors"
+              className="flex-1 py-2 rounded-lg text-sm font-medium text-warm-gray-600 bg-surface border border-warm-gray-200 hover:bg-warm-gray-100 transition-colors"
             >
               恢复默认
             </button>

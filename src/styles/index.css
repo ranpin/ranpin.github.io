@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== 明暗主题变量（2026-10-20）=====
+   由 public/theme.js 切换 <html data-theme="light|dark">；tailwind.config.js 的
+   sage-* / warm-gray-* / surface 全部引用这些变量，故一处翻转、全站换肤。
+   暗色值与 demo-shell.css 的 --ds-* 保持一致，主站与演示页观感统一。
+   中性色暗色下整体反转（50=最深底 → 900=最亮字）；主色暗色下提亮保证暗底对比。 */
+:root {
+  color-scheme: light;
+  --wg-50: #f8fafc; --wg-100: #f1f5f9; --wg-200: #e2e8f0; --wg-300: #cbd5e1;
+  --wg-400: #94a3b8; --wg-500: #64748b; --wg-600: #475569; --wg-700: #334155;
+  --wg-800: #1e293b; --wg-900: #0f172a;
+  --sage-50: #eff6ff; --sage-100: #dbeafe; --sage-200: #bedaff; --sage-300: #93c5fd;
+  --sage-400: #5da2fb; --sage-500: #3583f6; --sage-600: #1a67eb; --sage-700: #1552d1;
+  --sage-800: #1744a9; --sage-900: #183c85;
+  --c-surface: #ffffff;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+  --wg-50: #0f172a; --wg-100: #1e293b; --wg-200: #334155; --wg-300: #475569;
+  --wg-400: #64748b; --wg-500: #94a3b8; --wg-600: #cbd5e1; --wg-700: #e2e8f0;
+  --wg-800: #f1f5f9; --wg-900: #f8fafc;
+  --sage-50: #172554; --sage-100: #1e3a5f; --sage-200: #1e40af; --sage-300: #2563eb;
+  --sage-400: #3b82f6; --sage-500: #60a5fa; --sage-600: #2563eb; --sage-700: #60a5fa;
+  --sage-800: #93c5fd; --sage-900: #bfdbfe;
+  --c-surface: #1e293b;
+}
+
 /* 自托管 Inter（latin 子集，font-display: swap）。中文按字体栈逐字回退到
    PingFang SC / Microsoft YaHei，无需加载中文字体文件。 */
 @font-face {
@@ -64,10 +90,9 @@
       'PingFang SC',
       'Microsoft YaHei',
       sans-serif;
-    /* 与 tailwind.config.js 的 warm-gray-50 / warm-gray-800 保持一致
-       （2026-10-19 配色刷新：暖米色 → 冷白 + 冷调中性灰） */
-    background-color: #f8fafc;
-    color: #1e293b;
+    /* 跟随主题变量：亮/暗由 <html data-theme> 翻转（见文件顶部 :root / [data-theme=dark]） */
+    background-color: var(--wg-50);
+    color: var(--wg-800);
     line-height: 1.6;
   }
 

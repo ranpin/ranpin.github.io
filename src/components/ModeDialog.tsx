@@ -50,7 +50,7 @@ const ModeDialog: React.FC<ModeDialogProps> = ({ onClose }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="mode-dialog-title"
-        className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6"
+        className="bg-surface rounded-2xl shadow-xl w-full max-w-sm p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
