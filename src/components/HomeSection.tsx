@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { homeReadme } from '../data/content';
 
@@ -92,12 +93,32 @@ const components: Components = {
     <li className="leading-relaxed text-warm-gray-700">{children}</li>
   ),
   hr: () => <hr className="my-8 border-warm-gray-200" />,
+  // README 项目区是「时间 | 项目」两列表格（GitHub 侧用表格实现左右布局）。
+  // 主站把它渲染成时间轴：时间列在左，竖线 + 圆点节点居中，项目列在右。
+  // 单元格内 <br> 分行依赖 rehypeRaw（react-markdown 默认跳过原始 HTML）。
+  table: ({ children }) => (
+    <table className="my-8 w-full border-collapse text-left">{children}</table>
+  ),
+  th: ({ children }) => (
+    <th className="border-b border-warm-gray-200 pb-2 pr-4 text-left text-xs font-semibold tracking-wide text-warm-gray-400 last:pl-6">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="align-top py-4 leading-relaxed text-warm-gray-700 first:w-36 first:pr-4 first:font-semibold first:tabular-nums first:text-sage-700 first:whitespace-nowrap sm:first:w-40 last:relative last:border-l-2 last:border-sage-200 last:pl-6 last:before:absolute last:before:-left-1.5 last:before:top-[24px] last:before:h-2.5 last:before:w-2.5 last:before:rounded-full last:before:bg-sage-400 last:before:content-['']">
+      {children}
+    </td>
+  ),
 };
 
 const HomeSection: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={components}
+      >
         {homeReadme}
       </ReactMarkdown>
     </div>
