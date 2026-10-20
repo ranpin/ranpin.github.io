@@ -93,10 +93,26 @@ const components: Components = {
   ),
   hr: () => <hr className="my-8 border-warm-gray-200" />,
   // 时间轴段：README 项目区每个时间段是一个 blockquote（时间行 + 分类行 + 项目列表）。
-  // 渲染成竖向时间轴：左侧连续竖线（after）+ 每段一个圆点节点（before，z-10 压在线上）；
-  // 时间行蔚蓝 semibold + tabular-nums，分类行加深。段间 my-0、间距全靠 padding，竖线才连续。
+  // 渲染成竖向时间轴：一条连续竖线贯穿全部段（::after，段间 my-0、间距全靠 padding），
+  // 每段一个空心圆圈节点（::before，z-10 压在线上把线「分割」成节点）。
+  // sm+ 三栏网格：时间在左（右对齐贴线）、线+圆圈居中、分类与项目列表在右；
+  // 移动端退化为单列（线在最左，时间/分类/项目依次排列）。
   blockquote: ({ children }) => (
-    <blockquote className="relative my-0 border-l-0 pb-2 pl-8 pt-6 before:absolute before:left-0 before:top-[35px] before:z-10 before:h-3 before:w-3 before:rounded-full before:bg-sage-500 before:content-[''] after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-[''] [&>p:first-of-type]:font-semibold [&>p:first-of-type]:tabular-nums [&>p:first-of-type]:text-sage-700 [&>p:nth-of-type(2)]:font-bold [&>p:nth-of-type(2)]:text-warm-gray-900 [&_p]:my-1">
+    <blockquote
+      className={[
+        'relative my-0 pb-2 pl-8 pt-6',
+        "before:absolute before:left-0 before:top-[35px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-['']",
+        "after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-['']",
+        'sm:grid sm:grid-cols-[9rem_2rem_1fr] sm:items-start sm:pl-0',
+        'sm:before:left-[154px] sm:after:left-[159px]',
+        '[&_p]:my-1',
+        '[&>p:first-of-type]:font-semibold [&>p:first-of-type]:tabular-nums [&>p:first-of-type]:text-sage-700 [&>p:first-of-type]:whitespace-nowrap',
+        'sm:[&>p:first-of-type]:col-start-1 sm:[&>p:first-of-type]:row-start-1 sm:[&>p:first-of-type]:text-right',
+        '[&>p:nth-of-type(2)]:font-bold [&>p:nth-of-type(2)]:text-warm-gray-900',
+        'sm:[&>p:nth-of-type(2)]:col-start-3 sm:[&>p:nth-of-type(2)]:row-start-1',
+        'sm:[&_ul]:col-start-3 sm:[&_ul]:row-start-2',
+      ].join(' ')}
+    >
       {children}
     </blockquote>
   ),
