@@ -31,10 +31,8 @@ describe('App', () => {
     // 姓名在导航/Header 出现
     expect(screen.getAllByText(personalInfo.name).length).toBeGreaterThan(0);
     // 首页内容直接来自 ranpin/ranpin 的 profile README（构建时同步进 content/home-readme.md），
-    // 由 react-markdown 渲染：自我介绍(h3) + 分类标题(h4) + 项目链接
-    expect(
-      screen.getByText(/我是 ranpin，端侧 AI 工程师/),
-    ).toBeInTheDocument();
+    // 由 react-markdown 渲染：自我介绍(h3) + 时间轴段（blockquote：时间行+分类行+项目链接）
+    expect(screen.getByText(/我是 ranpin，端侧 AI 工程师/)).toBeInTheDocument();
     // 分类名同时出现在「关注方向」一行与分类标题里，故用 All
     expect(
       screen.getAllByText(/智能机器人 \/ 具身智能/).length,
@@ -149,9 +147,7 @@ describe('App', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('站点板块')).toBeInTheDocument();
     // 项目级配置已随 openResume「作品集」移除，面板只剩板块级
-    expect(
-      screen.queryByText(/简历中心 · 项目/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/简历中心 · 项目/)).not.toBeInTheDocument();
   });
 
   it('面板开启板块后写入持久化配置，并即时体现在演示模式导航', () => {

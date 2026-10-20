@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { homeReadme } from '../data/content';
 
@@ -93,32 +92,20 @@ const components: Components = {
     <li className="leading-relaxed text-warm-gray-700">{children}</li>
   ),
   hr: () => <hr className="my-8 border-warm-gray-200" />,
-  // README 项目区是「时间 | 项目」两列表格（GitHub 侧用表格实现左右布局）。
-  // 主站把它渲染成时间轴：时间列在左，竖线 + 圆点节点居中，项目列在右。
-  // 单元格内 <br> 分行依赖 rehypeRaw（react-markdown 默认跳过原始 HTML）。
-  table: ({ children }) => (
-    <table className="my-8 w-full border-collapse text-left">{children}</table>
-  ),
-  th: ({ children }) => (
-    <th className="border-b border-warm-gray-200 pb-2 pr-4 text-left text-xs font-semibold tracking-wide text-warm-gray-400 last:pl-6">
+  // 时间轴段：README 项目区每个时间段是一个 blockquote（时间行 + 分类行 + 项目列表）。
+  // 渲染成竖向时间轴：左侧连续竖线（after）+ 每段一个圆点节点（before，z-10 压在线上）；
+  // 时间行蔚蓝 semibold + tabular-nums，分类行加深。段间 my-0、间距全靠 padding，竖线才连续。
+  blockquote: ({ children }) => (
+    <blockquote className="relative my-0 border-l-0 pb-2 pl-8 pt-6 before:absolute before:left-0 before:top-[35px] before:z-10 before:h-3 before:w-3 before:rounded-full before:bg-sage-500 before:content-[''] after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-[''] [&>p:first-of-type]:font-semibold [&>p:first-of-type]:tabular-nums [&>p:first-of-type]:text-sage-700 [&>p:nth-of-type(2)]:font-bold [&>p:nth-of-type(2)]:text-warm-gray-900 [&_p]:my-1">
       {children}
-    </th>
-  ),
-  td: ({ children }) => (
-    <td className="align-top py-4 leading-relaxed text-warm-gray-700 first:w-36 first:pr-4 first:font-semibold first:tabular-nums first:text-sage-700 first:whitespace-nowrap sm:first:w-40 last:relative last:border-l-2 last:border-sage-200 last:pl-6 last:before:absolute last:before:-left-1.5 last:before:top-[24px] last:before:h-2.5 last:before:w-2.5 last:before:rounded-full last:before:bg-sage-400 last:before:content-['']">
-      {children}
-    </td>
+    </blockquote>
   ),
 };
 
 const HomeSection: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        components={components}
-      >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {homeReadme}
       </ReactMarkdown>
     </div>

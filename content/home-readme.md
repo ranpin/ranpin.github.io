@@ -7,10 +7,44 @@
 
 ---
 
-| 时间                | 项目                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **2026.07-至今**    | **🧰 工具 / 作品（做点可能无用但有意思的）**<br>• **[openResume](https://github.com/ranpin/openResume)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/openResume/) — 在线简历中心<br>• **[easter-egg-map](https://github.com/ranpin/easter-egg-map)** — 旅行彩蛋 UGC 平台<br>• **[MagicEye](https://github.com/ranpin/MagicEye)** — 手势 + AI 魔法交互（微信小程序）                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **2026.07-至今**    | **🤖 智能机器人 / 具身智能（学习研究中）**<br>• **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/alpamayo-edge/cosmos3-demo/) — NVIDIA Physical AI（Alpamayo 1.5 VLA + Cosmos3-Edge WAM）在 Jetson Orin 的量化部署 · INT4/INT8 · Orin 实测 · VLA 轨迹推理<br>• **[homebot-wm](https://github.com/ranpin/homebot-wm)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/homebot-wm/) — 世界模型驱动的家用机器人轻量算法框架 · 扩散策略压缩（DDIM+INT8）· Push-T 闭环评测<br>• **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/spring-festival-dance-robot/) — 视频 → 9 台 Unitree G1 机器人同步起舞 |
-| **2025.07-至今**    | **🚗 智能座舱（工作内容）**<br>• **[inforExtra](https://github.com/ranpin/inforExtra)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/inforExtra/) — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）<br>• **[mirix-cpp](https://github.com/ranpin/mirix-cpp)** — 多模态交互记忆系统（C++）<br>• **[aadkMemory](https://github.com/ranpin/aadkMemory)** — FAISS 对话记忆检索<br>• **[chat_huanhuan](https://github.com/ranpin/chat_huanhuan)** — 甄嬛传角色对话系统（Ollama + MCP）                                                                                                                                                                                                                                                                      |
-| **2022.09–2025.06** | **🛣️ 自动驾驶（读研期间）**<br>• **[heat2label](https://github.com/ranpin/heat2label)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/heat2label/) — 热力图自动生成伪框标注（DAAM 交叉注意力 + Grad-CAM++ 两路）<br>• **[offroad-judge-suite](https://github.com/ranpin/offroad-judge-suite)** — 越野挑战赛多传感器评测基础设施（2023）<br>• **[Resnet50_TensorRT](https://github.com/ranpin/Resnet50_TensorRT)** — ResNet50 TensorRT 部署（fork）                                                                                                                                                                                                                                                                                                                       |
-| **2017.09-2021.06** | **🎓 前后端开发（本科期间）**<br>• **[agriculturalScience](https://github.com/ranpin/agriculturalScience)** — 智慧e农 / 土圈后台管理系统（Java EE + BeX5 移动端，存档）<br>• **[musicPlayer](https://github.com/ranpin/musicPlayer)** — 仿网易云音乐播放器（Vue 2）<br>• **[ptaCode](https://github.com/ranpin/ptaCode)** — PTA 习题练习<br>• **[JavaTiku](https://github.com/ranpin/JavaTiku)** — 《Java2 实用教程》配套练习题库程序（Java Swing）                                                                                                                                                                                                                                                                                                                                  |
+> **2026.07 - 至今**
+>
+> **🧰 工具 / 作品（做点可能无用但有意思的）**
+>
+> - **[openResume](https://github.com/ranpin/openResume)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/openResume/) — 在线简历中心
+> - **[easter-egg-map](https://github.com/ranpin/easter-egg-map)** — 旅行彩蛋 UGC 平台
+> - **[MagicEye](https://github.com/ranpin/MagicEye)** — 手势 + AI 魔法交互（微信小程序）
+
+> **2026.07 - 至今**
+>
+> **🤖 智能机器人 / 具身智能（学习研究中）**
+>
+> - **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/alpamayo-edge/cosmos3-demo/) — NVIDIA Physical AI（Alpamayo 1.5 VLA + Cosmos3-Edge WAM）在 Jetson Orin 的量化部署 · INT4/INT8 · Orin 实测 · VLA 轨迹推理
+> - **[homebot-wm](https://github.com/ranpin/homebot-wm)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/homebot-wm/) — 世界模型驱动的家用机器人轻量算法框架 · 扩散策略压缩（DDIM+INT8）· Push-T 闭环评测
+> - **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/spring-festival-dance-robot/) — 视频 → 9 台 Unitree G1 机器人同步起舞
+
+> **2025.07 - 至今**
+>
+> **🚗 智能座舱（工作内容）**
+>
+> - **[inforExtra](https://github.com/ranpin/inforExtra)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/inforExtra/) — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）
+> - **[mirix-cpp](https://github.com/ranpin/mirix-cpp)** — 多模态交互记忆系统（C++）
+> - **[aadkMemory](https://github.com/ranpin/aadkMemory)** — FAISS 对话记忆检索
+> - **[chat_huanhuan](https://github.com/ranpin/chat_huanhuan)** — 甄嬛传角色对话系统（Ollama + MCP）
+
+> **2022.09 - 2025.06**
+>
+> **🛣️ 自动驾驶（读研期间）**
+>
+> - **[heat2label](https://github.com/ranpin/heat2label)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/heat2label/) — 热力图自动生成伪框标注（DAAM 交叉注意力 + Grad-CAM++ 两路）
+> - **[offroad-judge-suite](https://github.com/ranpin/offroad-judge-suite)** — 越野挑战赛多传感器评测基础设施（2023）
+> - **[Resnet50_TensorRT](https://github.com/ranpin/Resnet50_TensorRT)** — ResNet50 TensorRT 部署（fork）
+
+> **2017.09 - 2021.06**
+>
+> **🎓 前后端开发（本科期间）**
+>
+> - **[agriculturalScience](https://github.com/ranpin/agriculturalScience)** — 智慧e农 / 土圈后台管理系统（Java EE + BeX5 移动端，存档）
+> - **[musicPlayer](https://github.com/ranpin/musicPlayer)** — 仿网易云音乐播放器（Vue 2）
+> - **[ptaCode](https://github.com/ranpin/ptaCode)** — PTA 习题练习
+> - **[JavaTiku](https://github.com/ranpin/JavaTiku)** — 《Java2 实用教程》配套练习题库程序（Java Swing）
