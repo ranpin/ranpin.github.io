@@ -27,7 +27,7 @@
 >
 > #### 🚗 智能座舱（工作内容）
 >
-> - **[inforExtra](https://github.com/ranpin/inforExtra)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/inforExtra/) — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）
+> - **[jevCabin](https://github.com/ranpin/jevCabin)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/jevCabin/) — 车载座舱人员/身份/座位信息提取（laya 类型化决策替代巨型 prompt）
 > - **[mirix-cpp](https://github.com/ranpin/mirix-cpp)** — 多模态交互记忆系统（C++）
 > - **[aadkMemory](https://github.com/ranpin/aadkMemory)** — FAISS 对话记忆检索
 > - **[chat_huanhuan](https://github.com/ranpin/chat_huanhuan)** — 甄嬛传角色对话系统（Ollama + MCP）
