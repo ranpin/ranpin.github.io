@@ -64,9 +64,9 @@ const components: Components = {
       </a>
     );
   },
-  // README 用 h3 作自我介绍标题
+  // README 用 h3 作自我介绍标题（用户 2026-10-21 要求这一行居中，其余保持左对齐）
   h3: ({ children }) => (
-    <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-warm-gray-900 leading-snug">
+    <h3 className="text-center text-2xl sm:text-3xl font-bold tracking-tight text-warm-gray-900 leading-snug">
       {children}
     </h3>
   ),
@@ -96,17 +96,17 @@ const components: Components = {
   // 渲染成与上方「关注方向」列表左对齐的竖向时间轴：竖线 left-[5px]（对齐列表项圆点）、
   // 内容从 pl-5=20px 起（对齐列表项文字）；一条连续竖线贯穿全部段（::after，段间 my-0、间距全靠 padding），
   // 每段一个空心圆圈节点（::before，z-10 压在线上、页面底色填充把线「分割」成节点）。
-  // lg+ 时间（h6）绝对定位挂进容器左侧页边留白（right-full），与圆圈/分类首行对齐；
-  // < lg 无留白可挂，时间退回文档流排在分类上方。
+  // xl+ 时间（h6）绝对定位挂进容器左侧页边留白（right-full），与圆圈/分类首行对齐；
+  // < xl 留白不足（容器已加宽到 max-w-4xl，lg 处页边只剩 64px 挂不下 ~90px 的时间），时间退回文档流排在分类上方。
   // 分类 h4 走全局 h4 组件（字号/加粗），此处覆盖其大外边距并隐藏装饰短杠。
   blockquote: ({ children }) => (
     <blockquote
       className={[
         'relative my-0 pb-2 pl-5 pt-6',
         "after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-['']",
-        "before:absolute before:left-0 before:top-[28px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-[''] lg:before:top-[32px]",
+        "before:absolute before:left-0 before:top-[28px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-[''] xl:before:top-[32px]",
         '[&>h6]:mb-1 [&>h6]:text-[13px] [&>h6]:font-semibold [&>h6]:leading-relaxed [&>h6]:tabular-nums [&>h6]:text-sage-700 [&>h6]:whitespace-nowrap',
-        'lg:[&>h6]:absolute lg:[&>h6]:right-full lg:[&>h6]:top-[27px] lg:[&>h6]:mr-3 lg:[&>h6]:mb-0',
+        'xl:[&>h6]:absolute xl:[&>h6]:right-full xl:[&>h6]:top-[27px] xl:[&>h6]:mr-3 xl:[&>h6]:mb-0',
         '[&>h4]:mt-0 [&>h4]:mb-1 [&>h4>span:first-child]:hidden',
       ].join(' ')}
     >
@@ -117,7 +117,7 @@ const components: Components = {
 
 const HomeSection: React.FC = () => {
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {homeReadme}
       </ReactMarkdown>
