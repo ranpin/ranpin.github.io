@@ -88,6 +88,16 @@ body {
   padding: 0 1.4rem 4rem;
 }
 
+/* 正文两端对齐（2026-10-25 用户要求「正文文字（非标题）应两端对齐而非居中」）：
+   内容区的段落/列表一律 justify，单行文本自然呈现为左对齐。只作用于 p/li——
+   标题、页头横幅、导航按钮、图表 caption、统计卡、代码块、页脚均不受影响；
+   页面里个别需保持居中的示意行/小标题，用更高优先级选择器（如 .ds-wrap p.xxx）
+   在页面自身 CSS 里覆盖即可。 */
+.ds-wrap p,
+.ds-wrap li {
+  text-align: justify;
+}
+
 /* 页头横幅 */
 .ds-header {
   background: var(--ds-panel);
