@@ -99,15 +99,19 @@ const components: Components = {
   // xl+ 时间（h6）绝对定位挂进容器左侧页边留白（right-full），与圆圈/分类首行对齐；
   // < xl 留白不足（容器已加宽到 max-w-4xl，lg 处页边只剩 64px 挂不下 ~90px 的时间），时间退回文档流排在分类上方。
   // 分类 h4 走全局 h4 组件（字号/加粗），此处覆盖其大外边距并隐藏装饰短杠。
+  // 项目间距只在本段内放大（[&>ul] 覆盖全局 ul 的 space-y-2）——顶部「关注方向」列表共用
+  // 同一个 ul 组件，不能跟着被撑开。圆圈 top 随 h6 字号联动：圆心须落在首行行盒中线上
+  // （<xl 首行是 h6，xl 首行是 h4，故两侧偏移不同）。
   blockquote: ({ children }) => (
     <blockquote
       className={[
         'relative my-0 pb-2 pl-5 pt-6',
         "after:absolute after:bottom-0 after:left-[5px] after:top-0 after:w-0.5 after:bg-sage-200 after:content-['']",
-        "before:absolute before:left-0 before:top-[28px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-[''] xl:before:top-[32px]",
-        '[&>h6]:mb-1 [&>h6]:text-[13px] [&>h6]:font-semibold [&>h6]:leading-relaxed [&>h6]:tabular-nums [&>h6]:text-sage-700 [&>h6]:whitespace-nowrap',
-        'xl:[&>h6]:absolute xl:[&>h6]:right-full xl:[&>h6]:top-[27px] xl:[&>h6]:mr-3 xl:[&>h6]:mb-0',
+        "before:absolute before:left-0 before:top-[30px] before:z-10 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-sage-500 before:bg-warm-gray-50 before:content-[''] xl:before:top-[32px]",
+        '[&>h6]:mb-1 [&>h6]:text-[15px] [&>h6]:font-semibold [&>h6]:leading-relaxed [&>h6]:tabular-nums [&>h6]:text-sage-700 [&>h6]:whitespace-nowrap',
+        'xl:[&>h6]:absolute xl:[&>h6]:right-full xl:[&>h6]:top-[26px] xl:[&>h6]:mr-3 xl:[&>h6]:mb-0',
         '[&>h4]:mt-0 [&>h4]:mb-1 [&>h4>span:first-child]:hidden',
+        '[&>ul]:space-y-6',
       ].join(' ')}
     >
       {children}
