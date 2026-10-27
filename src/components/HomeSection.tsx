@@ -64,6 +64,19 @@ const components: Components = {
       </a>
     );
   },
+  // 两类 strong：包着链接的是仓库名（颜色/下划线由 a 组件决定，此处不干预）；
+  // 纯文本的是描述标题 → 亮绿 leaf-600（2026-10-27 用户要求，双主题走 CSS 变量）。
+  // 判据用 hast node（React children 里 a 已被映射成函数组件，type 不再是 'a'）。
+  strong: ({ node, children }) => {
+    const wrapsLink = node?.children?.some(
+      (c) => 'tagName' in c && c.tagName === 'a',
+    );
+    return (
+      <strong className={wrapsLink ? undefined : 'text-leaf-600'}>
+        {children}
+      </strong>
+    );
+  },
   // README 用 h3 作自我介绍标题（用户 2026-10-21 要求这一行居中，其余保持左对齐）
   h3: ({ children }) => (
     <h3 className="text-center text-2xl sm:text-3xl font-bold tracking-tight text-warm-gray-900 leading-snug">
@@ -112,10 +125,9 @@ const components: Components = {
         'xl:[&>h6]:absolute xl:[&>h6]:right-full xl:[&>h6]:top-[26px] xl:[&>h6]:mr-3 xl:[&>h6]:mb-0',
         '[&>h4]:mt-0 [&>h4]:mb-1 [&>h4>span:first-child]:hidden',
         '[&>ul]:space-y-6',
-        // 项目名链接（strong 内的 a）：亮绿 leaf-600 + 700（2026-10-27 用户要求）。
-        // 顶部「个人主页/技术文档」入口链接不在 blockquote 内、demo 徽章不在 strong 内，均不受影响。
-        '[&_strong_a]:font-bold [&_strong_a]:text-leaf-600 [&_strong_a]:decoration-leaf-300',
-        '[&_strong_a:hover]:text-leaf-800 [&_strong_a:hover]:decoration-leaf-600',
+        // 仓库名链接（strong 内的 a）只提字重到 700（2026-10-27 用户要求），颜色仍走 a 组件的湖蓝；
+        // 亮绿给的是描述标题（纯文本 strong），见下方 strong 组件映射。
+        '[&_strong_a]:font-bold',
       ].join(' ')}
     >
       {children}
