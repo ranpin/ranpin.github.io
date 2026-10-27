@@ -112,6 +112,10 @@ const components: Components = {
         'xl:[&>h6]:absolute xl:[&>h6]:right-full xl:[&>h6]:top-[26px] xl:[&>h6]:mr-3 xl:[&>h6]:mb-0',
         '[&>h4]:mt-0 [&>h4]:mb-1 [&>h4>span:first-child]:hidden',
         '[&>ul]:space-y-6',
+        // 项目名链接（strong 内的 a）：亮绿 leaf-600 + 700（2026-10-27 用户要求）。
+        // 顶部「个人主页/技术文档」入口链接不在 blockquote 内、demo 徽章不在 strong 内，均不受影响。
+        '[&_strong_a]:font-bold [&_strong_a]:text-leaf-600 [&_strong_a]:decoration-leaf-300',
+        '[&_strong_a:hover]:text-leaf-800 [&_strong_a:hover]:decoration-leaf-600',
       ].join(' ')}
     >
       {children}

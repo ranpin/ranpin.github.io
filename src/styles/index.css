@@ -4,9 +4,10 @@
 
 /* ===== 明暗主题变量（2026-10-20）=====
    由 public/theme.js 切换 <html data-theme="light|dark">；tailwind.config.js 的
-   sage-* / warm-gray-* / surface 全部引用这些变量，故一处翻转、全站换肤。
+   sage-* / leaf-* / warm-gray-* / surface 全部引用这些变量，故一处翻转、全站换肤。
    暗色值与 demo-shell.css 的 --ds-* 保持一致，主站与演示页观感统一。
-   中性色暗色下整体反转（50=最深底 → 900=最亮字）；主色暗色下提亮保证暗底对比。 */
+   中性色暗色下整体反转（50=最深底 → 900=最亮字）；主色暗色下提亮保证暗底对比。
+   leaf-* 是项目名链接专用亮绿（2026-10-27）：亮底 #16a34a / 暗底 #4ade80。 */
 :root {
   color-scheme: light;
   --wg-50: #f8fafc; --wg-100: #f1f5f9; --wg-200: #e2e8f0; --wg-300: #cbd5e1;
@@ -15,6 +16,9 @@
   --sage-50: #eff6ff; --sage-100: #dbeafe; --sage-200: #bedaff; --sage-300: #93c5fd;
   --sage-400: #5da2fb; --sage-500: #3583f6; --sage-600: #1a67eb; --sage-700: #1552d1;
   --sage-800: #1744a9; --sage-900: #183c85;
+  --leaf-50: #f0fdf4; --leaf-100: #dcfce7; --leaf-200: #bbf7d0; --leaf-300: #86efac;
+  --leaf-400: #4ade80; --leaf-500: #22c55e; --leaf-600: #16a34a; --leaf-700: #15803d;
+  --leaf-800: #166534; --leaf-900: #14532d;
   --c-surface: #ffffff;
 }
 [data-theme='dark'] {
@@ -25,6 +29,9 @@
   --sage-50: #172554; --sage-100: #1e3a5f; --sage-200: #1e40af; --sage-300: #2563eb;
   --sage-400: #3b82f6; --sage-500: #60a5fa; --sage-600: #2563eb; --sage-700: #60a5fa;
   --sage-800: #93c5fd; --sage-900: #bfdbfe;
+  --leaf-50: #052e16; --leaf-100: #14532d; --leaf-200: #166534; --leaf-300: #15803d;
+  --leaf-400: #16a34a; --leaf-500: #22c55e; --leaf-600: #4ade80; --leaf-700: #86efac;
+  --leaf-800: #bbf7d0; --leaf-900: #dcfce7;
   --c-surface: #1e293b;
 }
 
