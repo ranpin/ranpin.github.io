@@ -1,4 +1,5 @@
 ### Hi 👋 我是 ranpin，端侧 AI 工程师。
+
 - 关注方向：智能机器人 / 具身智能、自动驾驶、智能座舱。
 - 关注技术：Agent Harness · VLA 与世界模型 · 压缩与量化 · 边缘部署（Jetson Orin / 高通8x97 / NPU）。
 
@@ -18,7 +19,7 @@
 >
 > #### 🤖 智能机器人 / 具身智能（学习研究中）
 >
-> - **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/alpamayo-edge/cosmos3-demo/) — **NVIDIA Physical AI 模型在 Jetson Orin 上的边缘量化部署实证**：Alpamayo 1.5 VLA + Cosmos3-Edge WAM 两代模型共用一套管线，INT4/INT8 的精度、延迟、能耗、内存、可靠性五轴全实测
+> - **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/alpamayo-edge/cosmos3-demo/) [![🛣️ 轨迹演示](demo-badge-traj.svg)](https://ranpin.github.io/alpamayo-edge/r1-trajectory/) — **NVIDIA Physical AI 模型在 Jetson Orin 上的边缘部署实证**：一套 TensorRT-Edge 管线部署多代模型——8B VLM 量化五轴实测（INT4/INT8）、Cosmos3-Edge WAM 场景理解、Alpamayo-R1 AV 轨迹（分解注意力打穿 TRT≥11 算子墙），两个真实 Orin 推理 demo
 > - **[homebot-wm](https://github.com/ranpin/homebot-wm)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/homebot-wm/) — **视觉扩散策略的压缩与边缘部署**：Push-T 策略从训练走通 ONNX 导出 → INT8 量化 → DDIM 减步 → TensorRT，在 Jetson Orin 实机测延迟与闭环精度（早期世界模型框架探索已撞墙暂停，如实记录）
 > - **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/spring-festival-dance-robot/) — **复刻 Datawhale every-embodied 的「春晚舞蹈机器人」**：一段群舞视频经 PromptHMR → GMR 重定向为 9 台 Unitree G1 的同步动作，Kaggle GPU 推理 + Mac 本地 viser 交互式 3D 演示
 
