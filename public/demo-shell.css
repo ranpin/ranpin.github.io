@@ -88,9 +88,10 @@ body {
   padding: 0 1.4rem 4rem;
 }
 
-/* 正文两端对齐（2026-10-25 用户要求「正文文字（非标题）应两端对齐而非居中」）：
+/* 正文两端对齐（2026-10-25 用户要求「正文文字（非标题）应两端对齐而非居中」；
+   2026-10-28 页头描述 .ds-header__sub 同样改 justify，页头标题 h1 仍居中）：
    内容区的段落/列表一律 justify，单行文本自然呈现为左对齐。只作用于 p/li——
-   标题、页头横幅、导航按钮、图表 caption、统计卡、代码块、页脚均不受影响；
+   标题、导航按钮、图表 caption、统计卡、代码块、页脚均不受影响；
    页面里个别需保持居中的示意行/小标题，用更高优先级选择器（如 .ds-wrap p.xxx）
    在页面自身 CSS 里覆盖即可。 */
 .ds-wrap p,
@@ -109,7 +110,8 @@ body {
    内容盒的边而非页头横幅的边（1440px 视口下实测 left=282 / right=1158）。
    正文仍由 .ds-wrap 限宽居中，页头通栏是刻意的出血设计。
    inner 同时是「居中的纵向 flex」：只有 .ds-header__row 拉满通栏（align-self:stretch），
-   其余子项（副标题 .ds-header__sub、页头徽章行 .sf-badges/.ie-badges 等）一律水平居中——
+   其余子项（副标题 .ds-header__sub、页头徽章行 .sf-badges/.ie-badges 等）盒子一律水平居中
+   （sub 盒内文字 2026-10-28 起为 justify，见该规则处注释）——
    否则通栏后这些块会贴到最左边（2026-10-20 用户反馈「页头的标签与最左边对齐了，应居中」）。 */
 .ds-header__inner {
   display: flex;
@@ -180,12 +182,14 @@ body {
 .ds-theme-icon {
   pointer-events: none;
 }
+/* 页头描述（非标题）：2026-10-28 用户要求由 center 改两端对齐。
+   盒子仍居中、限宽 720px；多行文本两边缘拉齐，单行文本无从拉伸、视觉不变。 */
 .ds-header__sub {
   color: var(--ds-muted);
   font-size: 0.9rem;
   margin: 0.6rem auto 0;
   line-height: 1.6;
-  text-align: center;
+  text-align: justify;
   max-width: 720px;
 }
 
