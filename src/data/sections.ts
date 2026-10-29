@@ -20,13 +20,9 @@ export const SECTIONS: SectionMeta[] = [
   // 2026-10-20：「简历中心」导航入口已移除（用户判断作用不大）。简历改由
   // 首页项目总览里 openResume 的「🎬 演示Demo」徽章直达（ranpin.github.io/openResume/，
   // 独立站点，不依赖主站 iframe）。主站不再内嵌简历中心。
-  {
-    id: 'docs',
-    label: '技术文档',
-    shortLabel: '文档',
-    icon: 'file-alt',
-    visibility: 'private',
-  },
+  // 2026-10-29：「技术文档」导航入口已移除（用户决定 edge-ai-docs 不再从主站链接，
+  // 转为个人记录/复盘用途）。edge-ai-docs 仓库与其 Pages 站点保持公开、可直达
+  // （ranpin.github.io/edge-ai-docs/），只是主站不再提供入口。
   {
     id: 'stargate',
     label: '星际之门',

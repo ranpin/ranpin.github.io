@@ -23,17 +23,20 @@ describe('loadVisibilityConfig', () => {
   it('解析已存储的合法配置', () => {
     window.localStorage.setItem(
       VISIBILITY_CONFIG_KEY,
-      JSON.stringify({ sections: { docs: true } }),
+      JSON.stringify({ sections: { stargate: true } }),
     );
-    expect(loadVisibilityConfig()).toEqual({ sections: { docs: true } });
+    expect(loadVisibilityConfig()).toEqual({ sections: { stargate: true } });
   });
 
   it('忽略旧版残留的 projects 键（作品集已移除）', () => {
     window.localStorage.setItem(
       VISIBILITY_CONFIG_KEY,
-      JSON.stringify({ sections: { docs: true }, projects: { '01-a': false } }),
+      JSON.stringify({
+        sections: { stargate: true },
+        projects: { '01-a': false },
+      }),
     );
-    expect(loadVisibilityConfig()).toEqual({ sections: { docs: true } });
+    expect(loadVisibilityConfig()).toEqual({ sections: { stargate: true } });
   });
 
   it('配置损坏时安全回退为空结构', () => {
@@ -49,15 +52,15 @@ describe('loadVisibilityConfig', () => {
 
 describe('useVisibilityStore', () => {
   it('setSectionShown 更新状态并持久化', () => {
-    useVisibilityStore.getState().setSectionShown('docs', true);
-    expect(useVisibilityStore.getState().sections).toEqual({ docs: true });
+    useVisibilityStore.getState().setSectionShown('stargate', true);
+    expect(useVisibilityStore.getState().sections).toEqual({ stargate: true });
     expect(
       JSON.parse(window.localStorage.getItem(VISIBILITY_CONFIG_KEY)!),
-    ).toEqual({ sections: { docs: true } });
+    ).toEqual({ sections: { stargate: true } });
   });
 
   it('resetAll 清空配置与持久化内容', () => {
-    useVisibilityStore.getState().setSectionShown('docs', true);
+    useVisibilityStore.getState().setSectionShown('stargate', true);
     useVisibilityStore.getState().resetAll();
     expect(useVisibilityStore.getState().sections).toEqual({});
     expect(
@@ -70,15 +73,23 @@ describe('isSectionShown', () => {
   const section = (
     id: string,
     visibility?: SectionMeta['visibility'],
-  ): SectionMeta => ({ id, label: id, shortLabel: id, icon: 'home', visibility });
+  ): SectionMeta => ({
+    id,
+    label: id,
+    shortLabel: id,
+    icon: 'home',
+    visibility,
+  });
 
   it('未配置时回退代码默认：public 展示、private 隐藏', () => {
     expect(isSectionShown(section('home'), {})).toBe(true);
-    expect(isSectionShown(section('docs', 'private'), {})).toBe(false);
+    expect(isSectionShown(section('stargate', 'private'), {})).toBe(false);
   });
 
   it('配置优先于代码默认（可强制展示 private / 隐藏 public）', () => {
-    expect(isSectionShown(section('docs', 'private'), { docs: true })).toBe(true);
+    expect(
+      isSectionShown(section('stargate', 'private'), { stargate: true }),
+    ).toBe(true);
     expect(isSectionShown(section('home'), { home: false })).toBe(false);
   });
 });

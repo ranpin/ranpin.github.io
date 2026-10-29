@@ -57,23 +57,3 @@ export const buildOriginalUrl = (): string => {
   const orig = host.slice(0, -PROXY_SUFFIX.length).replace(/-/g, '.');
   return `https://${orig}${pathname}${stripTranslateParams(search)}${hash}`;
 };
-
-/**
- * 子站 iframe 的 src。英文（代理）模式下把 iframe 指向子站自己的 translate.goog
- * 地址，使内嵌的文档/简历也被翻译；否则返回普通相对地址（与原行为一致）。
- *   path       如 '/edge-ai-docs/'
- *   extraQuery 如 'embed=1'（不带前导 ?），可为空串
- *   onProxy/lang 来自 useTranslateProxy()
- */
-export const subSiteSrc = (
-  path: string,
-  extraQuery: string,
-  onProxy: boolean,
-  lang: string,
-): string => {
-  if (!onProxy) return extraQuery ? `${path}?${extraQuery}` : path;
-  const host = window.location.host; // 已是代理域
-  const trParams = `_x_tr_sl=${SOURCE_LANG}&_x_tr_tl=${lang}&_x_tr_hl=${lang}&_x_tr_pto=wv`;
-  const joined = extraQuery ? `${extraQuery}&${trParams}` : trParams;
-  return `https://${host}${path}?${joined}`;
-};

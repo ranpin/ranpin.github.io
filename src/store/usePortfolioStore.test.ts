@@ -5,7 +5,10 @@ describe('usePortfolioStore', () => {
   beforeEach(() => {
     window.sessionStorage.clear();
     window.history.replaceState(null, '', '/');
-    usePortfolioStore.setState({ activeSection: 'home', presentationMode: true });
+    usePortfolioStore.setState({
+      activeSection: 'home',
+      presentationMode: true,
+    });
   });
 
   it('loads read-only content from content.ts', () => {
@@ -20,8 +23,8 @@ describe('usePortfolioStore', () => {
   });
 
   it('updates activeSection via setActiveSection', () => {
-    usePortfolioStore.getState().setActiveSection('docs');
-    expect(usePortfolioStore.getState().activeSection).toBe('docs');
+    usePortfolioStore.getState().setActiveSection('stargate');
+    expect(usePortfolioStore.getState().activeSection).toBe('stargate');
   });
 
   it('defaults to presentation mode (public-only) for first-time visitors', () => {

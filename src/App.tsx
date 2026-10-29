@@ -7,27 +7,14 @@ import VisibilityPanel from './components/VisibilityPanel';
 import { SECTIONS, SECTION_IDS } from './data/sections';
 import { usePortfolioStore } from './store/usePortfolioStore';
 import { useVisibilityStore, isSectionShown } from './store/useVisibilityStore';
-import { useDocsAvailability } from './store/useDocsAvailability';
-import { useTranslateProxy, subSiteSrc } from './utils/translate';
 
 // 星际之门用到 Markdown + 代码高亮（highlight.js 较重），按需加载
 const StargateSection = lazy(() => import('./components/StargateSection'));
 
 const App = () => {
-  const { personalInfo, activeSection, setActiveSection } =
-    usePortfolioStore();
+  const { personalInfo, activeSection, setActiveSection } = usePortfolioStore();
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
   const sectionVisibility = useVisibilityStore((s) => s.sections);
-  const docsAvailable = useDocsAvailability((s) => s.available);
-  const docsChecked = useDocsAvailability((s) => s.checked);
-  const checkDocs = useDocsAvailability((s) => s.check);
-  // 英文（translate.goog 代理）模式下，内嵌子站 iframe 也指向各自的代理地址
-  const { onProxy, lang } = useTranslateProxy();
-
-  // 探测 edge-ai-docs 仓库可见性：公开→显示「技术文档」，私有→隐藏（导航+路由）。仅挂载时一次。
-  useEffect(() => {
-    checkDocs();
-  }, [checkDocs]);
 
   // 演示模式解锁弹窗：界面上无可见入口，仅通过隐藏快捷键 Ctrl/Cmd+Shift+M 唤出。
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
@@ -74,7 +61,6 @@ const App = () => {
 
   // 星际之门是全屏沉浸式深空板块，跳出常规 container 边距，自行占满视口
   const isStargate = activeSection === 'stargate';
-  const isDocs = activeSection === 'docs';
   // 安全网：演示模式下即便 activeSection 落在被隐藏的板块（如状态竞争），也不渲染其内容。
   // 是否隐藏由可见性配置决定（配置优先，未配置回退代码默认）。
   const activeMeta = SECTIONS.find((s) => s.id === activeSection);
@@ -127,28 +113,6 @@ const App = () => {
           >
             <StargateSection />
           </Suspense>
-        </main>
-      ) : isDocs ? (
-        // 技术文档：iframe 内嵌 edge-ai-docs 首页（?embed=1 隐藏其页头大标题），
-        // 布局随 edge-ai-docs 仓库自动同步，主站不再单独维护一套渲染。
-        // 高度固定为视口高，超出内容在框内自行滚动（与简历中心一致）。
-        <main id="main" className="flex-1 w-full">
-          {!docsChecked ? (
-            <div className="py-16 text-center text-warm-gray-400">加载中…</div>
-          ) : !docsAvailable ? (
-            // 仓库私有（或不可达）：中性占位，不暴露板块内容；导航此时也已隐藏该入口
-            <div className="py-24 flex flex-col items-center justify-center text-center">
-              <Icon name="lock" className="text-4xl text-warm-gray-300 mb-4" />
-              <p className="text-warm-gray-500 font-medium">该内容当前不可用</p>
-            </div>
-          ) : (
-            <iframe
-              src={subSiteSrc('/edge-ai-docs/', 'embed=1', onProxy, lang)}
-              title="Edge AI Docs"
-              className="w-full block border-0 bg-warm-gray-50"
-              style={{ height: 'calc(100vh - 60px)' }}
-            />
-          )}
         </main>
       ) : (
         <main

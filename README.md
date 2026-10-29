@@ -1,6 +1,6 @@
 # Ranpin 的个人网站
 
-作为简历补充的个人站点（聚合入口）：首页个人信息与项目总览（构建时拉取 [ranpin/ranpin](https://github.com/ranpin/ranpin) 的 profile README 原生渲染），内嵌**技术文档**（[edge-ai-docs](https://github.com/ranpin/edge-ai-docs)）与记录学习探索的「星际之门」。在线简历中心（[openResume](https://github.com/ranpin/openResume)）是独立站点，由首页项目总览里 openResume 的「🎬 演示Demo」徽章直达。
+作为简历补充的个人站点（聚合入口）：首页个人信息与项目总览（构建时拉取 [ranpin/ranpin](https://github.com/ranpin/ranpin) 的 profile README 原生渲染），以及记录学习探索的「星际之门」。在线简历中心（[openResume](https://github.com/ranpin/openResume)）是独立站点，由首页项目总览里 openResume 的「🎬 演示Demo」徽章直达。
 
 **在线地址**：<https://ranpin.github.io>
 
@@ -16,13 +16,12 @@
 
 完整的字段说明与操作步骤见 **[`content/README.md`](content/README.md)**。
 
-| 想改什么                                 | 文件                                                            |
-| ---------------------------------------- | --------------------------------------------------------------- |
-| 个人信息 / 简介 / 社交链接               | `content/profile.yaml`                                          |
-| 首页「最新动态」                         | `content/news.yaml`                                             |
-| 探索笔记（星际之门：TIL / 踩坑复盘）     | `content/garden/*.md`                                           |
+| 想改什么                                 | 文件                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| 个人信息 / 简介 / 社交链接               | `content/profile.yaml`                                           |
+| 首页「最新动态」                         | `content/news.yaml`                                              |
+| 探索笔记（星际之门：TIL / 踩坑复盘）     | `content/garden/*.md`                                            |
 | **个人简历 / 项目 / 论文 / 实习 / 荣誉** | 已独立到 [openResume](https://github.com/ranpin/openResume) 仓库 |
-| **技术文档 / 面试指南**                  | 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) |
 
 ---
 

@@ -8,7 +8,6 @@ import {
   VISIBILITY_CONFIG_KEY,
   useVisibilityStore,
 } from './store/useVisibilityStore';
-import { useDocsAvailability } from './store/useDocsAvailability';
 
 describe('App', () => {
   beforeEach(() => {
@@ -22,8 +21,6 @@ describe('App', () => {
       presentationMode: true,
     });
     useVisibilityStore.setState({ sections: {} });
-    // 默认假定 edge-ai-docs 公开可达（多数用例不针对可见性）；探测私有态的用例单独覆盖
-    useDocsAvailability.setState({ available: true, checked: true });
   });
 
   it('renders the home section with the profile-README project index', () => {
@@ -50,30 +47,6 @@ describe('App', () => {
     expect(await screen.findByText(/简历之外的实验空间/)).toBeInTheDocument();
   });
 
-  it('switches to 技术文档 and embeds edge-ai-docs via iframe', async () => {
-    // 技术文档为 private 板块：需先切到完整模式才可见
-    usePortfolioStore.setState({ presentationMode: false });
-    render(<App />);
-    fireEvent.click(screen.getAllByText('技术文档')[0]);
-    // docs 板块改为 iframe 内嵌 edge-ai-docs 首页（?embed=1 隐藏其页头大标题），
-    // 布局随 edge-ai-docs 仓库自动同步，主站不再单独渲染目录
-    const frame = await screen.findByTitle('Edge AI Docs');
-    expect(frame).toBeInTheDocument();
-    expect(frame.getAttribute('src')).toBe('/edge-ai-docs/?embed=1');
-  });
-
-  it('edge-ai-docs 私有/不可达时自动隐藏技术文档板块（导航+路由）', () => {
-    // 模拟仓库私有：探测判定不可用；即便完整模式也应隐藏
-    useDocsAvailability.setState({ available: false, checked: true });
-    usePortfolioStore.setState({ presentationMode: false });
-    window.history.replaceState(null, '', '/#docs');
-    render(<App />);
-    // 导航不再出现技术文档入口
-    expect(screen.queryAllByText('技术文档').length).toBe(0);
-    // 直达 #docs 也只显示中性占位，不渲染目录
-    expect(screen.getByText('该内容当前不可用')).toBeInTheDocument();
-  });
-
   it('supports deep links via URL hash', async () => {
     usePortfolioStore.setState({ presentationMode: false });
     window.history.replaceState(null, '', '/#stargate');
@@ -89,12 +62,11 @@ describe('App', () => {
     expect(screen.getAllByText('首页').length).toBeGreaterThan(0);
     expect(screen.queryAllByText('简历中心').length).toBe(0);
     // private 板块导航被隐藏
-    expect(screen.queryAllByText('技术文档').length).toBe(0);
     expect(screen.queryAllByText('星际之门').length).toBe(0);
   });
 
   it('演示模式下直达 private 板块 hash 显示已隐藏占位', () => {
-    window.history.replaceState(null, '', '/#docs');
+    window.history.replaceState(null, '', '/#stargate');
     render(<App />);
     expect(screen.getByText('该板块在演示模式下已隐藏')).toBeInTheDocument();
   });
@@ -115,7 +87,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: '解锁' }));
     expect(screen.getByText('访问码不正确')).toBeInTheDocument();
     // 仍然锁定：private 板块不可见
-    expect(screen.queryByText('技术文档')).not.toBeInTheDocument();
+    expect(screen.queryByText('星际之门')).not.toBeInTheDocument();
   });
 
   it('输入正确访问码后解锁完整模式（写入会话存储）', () => {
@@ -125,7 +97,6 @@ describe('App', () => {
     fireEvent.change(input, { target: { value: ACCESS_CODE } });
     fireEvent.click(screen.getByRole('button', { name: '解锁' }));
     // 解锁后 private 板块出现，弹窗关闭
-    expect(screen.getByText('技术文档')).toBeInTheDocument();
     expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
     expect(screen.queryByLabelText('访问码')).not.toBeInTheDocument();
     expect(window.sessionStorage.getItem('portfolio.presentationMode')).toBe(
@@ -168,15 +139,15 @@ describe('App', () => {
   });
 
   it('演示模式下配置可强制展示被隐藏板块（含 hash 直达）', async () => {
-    useVisibilityStore.setState({ sections: { docs: true } });
-    window.history.replaceState(null, '', '/#docs');
+    useVisibilityStore.setState({ sections: { stargate: true } });
+    window.history.replaceState(null, '', '/#stargate');
     render(<App />);
-    expect(screen.getAllByText('技术文档').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('星际之门').length).toBeGreaterThan(0);
     expect(
       screen.queryByText('该板块在演示模式下已隐藏'),
     ).not.toBeInTheDocument();
-    // 直达 #docs 渲染 edge-ai-docs iframe
-    expect(await screen.findByTitle('Edge AI Docs')).toBeInTheDocument();
+    // 直达 #stargate 渲染星际之门内景（懒加载，需等待）
+    expect(await screen.findByText('STARGATE')).toBeInTheDocument();
   });
 
   it('演示模式下配置可反向隐藏原本公开的板块', () => {
@@ -208,7 +179,7 @@ describe('App', () => {
     render(<App />);
     expect(
       screen.queryByRole('link', {
-        name: /编辑内容|编辑花园|编辑简历|编辑文档/,
+        name: /编辑内容|编辑花园/,
       }),
     ).not.toBeInTheDocument();
   });

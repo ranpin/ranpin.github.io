@@ -4,28 +4,29 @@
 
 纯静态个人站点（聚合入口），无后端、无数据库。内容以仓库中的 **Markdown / YAML 文件**为唯一数据源，构建时由加载器读入并**预渲染（SSG）**为静态 HTML，部署到 GitHub Pages，运行时再 hydrate。
 
-站点由三个板块组成：
+站点由两个板块组成：
 
-| 板块 | 实现方式 |
-|------|----------|
-| 首页 | 构建时拉取 [ranpin/ranpin](https://github.com/ranpin/ranpin) 的 profile README，react-markdown 原生渲染（个人信息 + 项目总览） |
-| 技术文档 | 运行时 fetch 独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs) 的 `docs.json` 清单并渲染目录 |
-| 星际之门 | 全屏沉浸式深空体验：Warp 穿越动画 → 数字花园星图（`content/garden/*.md`） |
+| 板块     | 实现方式                                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 首页     | 构建时拉取 [ranpin/ranpin](https://github.com/ranpin/ranpin) 的 profile README，react-markdown 原生渲染（个人信息 + 项目总览） |
+| 星际之门 | 全屏沉浸式深空体验：Warp 穿越动画 → 数字花园星图（`content/garden/*.md`）                                                      |
 
-> 「简历中心」曾是第四个板块（iframe 内嵌 [openResume](https://github.com/ranpin/openResume)），2026-10-20 移除导航入口；简历改由首页项目总览里 openResume 的「🎬 演示Demo」徽章直达独立站点 `ranpin.github.io/openResume/`。
+> 「简历中心」曾是板块之一（iframe 内嵌 [openResume](https://github.com/ranpin/openResume)），2026-10-20 移除导航入口；简历改由首页项目总览里 openResume 的「🎬 演示Demo」徽章直达独立站点 `ranpin.github.io/openResume/`。
+>
+> 「技术文档」曾是板块之一（iframe 内嵌独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs)），2026-10-29 移除导航入口；edge-ai-docs 仓库与其 Pages 站点保持公开、可直达 `ranpin.github.io/edge-ai-docs/`，只是主站不再提供入口。
 
 ## 技术栈
 
-| 层 | 选型 |
-|---|---|
-| UI | React 18 + TypeScript |
-| 构建 / 预渲染 | Vite 5 + `vite-react-ssg`（单页模式） |
-| 样式 | Tailwind CSS 3 + `@tailwindcss/typography` |
-| 状态 | Zustand（仅承载导航等 UI 状态） |
-| 内容解析 | `js-yaml`（YAML 与 Markdown frontmatter） |
-| 文章渲染 | `react-markdown` + `remark-gfm` + `rehype-highlight` |
-| 图标 / 字体 | `lucide-react`（SVG）/ `@fontsource/inter`（自托管） |
-| 质量 / 测试 | ESLint(flat) + Prettier + Husky + lint-staged + Vitest |
+| 层            | 选型                                                   |
+| ------------- | ------------------------------------------------------ |
+| UI            | React 18 + TypeScript                                  |
+| 构建 / 预渲染 | Vite 5 + `vite-react-ssg`（单页模式）                  |
+| 样式          | Tailwind CSS 3 + `@tailwindcss/typography`             |
+| 状态          | Zustand（仅承载导航等 UI 状态）                        |
+| 内容解析      | `js-yaml`（YAML 与 Markdown frontmatter）              |
+| 文章渲染      | `react-markdown` + `remark-gfm` + `rehype-highlight`   |
+| 图标 / 字体   | `lucide-react`（SVG）/ `@fontsource/inter`（自托管）   |
+| 质量 / 测试   | ESLint(flat) + Prettier + Husky + lint-staged + Vitest |
 
 > 站点无路由库：页面「板块」通过 `App.tsx` 里的 `activeSection` 状态条件渲染切换。
 
@@ -58,10 +59,9 @@ content/                # 唯一数据源（见 content/README.md）
 public/                 # images/、robots.txt、sitemap.xml、404.html
 src/
 ├── components/
-│   ├── Header.tsx          # 顶部导航（四个板块切换 + 移动端个人信息弹窗）
+│   ├── Header.tsx          # 顶部导航（板块切换 + 移动端个人信息弹窗）
 │   ├── HomeSection.tsx     # 首页（个人信息 + 最新动态）
 │   ├── Profile.tsx         # 个人信息卡片
-│   ├── DocsSection.tsx     # 技术文档（fetch edge-ai-docs 清单渲染目录）
 │   ├── StargateSection.tsx # 星际之门（Warp 穿越 + HUD + 数字花园入口）
 │   ├── stargate/
 │   │   ├── Warp.tsx        # 穿越动画
@@ -83,7 +83,7 @@ src/
 ## 渲染与性能
 
 - **SSG 预渲染**：`src/index.tsx` 以 `ViteReactSSG(<App/>)` 单页模式导出，`npm run build` 输出含真实内容的 `dist/index.html`（利于 SEO 与分享抓取），客户端再 hydrate。
-- **代码分割**：`StargateSection`（含 highlight.js 等较重依赖）与 `DocsSection` 用 `React.lazy` 按需加载；`StargateSection` 内部的 `DigitalGarden` 再做二级懒加载，保持首屏主包精简。
+- **代码分割**：`StargateSection`（含 highlight.js 等较重依赖）用 `React.lazy` 按需加载；`StargateSection` 内部的 `DigitalGarden` 再做二级懒加载，保持首屏主包精简。
 - **图片**：原生 `loading="lazy"`。
 - **字体**：自托管 Inter，去除 render-blocking 的外链字体/图标 CDN。
 - **SEO**：`index.html` 含 Open Graph / Twitter Card / canonical / `Person` JSON-LD；`public/` 提供 `robots.txt` 与 `sitemap.xml`。

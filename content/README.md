@@ -25,8 +25,6 @@
 > YAML（`.yaml`）用来存**结构化字段**；数字花园节点用 **Markdown（`.md`）**，正文支持标题、列表、代码块、图片、链接等格式。
 >
 > **个人简历 / 经历库（项目、论文、实习、荣誉）已迁移到独立仓库 [openResume](https://github.com/ranpin/openResume)（简历中心，独立站点 `ranpin.github.io/openResume`，主站首页项目总览直达）。**在那里编辑 `content/` 下的内容。
->
-> 成体系的学习文档 / 面试指南维护在独立仓库 [edge-ai-docs](https://github.com/ranpin/edge-ai-docs)，显示在主站「技术文档」板块。
 
 ---
 

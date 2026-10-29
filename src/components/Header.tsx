@@ -6,7 +6,6 @@ import {
   useVisibilityStore,
   isSectionShown,
 } from '../store/useVisibilityStore';
-import { useDocsAvailability } from '../store/useDocsAvailability';
 import {
   useTranslateProxy,
   buildTranslateUrl,
@@ -36,7 +35,6 @@ const EDIT_TARGETS: Record<string, { url: string; label: string }> = {
     url: 'https://github.com/ranpin/ranpin.github.io/tree/main/content/garden',
     label: '编辑花园',
   },
-  docs: { url: 'https://github.com/ranpin/edge-ai-docs', label: '编辑文档' },
 };
 const DEFAULT_EDIT = EDIT_TARGETS.home;
 
@@ -101,20 +99,16 @@ const Header: React.FC<HeaderProps> = ({
 
   const presentationMode = usePortfolioStore((s) => s.presentationMode);
   const sectionVisibility = useVisibilityStore((s) => s.sections);
-  const docsAvailable = useDocsAvailability((s) => s.available);
   // 中英文切换：挂载后判定是否处于 translate.goog 代理（英文模式）
   const { onProxy } = useTranslateProxy();
   // 当前板块对应的「编辑内容」深链（无匹配则回退首页内容目录）
   const editTarget = EDIT_TARGETS[activeSection] || DEFAULT_EDIT;
 
-  // 导航过滤（两套机制取交集）：
-  // ① 演示模式：按可见性配置过滤（配置优先，未配置回退代码默认）；
-  // ② 「技术文档」额外受 edge-ai-docs 仓库可见性自动控制——仓库私有（docs.json 取不到）时隐藏。
+  // 导航过滤：演示模式下按可见性配置过滤（配置优先，未配置回退代码默认）。
   // 访客看不到被隐藏板块的存在。解锁入口为隐藏快捷键，此处不放任何模式开关。
-  const navItems = SECTIONS.filter((s) => {
-    if (s.id === 'docs' && !docsAvailable) return false;
-    return presentationMode ? isSectionShown(s, sectionVisibility) : true;
-  });
+  const navItems = SECTIONS.filter((s) =>
+    presentationMode ? isSectionShown(s, sectionVisibility) : true,
+  );
 
   const go = (id: string) => {
     if (onSectionChange) onSectionChange(id);
