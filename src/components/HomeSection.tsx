@@ -93,9 +93,20 @@ const components: Components = {
       <span>{children}</span>
     </h4>
   ),
-  p: ({ children }) => (
-    <p className="my-3 leading-relaxed text-warm-gray-700">{children}</p>
-  ),
+  // README 顶部「🏠 个人主页」指向本站自身——主站首页上自指（点了等于刷新本页），隐藏整段；
+  // README 保留它供 GitHub 个人页用。只匹配裸根 URL，demo 徽章（/<repo>/ 子路径）不受影响。
+  p: ({ node, children }) => {
+    const selfLink = (node?.children ?? []).some((c) => {
+      if (!('tagName' in c) || c.tagName !== 'a') return false;
+      return /^https:\/\/ranpin\.github\.io\/?$/.test(
+        String(c.properties?.href ?? ''),
+      );
+    });
+    if (selfLink) return null;
+    return (
+      <p className="my-3 leading-relaxed text-warm-gray-700">{children}</p>
+    );
+  },
   ul: ({ children }) => (
     <ul className="my-3 list-disc space-y-2 pl-5 marker:text-sage-400">
       {children}

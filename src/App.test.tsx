@@ -35,6 +35,8 @@ describe('App', () => {
       screen.getAllByText(/智能机器人 \/ 具身智能/).length,
     ).toBeGreaterThan(0);
     expect(screen.getByText('alpamayo-edge')).toBeInTheDocument();
+    // README 顶部「🏠 个人主页」指向本站自身，主站渲染时隐藏（GitHub 个人页仍显示）
+    expect(screen.queryByText('个人主页')).not.toBeInTheDocument();
   });
 
   it('switches to 星际之门 and shows the cyberpunk stage', async () => {
