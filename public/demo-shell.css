@@ -93,10 +93,17 @@ body {
    内容区的段落/列表一律 justify，单行文本自然呈现为左对齐。只作用于 p/li——
    标题、导航按钮、图表 caption、统计卡、代码块、页脚均不受影响；
    页面里个别需保持居中的示意行/小标题，用更高优先级选择器（如 .ds-wrap p.xxx）
-   在页面自身 CSS 里覆盖即可。 */
+   在页面自身 CSS 里覆盖即可——覆盖规则须连 text-indent:0 一起写（见下条）。 */
 .ds-wrap p,
 .ds-wrap li {
   text-align: justify;
+}
+
+/* 正文段落首行缩进两个中文字符（2026-10-29 用户要求；列表除外——li 不缩进）。
+   居中/标题类 p 的页面覆盖规则必须同时 text-indent:0，否则缩进会把居中行推偏
+   （已豁免：heat2label .h2l-prompt、spring p.arrow、memolink 粗体小标题内联样式）。 */
+.ds-wrap p {
+  text-indent: 2em;
 }
 
 /* 页头横幅 */
