@@ -106,6 +106,27 @@ body {
   text-indent: 2em;
 }
 
+/* 论文式图表标题（2026-10-29 用户要求，参考中科院计算所毕业论文格式）：
+   表题用 <caption>（表 N · 标题，表格上方），图题用 p.ds-figcap（图 N · 标题，图下方），
+   均居中、无首行缩进。交互式演示组件（可切换画廊/回放面板/实时推理等）保留页面自有样式。 */
+.ds-wrap caption {
+  caption-side: top;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ds-muted);
+  line-height: 1.6;
+  padding: 10px 12px 8px;
+}
+.ds-wrap p.ds-figcap,
+.ds-wrap figcaption.ds-figcap {
+  text-align: center;
+  text-indent: 0;
+  font-size: 13px;
+  color: var(--ds-muted);
+  line-height: 1.6;
+  margin: 8px 0 18px;
+}
+
 /* 页头横幅 */
 .ds-header {
   background: var(--ds-panel);
@@ -189,15 +210,18 @@ body {
 .ds-theme-icon {
   pointer-events: none;
 }
-/* 页头描述（非标题）：2026-10-28 用户要求由 center 改两端对齐。
-   盒子仍居中、限宽 720px；多行文本两边缘拉齐，单行文本无从拉伸、视觉不变。 */
+/* 页头描述（非标题）：2026-10-28 由 center 改两端对齐；2026-10-29 用户要求
+   宽度占比与正文一致（1040px 减两侧 1.4rem 内边距）并首行缩进两个中文字符。
+   width:100% 让短描述也撑满正文宽（fit-content 会收缩成内容宽、对不齐正文）。 */
 .ds-header__sub {
   color: var(--ds-muted);
   font-size: 0.9rem;
   margin: 0.6rem auto 0;
   line-height: 1.6;
   text-align: justify;
-  max-width: 720px;
+  text-indent: 2em;
+  width: 100%;
+  max-width: calc(1040px - 2.8rem);
 }
 
 /* ---------- 章节导航 / 切换按钮 ---------- */
