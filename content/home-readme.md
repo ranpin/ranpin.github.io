@@ -1,5 +1,4 @@
 ### Hi 👋 我是 ranpin，端侧 AI 工程师。
-
 - 关注方向：智能机器人 / 具身智能、自动驾驶、智能座舱。
 - 关注技术：Agent Harness · VLA 与世界模型 · 压缩与量化 · 边缘部署（Jetson Orin / 高通8x97 / NPU）。
 
@@ -19,7 +18,7 @@
 >
 > #### 🤖 智能机器人 / 具身智能（学习研究中）
 >
-> - **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🛣️ 轨迹演示](demo-badge-traj.svg)](https://ranpin.github.io/alpamayo-edge/r1-trajectory/) — **NVIDIA Physical AI 模型在 Jetson Orin 上的边缘部署实证**：一套 TensorRT-Edge 管线部署多代模型——CR2-8B VLM 量化五轴实测（INT4/INT8）+ Cosmos3 跨代精度对比、Alpamayo-R1 AV 轨迹预测（分解注意力打穿 TRT≥11 算子墙、minADE 与官方基线一致），真实 Orin 推理 demo。
+> - **[alpamayo-edge](https://github.com/ranpin/alpamayo-edge)** [![🛣️ 轨迹演示](demo-badge-traj.svg)](https://ranpin.github.io/alpamayo-edge/r1-trajectory/) — **NVIDIA Physical AI 模型在 Jetson Orin 上的边缘部署实证**：一套 TensorRT-Edge 管线部署多代模型——CR2-8B VLM 量化五轴实测（INT4/INT8）+ Cosmos3 跨代精度对比、Alpamayo-R1 AV 轨迹预测（分解注意力打穿 TRT≥11 算子墙、minADE 与官方基线一致；同口径跨代对比 R1 胜 Alpamayo-1.5，minADE 0.804 vs 1.815m），真实 Orin 推理 demo。
 > - **[cosmos3-edge](https://github.com/ranpin/cosmos3-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/cosmos3-edge/cosmos3-demo/) — **NVIDIA Cosmos3-Edge（4B 世界动作模型）在 Jetson Orin 上的边缘部署实证**：2B VL reasoner 驾驶场景理解（自建 n=184 基准 42.4%、3.4× 随机基线）+ DROID 机器人操作 policy 动作链部署打通（分解注意力/RoPE 补丁打穿六道 JetPack 6.2 兼容墙），真实 Orin 推理 demo。
 > - **[homebot-wm](https://github.com/ranpin/homebot-wm)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/homebot-wm/) — **视觉扩散策略的压缩与边缘部署**：Push-T 策略从训练走通 ONNX 导出 → INT8 量化 → DDIM 减步 → TensorRT，在 Jetson Orin 实机测延迟与闭环精度。
 > - **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/spring-festival-dance-robot/) — **复刻「春晚舞蹈机器人」**：一段群舞视频经 PromptHMR → GMR 重定向为 9 台 Unitree G1 的同步动作，Kaggle GPU 推理 + Mac 本地 viser 交互式 3D 演示。
@@ -29,7 +28,7 @@
 > #### 🚗 智能座舱（工作期间）
 >
 > - **[jevCabin](https://github.com/ranpin/jevCabin)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/jevCabin/) — **车载座舱智能助手**：对话走 Qwen-2.5-Omni-7B，车内人员/身份/座位信息提取改用 Jev 类型化决策模型（本地 Laya）替代约 2000 token 的巨型 prompt，零样本人名 F1 0.964、单条 28ms（比旧管线快 27 倍）。
-> - **[memolink](https://github.com/ranpin/memolink)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/memolink/) — **Jetson Orin 上纯本地跑通的 C++ 端侧 Agent 记忆系统**：提取 → 消解 → 存储 → 检索 → 更新 → 删除 → 版本回溯全链路离线完成，自写 WordPiece 分词器 + ONNX INT8 embedding + 本地 4B 做矛盾消解，附座舱助手应用 demo。
+> - **[memolink](https://github.com/ranpin/memolink)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/memolink/) — **Jetson Orin 上纯本地跑通的 C++ 端侧 Agent 记忆系统**：提取 → 消解 → 存储 → 检索 → 更新 → 删除 → 版本回溯全链路离线完成，自写 WordPiece 分词器 + ONNX INT8 embedding + 本地 4B 做矛盾消解，新增多模态记忆（视觉接地），附座舱助手应用 demo。
 > - **[aadkMemory](https://github.com/ranpin/aadkMemory)** — **基于 FAISS 的对话记忆检索 demo**：C++ 主程序内嵌 Python 解释器做本地向量检索、拼 Top-K 历史进 prompt 后交云端 Qwen 生成（学习性质，本地检索 + 云端生成，非端侧部署）。
 > - **[chat_huanhuan](https://github.com/ranpin/chat_huanhuan)** — **《甄嬛传》角色对话系统**：用 LoRA 微调训练甄嬛角色模型，Ollama 部署，配 Streamlit 对话界面与 MCP 服务器。
 
