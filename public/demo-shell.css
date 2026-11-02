@@ -233,10 +233,34 @@ body {
   stroke-width: 1.2;
   stroke-dasharray: 7 4;
 }
-/* 节点悬停光效（2026-11-02 用户要求「鼠标触碰有光效」）：页面 SVG 里每个节点包
-   <g class="dg-node" style="--dg-glow:var(--ds-语义色)">，hover 出语义色光晕 + 描边微增粗。
-   数据流动画走 SVG 原生 SMIL（class="dg-flow" 的虚线沿轨迹流动），不用 CSS keyframes；
-   SMIL 不吃 prefers-reduced-motion，由 theme.js 统一 pauseAnimations() 停动画。 */
+/* 插图动态化层（2026-11-02 用户拍板：动态图=图要活起来，流光只是示例之一）。
+   分工：入场/聚焦/轮播 = 本文件的简单 CSS 状态类；数据包/脉冲 = 页内 SVG 原生
+   SMIL（begin="indefinite"）；触发与悬停接线 = theme.js（IntersectionObserver +
+   mouseenter/leave）。约定：节点 <g class="dg-node" data-id style="--dg-glow:语义色;--dg-i:入场序号">，
+   边带 data-from/data-to（悬停聚焦-上下文用），脉冲环 .dg-ring（底色 opacity=0，
+   SMIL 按数据包到达时刻开槽），数据包 .dg-packet-g（外层 g 静态 translate 到轨迹
+   起点、内层 animateMotion 走相对坐标 defs 路径——无 JS/SMIL 时停在起点不越界）。
+   无 JS 回退：html 不加 .dg-anim → 节点全可见、数据包/脉冲保持 opacity=0 隐藏。 */
+.dg-anim .ds-dg .dg-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.dg-anim .ds-dg.dg-live .dg-node {
+  animation: dg-enter 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation-delay: calc(var(--dg-i, 0) * 90ms);
+}
+@keyframes dg-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* 悬停光效：语义色光晕 + 描边微增粗 */
 .ds-dg .dg-node rect {
   transition:
     filter 0.22s ease,
@@ -246,9 +270,53 @@ body {
   filter: drop-shadow(0 0 7px var(--dg-glow, var(--ds-accent)));
   stroke-width: 2.2;
 }
+/* 悬停聚焦-上下文：压暗无关节点/边（入场 animation fill 会覆盖 opacity，压暗走 filter） */
+.ds-dg .dg-node,
+.ds-dg .dg-edge {
+  transition:
+    filter 0.25s ease,
+    opacity 0.25s ease;
+}
+.ds-dg.dg-focus .dg-node:not(.dg-hi) {
+  filter: opacity(0.35);
+}
+.ds-dg.dg-focus .dg-edge:not(.dg-hi) {
+  opacity: 0.15;
+}
+.ds-dg .dg-ring {
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+.ds-dg .dg-packet-g {
+  pointer-events: none;
+}
+/* 状态轮播（如消解五分类逐词高亮）：fill 走 var 随主题翻转 */
+@keyframes dg-cycle {
+  0%,
+  14% {
+    fill: var(--ds-accent-strong);
+  }
+  26%,
+  100% {
+    fill: var(--ds-muted);
+  }
+}
+.ds-dg .dg-cyc {
+  animation: dg-cycle 6s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .ds-dg .dg-node rect {
+  .ds-dg .dg-node rect,
+  .ds-dg .dg-node,
+  .ds-dg .dg-edge {
     transition: none;
+  }
+  .dg-anim .ds-dg.dg-live .dg-node {
+    animation: none;
+    opacity: 1;
+  }
+  .ds-dg .dg-cyc {
+    animation: none;
   }
 }
 

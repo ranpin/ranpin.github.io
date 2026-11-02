@@ -154,27 +154,85 @@
 })();
 
 /* ============================================================================
-   prefers-reduced-motion 守卫（2026-11-02）：demo 页插图（svg.ds-dg）里的数据流
-   是 SVG 原生 SMIL 动画，不吃 CSS 媒体查询——系统开了「减弱动态效果」时在这里
-   统一 pauseAnimations()。theme.js 在 <head> 同步加载，须等 DOMContentLoaded。
+   插图动效（2026-11-02 用户拍板：动态图=图要活起来，流光只是示例之一）：
+   ① 入场——IntersectionObserver 滚入视口加 .dg-live，节点按 --dg-i 逐级弹出
+      （CSS animation；html 上的 .dg-anim 由本脚本加——无 JS 的页面不加，
+      插图保持静态全可见 = 渐进增强）；
+   ② 数据包/节点脉冲——SVG 原生 SMIL，begin="indefinite"，滚入视口时同帧
+      beginElement()（数据包与各节点脉冲同周期，保持「包过节点亮」的同步）；
+   ③ 悬停聚焦-上下文——g.dg-node[data-id] mouseenter → 自身与 data-from/to
+      关联边加 .dg-hi、svg 加 .dg-focus（压暗无关元素，规则在 demo-shell.css）；
+   ④ prefers-reduced-motion——不加 .dg-anim、pauseAnimations()、不触发动画。
    ============================================================================ */
 (function () {
-  if (!(
+  var reduce =
     window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  ))
-    return;
-  var pause = function () {
-    var svgs = document.querySelectorAll('svg.ds-dg');
-    for (var i = 0; i < svgs.length; i++) {
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) document.documentElement.classList.add('dg-anim');
+
+  function wire(svg) {
+    if (reduce) {
       try {
-        svgs[i].pauseAnimations();
+        svg.pauseAnimations();
       } catch {
         /* 不支持 SMIL 的内核静默 */
       }
+      return;
     }
-  };
+    var started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      svg.classList.add('dg-live');
+      var anims = svg.querySelectorAll('[begin="indefinite"]');
+      for (var i = 0; i < anims.length; i++) {
+        try {
+          anims[i].beginElement();
+        } catch {
+          /* 无 SMIL 时静默 */
+        }
+      }
+    }
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(
+        function (entries) {
+          for (var j = 0; j < entries.length; j++)
+            if (entries[j].isIntersecting) {
+              start();
+              io.disconnect();
+            }
+        },
+        { threshold: 0.2 },
+      );
+      io.observe(svg);
+    } else start();
+    var nodes = svg.querySelectorAll('g.dg-node[data-id]');
+    for (var k = 0; k < nodes.length; k++) {
+      (function (g) {
+        var id = g.getAttribute('data-id');
+        g.addEventListener('mouseenter', function () {
+          svg.classList.add('dg-focus');
+          g.classList.add('dg-hi');
+          var linked = svg.querySelectorAll(
+            '[data-from="' + id + '"],[data-to="' + id + '"]',
+          );
+          for (var m = 0; m < linked.length; m++)
+            linked[m].classList.add('dg-hi');
+        });
+        g.addEventListener('mouseleave', function () {
+          svg.classList.remove('dg-focus');
+          var his = svg.querySelectorAll('.dg-hi');
+          for (var m = 0; m < his.length; m++) his[m].classList.remove('dg-hi');
+        });
+      })(nodes[k]);
+    }
+  }
+
+  function init() {
+    var svgs = document.querySelectorAll('svg.ds-dg');
+    for (var i = 0; i < svgs.length; i++) wire(svgs[i]);
+  }
   if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', pause);
-  else pause();
+    document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
