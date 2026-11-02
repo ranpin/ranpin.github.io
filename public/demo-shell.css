@@ -238,6 +238,22 @@ body {
   stroke-width: 1.2;
   stroke-dasharray: 7 4;
 }
+/* 动态箭头（2026-11-02 用户：「箭头全都不是动态的」）：滚入视口后连线沿箭头方向流动虚线。
+   所有连线都从源画到靶（data-from→data-to、marker-end 在靶端），故 dashoffset 取负 = 朝箭头流动；
+   -36 = 两种虚线周期（7+5=12 与 4+5=9）的公倍数，实线/虚线边都无缝循环。只在 .dg-live 下启用——
+   静态/无 JS/reduced-motion 保持原实线不流动（.dg-dash 的反馈/注释边静态时仍是 5 4 虚线）。 */
+.dg-anim .ds-dg.dg-live .dg-edge {
+  stroke-dasharray: 7 5;
+  animation: dg-flow 1.2s linear infinite;
+}
+.dg-anim .ds-dg.dg-live .dg-edge.dg-dash {
+  stroke-dasharray: 4 5;
+}
+@keyframes dg-flow {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
 /* 插图动态化层（2026-11-02 用户拍板：动态图=图要活起来，流光只是示例之一）。
    分工：入场/聚焦/轮播 = 本文件的简单 CSS 状态类；数据包/脉冲 = 页内 SVG 原生
    SMIL（begin="indefinite"）；触发与悬停接线 = theme.js（IntersectionObserver +
