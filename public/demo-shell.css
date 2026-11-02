@@ -191,6 +191,11 @@ body {
 .ds-dgwrap {
   overflow-x: auto;
   margin: 14px 0 0;
+  /* 框卡陈列（2026-11-02 视觉层，anatomy「framed card」原则）：图如展品 */
+  background: var(--ds-panel);
+  border: 1px solid var(--ds-border);
+  border-radius: 12px;
+  padding: 16px 14px 12px;
 }
 .ds-dg {
   display: block;
@@ -260,14 +265,16 @@ body {
     transform: none;
   }
 }
-/* 悬停光效：语义色光晕 + 描边微增粗 */
+/* 悬停光效：语义色光晕 + 描边微增粗；常态细投影（视觉层·立体） */
 .ds-dg .dg-node rect {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.14));
   transition:
     filter 0.22s ease,
     stroke-width 0.22s ease;
 }
 .ds-dg .dg-node:hover rect {
-  filter: drop-shadow(0 0 7px var(--dg-glow, var(--ds-accent)));
+  filter: drop-shadow(0 0 7px var(--dg-glow, var(--ds-accent)))
+    drop-shadow(0 1px 2px rgb(0 0 0 / 0.14));
   stroke-width: 2.2;
 }
 /* 悬停聚焦-上下文：压暗无关节点/边（入场 animation fill 会覆盖 opacity，压暗走 filter） */
@@ -304,6 +311,66 @@ body {
 }
 .ds-dg .dg-cyc {
   animation: dg-cycle 6s linear infinite;
+}
+/* ---------- 插图视觉层（2026-11-02 用户：「除了动态以外」的图形优化——
+   anatomy skill 的四色调 shading / 精致小件 / 框卡原则适配到内联 SVG）----------
+   ① 渐变立体盒：defs 里 <linearGradient class="dg-grad" data-c="语义名" x1=0 y1=0 x2=0 y2=1>
+      两个 stop 都写 stop-color="var(--ds-X-soft)"（回退=纯色），下方 CSS 把末 stop
+      升级为 color-mix 加深 14%（随主题翻转；老内核不识别 color-mix 时优雅回退纯色）；
+      节点 rect fill="url(#页前缀-g-语义名)"。
+   ② 图标：symbol 库在 demo-page-iteration skill 的 assets/dg-icons.svg（24×24 纯 stroke 几何）。
+      外部 <use> 引用在 Chrome/Safari 静默失败（Chrome 156 实测：instanceRoot=null 且无报错），
+      必须把所需 symbol 复制进页面 SVG 的 defs 再内部引用：<use class="dg-ico" href="#ico-xxx"
+      x y width="14" height="14" style="color:var(--ds-语义色)"/> 放盒左上角（x+9,y+9），
+      必须放进 g.dg-node 内随悬停/聚焦联动。
+   ③ 图例：.dg-legend 放 </svg> 之后、ds-dgwrap 之内，只列本页用到的语义色。 */
+.ds-dg .dg-grad[data-c='accent'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-accent-soft) 86%, var(--ds-accent));
+}
+.ds-dg .dg-grad[data-c='alt'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-alt-soft) 86%, var(--ds-alt));
+}
+.ds-dg .dg-grad[data-c='warn'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-warn-soft) 86%, var(--ds-warn));
+}
+.ds-dg .dg-grad[data-c='ok'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-ok-soft) 86%, var(--ds-ok));
+}
+.ds-dg .dg-grad[data-c='danger'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-danger-soft) 86%, var(--ds-danger));
+}
+.ds-dg .dg-grad[data-c='neutral'] stop:last-child {
+  stop-color: color-mix(in srgb, var(--ds-code-bg) 86%, var(--ds-faint));
+}
+.ds-dg .dg-ico {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.dg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  justify-content: center;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ds-muted);
+}
+.dg-legend span {
+  display: inline-flex;
+  align-items: center;
+}
+.dg-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-right: 6px;
+  background: var(--c);
+  flex: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .ds-dg .dg-node rect,
