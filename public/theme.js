@@ -152,3 +152,29 @@
     open(img);
   });
 })();
+
+/* ============================================================================
+   prefers-reduced-motion 守卫（2026-11-02）：demo 页插图（svg.ds-dg）里的数据流
+   是 SVG 原生 SMIL 动画，不吃 CSS 媒体查询——系统开了「减弱动态效果」时在这里
+   统一 pauseAnimations()。theme.js 在 <head> 同步加载，须等 DOMContentLoaded。
+   ============================================================================ */
+(function () {
+  if (!(
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ))
+    return;
+  var pause = function () {
+    var svgs = document.querySelectorAll('svg.ds-dg');
+    for (var i = 0; i < svgs.length; i++) {
+      try {
+        svgs[i].pauseAnimations();
+      } catch {
+        /* 不支持 SMIL 的内核静默 */
+      }
+    }
+  };
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', pause);
+  else pause();
+})();

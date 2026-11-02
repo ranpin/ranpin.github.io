@@ -233,6 +233,24 @@ body {
   stroke-width: 1.2;
   stroke-dasharray: 7 4;
 }
+/* 节点悬停光效（2026-11-02 用户要求「鼠标触碰有光效」）：页面 SVG 里每个节点包
+   <g class="dg-node" style="--dg-glow:var(--ds-语义色)">，hover 出语义色光晕 + 描边微增粗。
+   数据流动画走 SVG 原生 SMIL（class="dg-flow" 的虚线沿轨迹流动），不用 CSS keyframes；
+   SMIL 不吃 prefers-reduced-motion，由 theme.js 统一 pauseAnimations() 停动画。 */
+.ds-dg .dg-node rect {
+  transition:
+    filter 0.22s ease,
+    stroke-width 0.22s ease;
+}
+.ds-dg .dg-node:hover rect {
+  filter: drop-shadow(0 0 7px var(--dg-glow, var(--ds-accent)));
+  stroke-width: 2.2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-dg .dg-node rect {
+    transition: none;
+  }
+}
 
 /* 页头横幅 */
 .ds-header {
