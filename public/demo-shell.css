@@ -33,6 +33,12 @@
   --ds-danger: #b42318;
   --ds-danger-soft: #fef2f2;
   --ds-danger-ring: #fecaca;
+  /* 科研插图语义色补充（2026-11-02）：绿 ok=输出/结果、紫 alt=模型/推理；
+     蓝(accent)=输入/数据、琥珀(warn)=硬件/部署、红(danger)=问题/补丁 复用既有变量 */
+  --ds-ok: #047857;
+  --ds-ok-soft: #ecfdf5;
+  --ds-alt: #7c3aed;
+  --ds-alt-soft: #f5f3ff;
   --ds-radius: 12px;
   /* 字体：与主站一致（正文 sans，标题 serif） */
   --ds-serif:
@@ -63,6 +69,10 @@
   --ds-danger: #fca5a5;
   --ds-danger-soft: #3f1512;
   --ds-danger-ring: #7f1d1d;
+  --ds-ok: #34d399;
+  --ds-ok-soft: #06301f;
+  --ds-alt: #a78bfa;
+  --ds-alt-soft: #2e1065;
 }
 
 * {
@@ -125,6 +135,103 @@ body {
   color: var(--ds-muted);
   line-height: 1.6;
   margin: 8px 0 18px;
+}
+
+/* ---------- 标准三线表（2026-11-02 用户要求：所有 demo 页表格统一学术三线式） ----------
+   顶/底 2px 粗线 + 表头下 1px 细线；无竖线、无斑马纹、无圆角卡片壳。
+   用法：外层 <div class="ds-tablewrap">（窄屏横向滚动）+ <table class="ds-table">。
+   行头用 td.rowh（加粗无底色）；列对齐等页面个性需求仍用页面类补充
+   （页面 CSS 在外壳之后加载、同特异性下可覆盖 text-align，但勿改边框/底色）。 */
+.ds-tablewrap {
+  overflow-x: auto;
+  margin: 14px 0;
+}
+.ds-wrap table.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: none;
+  border-top: 2px solid var(--ds-text);
+  border-bottom: 2px solid var(--ds-text);
+}
+.ds-table th,
+.ds-table td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.6;
+  border: none;
+}
+.ds-table thead th,
+.ds-table tr:first-child th {
+  border-bottom: 1px solid var(--ds-text);
+  font-weight: 600;
+  color: var(--ds-text);
+  background: none;
+}
+.ds-table tbody tr:hover td {
+  background: var(--ds-code-bg);
+}
+.ds-table td.rowh {
+  color: var(--ds-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- 内联 SVG 科研插图（2026-11-02，流程图 / 算法结构图） ----------
+   插图以 <svg class="ds-dg" viewBox="…"> 直接内联进页面，颜色一律引用 --ds-* 变量
+   （随 data-theme 自动翻转，禁止写死 hex）；外层 .ds-dgwrap 负责窄屏横向滚动；
+   图题沿用 p.ds-figcap（图 N · 标题，图下方居中）。
+   语义配色（各页一致）：蓝 accent=输入/数据 · 紫 alt=模型/推理 · 琥珀 warn=硬件/部署 ·
+   绿 ok=输出/结果 · 红 danger=问题/补丁 · 中性 code-bg+faint=通用/外部。
+   文字层级：.dg-name 盒名 12.5/600 · .dg-sub 盒内副标签 10.5 · .dg-tag 注释标签 11/600 ·
+   .dg-note 脚注 10.5；连线 .dg-edge（虚线加 .dg-dash），区域边界 .dg-region。
+   排版纪律（baoyu-diagram skill）：盒高 50-70、竖距 ≥40 横距 ≥30、箭头标签离盒 ≥10、
+   viewBox 四周留 ≥20 边距；CJK 字宽按字号 1:1 估、拉丁按 0.55 估，盒宽 = 字宽 + 24。 */
+.ds-dgwrap {
+  overflow-x: auto;
+  margin: 14px 0 0;
+}
+.ds-dg {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+  margin: 0 auto;
+}
+.ds-dg text {
+  font-family: var(--ds-sans);
+}
+.ds-dg .dg-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--ds-text);
+}
+.ds-dg .dg-sub {
+  font-size: 10.5px;
+  fill: var(--ds-muted);
+}
+.ds-dg .dg-tag {
+  font-size: 11px;
+  font-weight: 600;
+}
+.ds-dg .dg-note {
+  font-size: 10.5px;
+  fill: var(--ds-muted);
+}
+.ds-dg .dg-edge {
+  stroke: var(--ds-faint);
+  stroke-width: 1.4;
+  fill: none;
+}
+.ds-dg .dg-dash {
+  stroke-dasharray: 5 4;
+}
+.ds-dg .dg-region {
+  fill: none;
+  stroke: var(--ds-faint);
+  stroke-width: 1.2;
+  stroke-dasharray: 7 4;
 }
 
 /* 页头横幅 */
