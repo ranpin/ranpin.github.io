@@ -24,6 +24,7 @@
 > - **[pi05-edge](https://github.com/ranpin/pi05-edge)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/pi05-edge/) — **π0.5 VLA 在 Jetson Orin 上的部署与实时性解剖**：jetson-containers 现场构建 openpi 容器跑通 Physical Intelligence 的 π0.5 机械臂操作策略，LIBERO 闭环复现官方成功率（spatial 99%≈官方 98.8）；性能解剖发现延迟 71% 在 VLM prefix、减 flow-matching 去噪步（10→1）成功率不掉（98-100%）但只到 383ms 地板，叠加 GPU DVFS 与 async prefetch 的 obs 陈旧墙 ⇒ Orin 上「20Hz 实时」与「准确」不可兼得，出路是压 prefix（TRT/量化）。
 > - **[homebot-wm](https://github.com/ranpin/homebot-wm)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/homebot-wm/) — **视觉扩散策略的压缩与边缘部署**：Push-T 策略从训练走通 ONNX 导出 → INT8 量化 → DDIM 减步 → TensorRT，在 Jetson Orin 实机测延迟与闭环精度。
 > - **[spring-festival-dance-robot](https://github.com/ranpin/spring-festival-dance-robot)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/spring-festival-dance-robot/) — **复刻「春晚舞蹈机器人」**：一段群舞视频经 PromptHMR → GMR 重定向为 9 台 Unitree G1 的同步动作，Kaggle GPU 推理 + Mac 本地 viser 交互式 3D 演示。
+> - **[supermimic-dance](https://github.com/ranpin/supermimic-dance)** [![🎬 演示Demo](demo-badge.svg)](https://ranpin.github.io/supermimic-dance/) — **春晚舞蹈视频 → 物理仿真 G1 零样本跳舞**：前作的物理版续作——同一支群舞视频的重定向动作交给 SuperMimic 复现策略（98k checkpoint，LAFAN1 训练）在 MuJoCo 物理仿真中零样本跟踪，9/9 舞者全片 39.3s 完片零失败、关节 MAE 6.5–8.2°（落在该策略 OOD 发布带），纯仿真 demo。
 
 > ###### 2025.07 - 至今
 >
